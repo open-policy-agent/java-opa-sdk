@@ -1,11 +1,11 @@
 package io.github.open_policy_agent.opa.plugins;
 
+import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import io.github.open_policy_agent.opa.bundle.TarballBundleLoader;
@@ -36,10 +36,16 @@ public final class BundlePlugin implements Plugin {
       } else {
         if (bundle.getService() == null || bundle.getService().isEmpty()) {
           errors.add("Bundle '" + name + "' has missing or empty service reference");
+        } else if (manager.getConfig().getService(bundle.getService()) == null) {
+          // Fail fast on typos in the service name. Without this, a misconfigured bundle would
+          // pass validate() and only surface on the first download attempt (as a log line).
+          errors.add(
+              "Bundle '" + name + "' references unknown service '" + bundle.getService() + "'");
         }
         if (bundle.getResource() == null || bundle.getResource().isEmpty()) {
           errors.add("Bundle '" + name + "' has missing or empty resource path");
         }
+        errors.addAll(BundleDownloader.validatePolling(bundle.getPolling(), "Bundle '" + name + "'"));
       }
     }
     return errors;
@@ -48,11 +54,16 @@ public final class BundlePlugin implements Plugin {
   public Plugin initialize(PluginManager manager) {
     BundlePlugin plugin = new BundlePlugin();
     plugin.manager = manager;
-    plugin.scheduler = Executors.newScheduledThreadPool(1, r -> {
-      Thread t = new Thread(r, "opa-bundle-scheduler");
-      t.setDaemon(true);
-      return t;
-    });
+    plugin.scheduler = BundleDownloader.newPollScheduler("opa-bundle-scheduler");
+
+    // ServicePlugin is initialized before BundlePlugin by Opa.Builder, so it's safe to look up
+    // here. When absent (e.g. a test constructing BundlePlugin directly), fall back to a default
+    // HttpClient; that path still supports file:// URIs and unauthenticated HTTP.
+    ServicePlugin servicePlugin = null;
+    Plugin raw = manager.getPlugin("services");
+    if (raw instanceof ServicePlugin) {
+      servicePlugin = (ServicePlugin) raw;
+    }
 
     if (manager.getConfig().getBundles() != null) {
       for (Map.Entry<String, Config.BundleConfig> entry :
@@ -60,9 +71,13 @@ public final class BundlePlugin implements Plugin {
         String name = entry.getKey();
         Config.BundleConfig bundleConfig = entry.getValue();
 
+        ServicePlugin.Service svc =
+            servicePlugin == null ? null : servicePlugin.getService(bundleConfig.getService());
+        HttpClient client = svc == null ? null : svc.getClient();
+
         plugin.bundles.put(
             name,
-            new Bundle(name, manager)
+            new Bundle(name, manager, client, svc)
                 .setService(bundleConfig.getService())
                 .setResource(bundleConfig.getResource())
                 .setPolling(bundleConfig.getPolling()));
@@ -102,6 +117,11 @@ public final class BundlePlugin implements Plugin {
             });
   }
 
+  /** Get a bundle by name (primarily for tests and status reporting). */
+  public Bundle getBundle(String name) {
+    return bundles.get(name);
+  }
+
   @Override
   public void stop() {
     if (scheduler != null) {
@@ -123,8 +143,8 @@ public final class BundlePlugin implements Plugin {
   /** Bundle downloader that activates policy and data bundles. */
   public static class Bundle extends BundleDownloader {
 
-    private Bundle(String name, PluginManager manager) {
-      super(name, manager);
+    private Bundle(String name, PluginManager manager, HttpClient client, ServicePlugin.Service authService) {
+      super(name, manager, client, authService);
     }
 
     public String getName() {

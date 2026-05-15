@@ -91,6 +91,74 @@ status:
   service: acmecorp
 ```
 
+### TLS and mTLS
+
+Services support two related TLS blocks, mirroring Go-OPA:
+
+- `services.<name>.tls` — trust roots used to verify the server certificate.
+- `services.<name>.credentials.client_tls` — client certificate and key presented during the TLS handshake (mTLS).
+
+Both apply to all HTTP traffic for the service: bundle downloads, decision-log uploads, status reports, and discovery.
+
+```yaml
+services:
+  acmecorp:
+    url: https://policy.example.com
+    tls:
+      ca_cert: /etc/ssl/corp-ca.pem
+      system_ca_required: true
+    credentials:
+      client_tls:
+        cert: /etc/ssl/client.pem
+        private_key: /etc/ssl/client-key.pem
+        private_key_passphrase: "key-passphrase"
+        cert_reread_interval_seconds: 3600
+```
+
+| Field | Description |
+|-------|-------------|
+| `tls.ca_cert` | PEM file containing one or more trust roots for verifying the server. |
+| `tls.system_ca_required` | When `true`, the JVM's default trust store is also trusted in addition to `ca_cert`. |
+| `credentials.client_tls.cert` | PEM file containing the client certificate (and any intermediates). |
+| `credentials.client_tls.private_key` | PKCS#8 PEM file with the client private key. |
+| `credentials.client_tls.private_key_passphrase` | Passphrase for an encrypted PKCS#8 key. Omit for unencrypted keys. |
+| `credentials.client_tls.cert_reread_interval_seconds` | If set, the cert and key are reloaded from disk on this interval to support runtime rotation. |
+
+Only PKCS#8 PEM private keys are accepted. Convert PKCS#1 keys with:
+
+```sh
+openssl pkcs8 -topk8 -nocrypt -in key.pem -out key-pkcs8.pem
+```
+
+Programmatic equivalent:
+
+```java
+Config config = new Config()
+    .addService(new Config.ServiceConfig()
+        .setName("acmecorp")
+        .setUrl("https://policy.example.com")
+        .setTls(new Config.TlsConfig()
+            .setCaCert("/etc/ssl/corp-ca.pem")
+            .setSystemCaRequired(true))
+        .setCredentials(new Config.CredentialsConfig()
+            .setClientTls(new Config.ClientTlsConfig()
+                .setCert("/etc/ssl/client.pem")
+                .setPrivateKey("/etc/ssl/client-key.pem")
+                .setPrivateKeyPassphrase("key-passphrase")
+                .setCertRereadIntervalSeconds(3600))));
+```
+
+For keystores that cannot be expressed as files (HSM-backed keys, secret-manager-driven rotation, custom `KeyManager` chains), supply a fully constructed `SSLContext` directly. When set, file-based TLS fields are rejected during validation:
+
+```java
+SSLContext sslContext = buildSslContextFromHsm();
+
+Config.ServiceConfig service = new Config.ServiceConfig()
+    .setName("acmecorp")
+    .setUrl("https://policy.example.com")
+    .setSslContext(sslContext);
+```
+
 ### Lifecycle Management
 
 ```java

@@ -102,6 +102,31 @@ class BundlePluginTest {
   }
 
   @Test
+  void validate_unknownServiceReference_returnsError() {
+    Config.BundleConfig bundle =
+        new Config.BundleConfig()
+            .setService("does-not-exist")
+            .setResource("/bundles/test.tar.gz");
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    BundlePlugin plugin = new BundlePlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertFalse(errors.isEmpty());
+    assertTrue(
+        errors.stream().anyMatch(e -> e.contains("references unknown service 'does-not-exist'")),
+        "expected unknown-service error, got: " + errors);
+  }
+
+  @Test
   void validate_validConfig_returnsNoErrors() {
     Config.BundleConfig bundle =
         new Config.BundleConfig().setService("test-service").setResource("/bundles/test.tar.gz");
@@ -119,6 +144,53 @@ class BundlePluginTest {
     Set<String> errors = plugin.validate(manager);
 
     assertTrue(errors.isEmpty());
+  }
+
+  @Test
+  void validate_pollingMinGreaterThanMax_returnsError() {
+    Config.BundleConfig bundle =
+        new Config.BundleConfig()
+            .setService("test-service")
+            .setResource("/bundles/test.tar.gz")
+            .setPolling(
+                new Config.PollingConfig().setMinDelaySeconds(120).setMaxDelaySeconds(60));
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new BundlePlugin().validate(manager);
+    assertTrue(
+        errors.stream().anyMatch(e -> e.contains("must be <= max_delay_seconds")),
+        "expected min>max error, got: " + errors);
+  }
+
+  @Test
+  void validate_pollingNegativeDelay_returnsError() {
+    Config.BundleConfig bundle =
+        new Config.BundleConfig()
+            .setService("test-service")
+            .setResource("/bundles/test.tar.gz")
+            .setPolling(new Config.PollingConfig().setMinDelaySeconds(-1));
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new BundlePlugin().validate(manager);
+    assertTrue(
+        errors.stream().anyMatch(e -> e.contains("min_delay_seconds must be >= 0")),
+        "expected negative-delay error, got: " + errors);
   }
 
   @Test

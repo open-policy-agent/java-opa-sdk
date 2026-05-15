@@ -1,9 +1,11 @@
 package io.github.open_policy_agent.opa.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.HashMap;
 import java.util.Map;
+import javax.net.ssl.SSLContext;
 
 public class Config {
 
@@ -445,6 +447,12 @@ public class Config {
     @JsonProperty("allow_insecure_tls")
     private boolean allowInsecureTLS = false;
 
+    private TlsConfig tls;
+
+    @JsonIgnore private SSLContext sslContext;
+
+    private Map<String, String> headers;
+
     public int getResponseHeaderTimeoutSeconds() {
       return responseHeaderTimeoutSeconds;
     }
@@ -463,12 +471,39 @@ public class Config {
       return this;
     }
 
+    public TlsConfig getTls() {
+      return tls;
+    }
+
+    public ServiceConfig setTls(TlsConfig tls) {
+      this.tls = tls;
+      return this;
+    }
+
+    /**
+     * Programmatic override for the per-service {@link SSLContext}.
+     *
+     * <p>When set, it is used as-is and file-based TLS fields ({@link TlsConfig},
+     * {@link ClientTlsConfig}) are rejected during validation. Use this for keystores that can't be
+     * expressed in YAML (PKCS12 from an enterprise cert manager, HSM-backed keys, runtime rotation
+     * from an external secret manager, etc.).
+     */
+    public SSLContext getSslContext() {
+      return sslContext;
+    }
+
+    public ServiceConfig setSslContext(SSLContext sslContext) {
+      this.sslContext = sslContext;
+      return this;
+    }
+
     public CredentialsConfig getCredentials() {
       return credentials;
     }
 
-    public void setCredentials(CredentialsConfig credentials) {
+    public ServiceConfig setCredentials(CredentialsConfig credentials) {
       this.credentials = credentials;
+      return this;
     }
 
     public String getName() {
@@ -489,6 +524,22 @@ public class Config {
       return this;
     }
 
+    /**
+     * Extra HTTP headers applied to every request the SDK sends to this service (bundle
+     * downloads, decision-log uploads, status reports). Applied after credentials, so they may
+     * override built-in headers (including {@code Authorization}). Use sparingly — bearer/mTLS
+     * cover most auth needs; this hook exists for services that require non-standard headers
+     * (e.g. caller-identity tokens).
+     */
+    public Map<String, String> getHeaders() {
+      return headers;
+    }
+
+    public ServiceConfig setHeaders(Map<String, String> headers) {
+      this.headers = headers;
+      return this;
+    }
+
     @Override
     public String toString() {
       return "ServiceConfig{"
@@ -500,12 +551,53 @@ public class Config {
           + ", url='"
           + url
           + '\''
+          + ", tls="
+          + tls
           + '}';
+    }
+  }
+
+  /**
+   * Server-TLS configuration for a service (trust roots).
+   *
+   * <p>Mirrors Go-OPA's {@code services.<name>.tls} block.
+   */
+  public static class TlsConfig {
+    @JsonProperty("ca_cert")
+    private String caCert;
+
+    @JsonProperty("system_ca_required")
+    private boolean systemCaRequired = false;
+
+    public String getCaCert() {
+      return caCert;
+    }
+
+    public TlsConfig setCaCert(String caCert) {
+      this.caCert = caCert;
+      return this;
+    }
+
+    public boolean isSystemCaRequired() {
+      return systemCaRequired;
+    }
+
+    public TlsConfig setSystemCaRequired(boolean systemCaRequired) {
+      this.systemCaRequired = systemCaRequired;
+      return this;
+    }
+
+    @Override
+    public String toString() {
+      return "TlsConfig{caCert='" + caCert + "', systemCaRequired=" + systemCaRequired + '}';
     }
   }
 
   public static class CredentialsConfig {
     private BearerConfig bearer;
+
+    @JsonProperty("client_tls")
+    private ClientTlsConfig clientTls;
 
     public BearerConfig getBearer() {
       return bearer;
@@ -516,9 +608,87 @@ public class Config {
       return this;
     }
 
+    public ClientTlsConfig getClientTls() {
+      return clientTls;
+    }
+
+    public CredentialsConfig setClientTls(ClientTlsConfig clientTls) {
+      this.clientTls = clientTls;
+      return this;
+    }
+
     @Override
     public String toString() {
-      return "CredentialsConfig{" + "bearer=" + bearer + '}';
+      return "CredentialsConfig{bearer=" + bearer + ", clientTls=" + clientTls + '}';
+    }
+  }
+
+  /**
+   * Client-TLS credentials for mTLS bundle downloads (and all service HTTP traffic).
+   *
+   * <p>Mirrors Go-OPA's {@code services.<name>.credentials.client_tls} block. Only PKCS#8
+   * (encrypted or unencrypted) PEM private keys are supported; convert PKCS#1 keys with {@code
+   * openssl pkcs8 -topk8 -nocrypt -in key.pem -out key-pkcs8.pem}.
+   */
+  public static class ClientTlsConfig {
+    private String cert;
+
+    @JsonProperty("private_key")
+    private String privateKey;
+
+    @JsonProperty("private_key_passphrase")
+    private String privateKeyPassphrase;
+
+    @JsonProperty("cert_reread_interval_seconds")
+    private Integer certRereadIntervalSeconds;
+
+    public String getCert() {
+      return cert;
+    }
+
+    public ClientTlsConfig setCert(String cert) {
+      this.cert = cert;
+      return this;
+    }
+
+    public String getPrivateKey() {
+      return privateKey;
+    }
+
+    public ClientTlsConfig setPrivateKey(String privateKey) {
+      this.privateKey = privateKey;
+      return this;
+    }
+
+    public String getPrivateKeyPassphrase() {
+      return privateKeyPassphrase;
+    }
+
+    public ClientTlsConfig setPrivateKeyPassphrase(String privateKeyPassphrase) {
+      this.privateKeyPassphrase = privateKeyPassphrase;
+      return this;
+    }
+
+    public Integer getCertRereadIntervalSeconds() {
+      return certRereadIntervalSeconds;
+    }
+
+    public ClientTlsConfig setCertRereadIntervalSeconds(Integer certRereadIntervalSeconds) {
+      this.certRereadIntervalSeconds = certRereadIntervalSeconds;
+      return this;
+    }
+
+    @Override
+    public String toString() {
+      return "ClientTlsConfig{cert='"
+          + cert
+          + "', privateKey='"
+          + privateKey
+          + "', privateKeyPassphrase="
+          + (privateKeyPassphrase == null ? "null" : "<redacted>")
+          + ", certRereadIntervalSeconds="
+          + certRereadIntervalSeconds
+          + '}';
     }
   }
 
@@ -536,7 +706,7 @@ public class Config {
 
     @Override
     public String toString() {
-      return "BearerConfig{" + "token='" + token + '\'' + '}';
+      return "BearerConfig{token=" + (token == null ? "null" : "<redacted>") + '}';
     }
   }
 

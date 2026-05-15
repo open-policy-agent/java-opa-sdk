@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.http.HttpClient;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
@@ -62,6 +62,8 @@ public final class DiscoveryPlugin implements Plugin {
       errors.add("Discovery has missing or empty resource path");
     }
 
+    errors.addAll(BundleDownloader.validatePolling(discovery.getPolling(), "Discovery"));
+
     return errors;
   }
 
@@ -69,17 +71,24 @@ public final class DiscoveryPlugin implements Plugin {
   public Plugin initialize(PluginManager manager) {
     DiscoveryPlugin plugin = new DiscoveryPlugin();
     plugin.manager = manager;
-    plugin.scheduler = Executors.newScheduledThreadPool(1, r -> {
-      Thread t = new Thread(r, "opa-discovery-scheduler");
-      t.setDaemon(true);
-      return t;
-    });
+    plugin.scheduler = BundleDownloader.newPollScheduler("opa-discovery-scheduler");
 
     Config.DiscoveryConfig discoveryConfig = manager.getConfig().getDiscovery();
     if (discoveryConfig != null) {
       String name = discoveryConfig.getName() != null ? discoveryConfig.getName() : "discovery";
+
+      ServicePlugin.Service svc = null;
+      HttpClient client = null;
+      Plugin raw = manager.getPlugin("services");
+      if (raw instanceof ServicePlugin) {
+        svc = ((ServicePlugin) raw).getService(discoveryConfig.getService());
+        if (svc != null) {
+          client = svc.getClient();
+        }
+      }
+
       plugin.discoveryBundle =
-          new DiscoveryBundle(name, manager)
+          new DiscoveryBundle(name, manager, client, svc)
               .setService(discoveryConfig.getService())
               .setResource(discoveryConfig.getResource())
               .setPolling(discoveryConfig.getPolling());
@@ -141,8 +150,12 @@ public final class DiscoveryPlugin implements Plugin {
 
     private Config discoveredConfig; // Store the last successfully loaded config
 
-    private DiscoveryBundle(String name, PluginManager manager) {
-      super(name, manager);
+    private DiscoveryBundle(
+        String name,
+        PluginManager manager,
+        HttpClient client,
+        ServicePlugin.Service service) {
+      super(name, manager, client, service);
     }
 
     @Override

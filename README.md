@@ -264,8 +264,16 @@ nd_builtin_cache: true
 |-------|------|---------|-------------|
 | `url` | string | - | Base URL of the service |
 | `credentials.bearer.token` | string | - | Bearer token for authentication |
+| `credentials.client_tls.cert` | string | - | PEM file with the client certificate (mTLS) |
+| `credentials.client_tls.private_key` | string | - | PKCS#8 PEM file with the client private key |
+| `credentials.client_tls.private_key_passphrase` | string | - | Passphrase for an encrypted PKCS#8 key |
+| `credentials.client_tls.cert_reread_interval_seconds` | int | - | Interval to reload the client cert/key from disk for rotation |
+| `tls.ca_cert` | string | - | PEM file with trust roots used to verify the server cert |
+| `tls.system_ca_required` | boolean | false | Also trust the JVM default trust store in addition to `ca_cert` |
 | `response_header_timeout_seconds` | int | 10 | HTTP response header timeout |
 | `allow_insecure_tls` | boolean | false | Allow insecure TLS (dev only) |
+
+See [opa-services/README.md](opa-services/README.md#tls-and-mtls) for a full mTLS walkthrough, including the programmatic `setSslContext` escape hatch for HSM-backed or rotated keys.
 
 #### Bundles
 

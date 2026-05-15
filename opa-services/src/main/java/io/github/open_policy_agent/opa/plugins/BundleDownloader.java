@@ -10,8 +10,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import io.github.open_policy_agent.opa.config.Config;
 
@@ -37,21 +43,94 @@ public abstract class BundleDownloader {
   protected final HttpClient httpClient;
   protected final CompletableFuture<Void> initialActivation;
 
+  private final ServicePlugin.Service authService;
+
   protected String service;
   protected String resource;
   protected Config.PollingConfig polling;
   protected String etag;
   protected long lastModifiedTime = 0;
 
-  protected BundleDownloader(String name, PluginManager manager) {
+  /**
+   * Construct a BundleDownloader.
+   *
+   * @param name bundle name (used in log messages)
+   * @param manager the owning plugin manager
+   * @param httpClient the HTTP client to use for HTTP/HTTPS downloads; may be {@code null} if this
+   *     downloader only ever handles {@code file://} URIs or filesystem paths
+   * @param authService the {@link ServicePlugin.Service} providing credentials for HTTP downloads;
+   *     may be {@code null} to skip auth
+   */
+  protected BundleDownloader(
+      String name,
+      PluginManager manager,
+      HttpClient httpClient,
+      ServicePlugin.Service authService) {
     this.name = name;
     this.manager = manager;
-    this.httpClient =
-        HttpClient.newBuilder()
-            .followRedirects(HttpClient.Redirect.NORMAL)
-            .connectTimeout(Duration.ofSeconds(10))
-            .build();
+    this.httpClient = httpClient != null ? httpClient : defaultHttpClient();
+    this.authService = authService;
     this.initialActivation = new CompletableFuture<>();
+  }
+
+  private static HttpClient defaultHttpClient() {
+    return HttpClient.newBuilder()
+        .followRedirects(HttpClient.Redirect.NORMAL)
+        .connectTimeout(Duration.ofSeconds(10))
+        .build();
+  }
+
+  /**
+   * Build a daemon scheduler with the "drop pending delayed tasks on shutdown" policy. Suitable
+   * for chained-delay polling and for periodic cert/config reloads — in both cases {@code
+   * shutdown()} returns promptly without waiting through the next scheduled tick.
+   */
+  public static ScheduledExecutorService newPollScheduler(int poolSize, String threadName) {
+    ScheduledThreadPoolExecutor exec =
+        new ScheduledThreadPoolExecutor(
+            poolSize,
+            r -> {
+              Thread t = new Thread(r, threadName);
+              t.setDaemon(true);
+              return t;
+            });
+    exec.setExecuteExistingDelayedTasksAfterShutdownPolicy(false);
+    return exec;
+  }
+
+  public static ScheduledExecutorService newPollScheduler(String threadName) {
+    return newPollScheduler(1, threadName);
+  }
+
+  /**
+   * Validate a {@link Config.PollingConfig}. Each error is prefixed with {@code subjectPrefix}
+   * (e.g. {@code "Bundle 'authz'"} or {@code "Discovery"}) so the caller can mix it into its own
+   * error set.
+   */
+  public static Set<String> validatePolling(
+      Config.PollingConfig polling, String subjectPrefix) {
+    Set<String> errors = new HashSet<>();
+    if (polling == null) {
+      return errors;
+    }
+    Integer min = polling.getMinDelaySeconds();
+    Integer max = polling.getMaxDelaySeconds();
+    if (min != null && min < 0) {
+      errors.add(subjectPrefix + " polling.min_delay_seconds must be >= 0");
+    }
+    if (max != null && max < 0) {
+      errors.add(subjectPrefix + " polling.max_delay_seconds must be >= 0");
+    }
+    if (min != null && max != null && min >= 0 && max >= 0 && min > max) {
+      errors.add(
+          subjectPrefix
+              + " polling.min_delay_seconds ("
+              + min
+              + ") must be <= max_delay_seconds ("
+              + max
+              + ")");
+    }
+    return errors;
   }
 
   public BundleDownloader setService(String service) {
@@ -70,6 +149,14 @@ public abstract class BundleDownloader {
   }
 
   /**
+   * @return a future that completes when the first bundle download succeeds, or completes
+   *     exceptionally with the underlying download/activation error
+   */
+  public CompletableFuture<Void> getInitialActivation() {
+    return initialActivation;
+  }
+
+  /**
    * Start polling for bundle updates.
    *
    * @param scheduler the scheduler to use for periodic downloads
@@ -85,13 +172,39 @@ public abstract class BundleDownloader {
             ? polling.getMaxDelaySeconds()
             : 120;
 
-    // Schedule initial download
     scheduler.schedule(this::downloadBundle, 0, TimeUnit.SECONDS);
-
-    // Schedule periodic downloads
-    scheduler.scheduleAtFixedRate(this::downloadBundle, minDelay, maxDelay, TimeUnit.SECONDS);
+    scheduleNextPoll(scheduler, minDelay, maxDelay);
 
     return initialActivation;
+  }
+
+  // Re-schedules the next download with a uniformly random delay in [minDelay, maxDelay],
+  // matching Go-OPA's jittered polling. ScheduledExecutorService has no built-in jitter, so the
+  // task chains itself. RejectedExecutionException after a shutdown breaks the chain cleanly.
+  private void scheduleNextPoll(ScheduledExecutorService scheduler, int minDelay, int maxDelay) {
+    long delay =
+        minDelay >= maxDelay
+            ? minDelay
+            : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
+    try {
+      scheduler.schedule(
+          () -> {
+            try {
+              downloadBundle();
+            } catch (Exception e) {
+              // downloadBundle() handles its own logging; swallow so the chain keeps polling.
+              // Only Exception is caught here — Errors (OOM, etc.) propagate and let the
+              // executor's uncaught-exception handler tear down the pool, which is the right
+              // outcome for unrecoverable conditions.
+            } finally {
+              scheduleNextPoll(scheduler, minDelay, maxDelay);
+            }
+          },
+          delay,
+          TimeUnit.SECONDS);
+    } catch (RejectedExecutionException stopped) {
+      // Scheduler was shut down; let the chain end.
+    }
   }
 
   /**
@@ -187,6 +300,20 @@ public abstract class BundleDownloader {
 
     if (etag != null) {
       requestBuilder.header("If-None-Match", etag);
+    }
+
+    if (authService != null) {
+      requestBuilder = authService.applyCredentials(requestBuilder);
+    }
+
+    Config.ServiceConfig serviceConfig = manager.getConfig().getService(service);
+    if (serviceConfig != null && serviceConfig.getHeaders() != null) {
+      for (Map.Entry<String, String> h : serviceConfig.getHeaders().entrySet()) {
+        // setHeader (not header) so user-supplied entries replace built-in headers like
+        // Authorization rather than producing duplicates — RFC 7230 forbids multiple
+        // Authorization headers, and HttpRequest.Builder#header is additive.
+        requestBuilder.setHeader(h.getKey(), h.getValue());
+      }
     }
 
     HttpRequest request = requestBuilder.build();

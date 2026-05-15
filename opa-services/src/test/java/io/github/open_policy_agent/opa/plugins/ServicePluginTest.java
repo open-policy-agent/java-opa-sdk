@@ -309,4 +309,200 @@ class ServicePluginTest {
     assertTrue(errors.stream().anyMatch(e -> e.contains("service2")));
     assertTrue(errors.stream().anyMatch(e -> e.contains("missing or empty URL")));
   }
+
+  @Test
+  void validate_tls_allowInsecureTlsConflict_returnsError() {
+    Config.ServiceConfig service =
+        new Config.ServiceConfig()
+            .setName("s")
+            .setUrl("https://example.com")
+            .setAllowInsecureTLS(true)
+            .setSslContext(mock(javax.net.ssl.SSLContext.class));
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new ServicePlugin().validate(manager);
+    assertTrue(errors.stream().anyMatch(e -> e.contains("allow_insecure_tls=true alongside")));
+  }
+
+  @Test
+  void validate_tls_programmaticAndFileConflict_returnsError() {
+    Config.ServiceConfig service =
+        new Config.ServiceConfig()
+            .setName("s")
+            .setUrl("https://example.com")
+            .setTls(new Config.TlsConfig().setCaCert("/nonexistent/ca.pem"))
+            .setSslContext(mock(javax.net.ssl.SSLContext.class));
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new ServicePlugin().validate(manager);
+    assertTrue(errors.stream().anyMatch(e -> e.contains("programmatic SSLContext alongside")));
+  }
+
+  @Test
+  void validate_tls_emptyBlock_returnsError() {
+    // tls block with neither ca_cert nor system_ca_required=true is a no-op — likely a typo.
+    Config.ServiceConfig service =
+        new Config.ServiceConfig()
+            .setName("s")
+            .setUrl("https://example.com")
+            .setTls(new Config.TlsConfig());
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new ServicePlugin().validate(manager);
+    assertTrue(errors.stream().anyMatch(e -> e.contains("tls block has no effect")));
+  }
+
+  @Test
+  void validate_tls_certWithoutKey_returnsError() {
+    Config.ServiceConfig service =
+        new Config.ServiceConfig()
+            .setName("s")
+            .setUrl("https://example.com")
+            .setCredentials(
+                new Config.CredentialsConfig()
+                    .setClientTls(new Config.ClientTlsConfig().setCert("/some/cert.pem")));
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new ServicePlugin().validate(manager);
+    assertTrue(errors.stream().anyMatch(e -> e.contains("must set both cert and private_key")));
+  }
+
+  @Test
+  void validate_tls_bearerAndClientTls_returnsError() {
+    Config.ClientTlsConfig ctls =
+        new Config.ClientTlsConfig().setCert("/c.pem").setPrivateKey("/k.pem");
+    Config.CredentialsConfig creds =
+        new Config.CredentialsConfig()
+            .setBearer(new Config.BearerConfig().setToken("abc"))
+            .setClientTls(ctls);
+    Config.ServiceConfig service =
+        new Config.ServiceConfig().setName("s").setUrl("https://example.com").setCredentials(creds);
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new ServicePlugin().validate(manager);
+    assertTrue(
+        errors.stream().anyMatch(e -> e.contains("both bearer and client_tls")),
+        "expected bearer/client_tls conflict but got " + errors);
+  }
+
+  @Test
+  void validate_tls_negativeRereadInterval_returnsError() {
+    Config.ServiceConfig service =
+        new Config.ServiceConfig()
+            .setName("s")
+            .setUrl("https://example.com")
+            .setCredentials(
+                new Config.CredentialsConfig()
+                    .setClientTls(
+                        new Config.ClientTlsConfig()
+                            .setCert("/c.pem")
+                            .setPrivateKey("/k.pem")
+                            .setCertRereadIntervalSeconds(-1)));
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new ServicePlugin().validate(manager);
+    assertTrue(errors.stream().anyMatch(e -> e.contains("cert_reread_interval_seconds must be >= 0")));
+  }
+
+  @Test
+  void validate_tls_rereadIntervalWithoutCert_returnsError() {
+    Config.ServiceConfig service =
+        new Config.ServiceConfig()
+            .setName("s")
+            .setUrl("https://example.com")
+            .setCredentials(
+                new Config.CredentialsConfig()
+                    .setClientTls(new Config.ClientTlsConfig().setCertRereadIntervalSeconds(60)));
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    Set<String> errors = new ServicePlugin().validate(manager);
+    assertTrue(
+        errors.stream()
+            .anyMatch(e -> e.contains("cert_reread_interval_seconds requires both cert")),
+        "expected reread-without-cert error, got " + errors);
+  }
+
+  @Test
+  void stop_shutsDownCertReloadScheduler() throws Exception {
+    Config.ServiceConfig service =
+        new Config.ServiceConfig().setName("s").setUrl("https://example.com");
+    config.setServices(Collections.singletonMap("s", service));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("t")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    ServicePlugin plugin = (ServicePlugin) new ServicePlugin().initialize(manager);
+
+    java.lang.reflect.Field f = ServicePlugin.class.getDeclaredField("certReloadScheduler");
+    f.setAccessible(true);
+    java.util.concurrent.ScheduledExecutorService scheduler =
+        (java.util.concurrent.ScheduledExecutorService) f.get(plugin);
+    assertNotNull(scheduler, "scheduler should be created when services are configured");
+    assertFalse(scheduler.isShutdown(), "scheduler must be running before stop()");
+
+    plugin.stop();
+
+    assertTrue(scheduler.isShutdown(), "scheduler must be shut down after stop()");
+  }
 }

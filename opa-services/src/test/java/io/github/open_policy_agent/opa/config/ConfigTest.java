@@ -324,4 +324,64 @@ class ConfigTest {
     assertNotNull(configString);
     assertTrue(configString.contains("discovery"));
   }
+
+  @Test
+  void config_loadsMtlsFromYaml() throws Exception {
+    String yaml =
+        "services:\n"
+            + "  test-service:\n"
+            + "    url: https://opa.example.com\n"
+            + "    tls:\n"
+            + "      ca_cert: /etc/ssl/corp-ca.pem\n"
+            + "      system_ca_required: true\n"
+            + "    credentials:\n"
+            + "      client_tls:\n"
+            + "        cert: /etc/ssl/client.pem\n"
+            + "        private_key: /etc/ssl/client-key.pem\n"
+            + "        private_key_passphrase: \"secret\"\n"
+            + "        cert_reread_interval_seconds: 3600\n";
+
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    Config config = mapper.readValue(new StringReader(yaml), Config.class);
+
+    Config.ServiceConfig svc = config.getService("test-service");
+    assertNotNull(svc);
+
+    Config.TlsConfig tls = svc.getTls();
+    assertNotNull(tls);
+    assertEquals("/etc/ssl/corp-ca.pem", tls.getCaCert());
+    assertTrue(tls.isSystemCaRequired());
+
+    Config.ClientTlsConfig clientTls = svc.getCredentials().getClientTls();
+    assertNotNull(clientTls);
+    assertEquals("/etc/ssl/client.pem", clientTls.getCert());
+    assertEquals("/etc/ssl/client-key.pem", clientTls.getPrivateKey());
+    assertEquals("secret", clientTls.getPrivateKeyPassphrase());
+    assertEquals(3600, clientTls.getCertRereadIntervalSeconds());
+  }
+
+  @Test
+  void config_mtlsDefaults() {
+    Config.TlsConfig tls = new Config.TlsConfig();
+    assertFalse(tls.isSystemCaRequired());
+    assertEquals(null, tls.getCaCert());
+
+    Config.ClientTlsConfig clientTls = new Config.ClientTlsConfig();
+    assertEquals(null, clientTls.getCert());
+    assertEquals(null, clientTls.getPrivateKey());
+    assertEquals(null, clientTls.getPrivateKeyPassphrase());
+    assertEquals(null, clientTls.getCertRereadIntervalSeconds());
+  }
+
+  @Test
+  void config_clientTlsToString_redactsPassphrase() {
+    Config.ClientTlsConfig clientTls =
+        new Config.ClientTlsConfig()
+            .setCert("/c.pem")
+            .setPrivateKey("/k.pem")
+            .setPrivateKeyPassphrase("super-secret");
+    String s = clientTls.toString();
+    assertTrue(s.contains("<redacted>"), s);
+    assertFalse(s.contains("super-secret"), "passphrase must never appear in toString(): " + s);
+  }
 }
