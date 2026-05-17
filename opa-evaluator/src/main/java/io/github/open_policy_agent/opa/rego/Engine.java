@@ -519,7 +519,7 @@ public class Engine {
       private QueryTracer tracer;
       private Metrics metrics;
       private StatementProfiler statementProfiler;
-      private Profiler profiler;
+      private final List<Profiler> profilers = new ArrayList<>();
       private String entrypoint;
       private PreparedPlan preparedPlan;
       private PrintHook printHook;
@@ -572,14 +572,16 @@ public class Engine {
       }
 
       /**
-       * Enable profiling. The profiler provides detailed performance information about which
-       * parts of the policy took the most time.
+       * Register a profiler. Profilers receive a callback for every executed statement, keyed by
+       * source location, and can be used for time-by-line profiling, line coverage, or any other
+       * location-based analysis. May be called multiple times to register more than one profiler;
+       * each receives every callback in registration order.
        *
        * @param profiler the profiler implementation
        * @return this builder
        */
       public Builder withProfiler(Profiler profiler) {
-        this.profiler = profiler;
+        this.profilers.add(profiler);
         return this;
       }
 
@@ -625,8 +627,8 @@ public class Engine {
         if (statementProfiler != null) {
           contextBuilder.withStatementProfiler(statementProfiler);
         }
-        if (profiler != null) {
-          contextBuilder.withProfiler(profiler);
+        for (Profiler p : profilers) {
+          contextBuilder.withProfiler(p);
         }
         if (entrypoint != null) {
           contextBuilder.withEntrypoint(entrypoint);

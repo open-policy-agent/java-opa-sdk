@@ -14,6 +14,7 @@ import io.github.open_policy_agent.opa.storage.InMem;
 import io.github.open_policy_agent.opa.storage.Store;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.open_policy_agent.opa.tracing.DurationProfiler;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -171,7 +172,7 @@ class EngineTest {
     Engine.PreparedQuery pq =
         engine
             .prepareForEvaluation()
-            .withProfiler(new io.github.open_policy_agent.opa.tracing.Profiler())
+            .withProfiler(new DurationProfiler())
             .build();
 
     assertNotNull(pq);
