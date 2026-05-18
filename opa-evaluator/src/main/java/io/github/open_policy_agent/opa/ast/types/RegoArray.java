@@ -1,9 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -38,34 +34,6 @@ public class RegoArray implements RegoValue, RegoCollection {
     }
   }
 
-  public static RegoArray fromJsonNode(ObjectMapper mapper, JsonNode arrayNode) throws Exception {
-    RegoArray array = new RegoArray();
-    for (JsonNode element : arrayNode) {
-      if (element.isObject()) {
-        array.addValue(mapper.treeToValue(element, RegoObject.class));
-      } else if (element.isArray()) {
-        array.addValue(fromJsonNode(mapper, element));
-      } else if (element.isTextual()) {
-        array.addValue(new RegoString(element.asText()));
-      } else if (element.isNumber()) {
-        if (element.isIntegralNumber()) {
-          array.addValue(new RegoBigInt(BigInteger.valueOf(element.asLong())));
-        } else {
-          array.addValue(new RegoDecimal(element.doubleValue()));
-        }
-      } else if (element.isBoolean()) {
-        array.addValue(RegoBoolean.of(element.asBoolean()));
-      } else if (element.isNull()) {
-        array.addValue(RegoNull.INSTANCE);
-      } else {
-        throw new UnsupportedOperationException(
-            "Unsupported JSON element type: " + element.getNodeType());
-      }
-    }
-    return array;
-  }
-
-  @JsonValue
   public List<RegoValue> getValue() {
     return values;
   }

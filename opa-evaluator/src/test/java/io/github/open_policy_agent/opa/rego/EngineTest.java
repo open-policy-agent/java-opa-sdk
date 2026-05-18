@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class EngineTest {
   private static final PolicyReader policyReader =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+  private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
 
   @Test
   void engine_builder_requiresStore() {
@@ -110,7 +110,7 @@ class EngineTest {
     Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
     JsonNode input = objectMapper.readTree("{}");
-    List<JsonNode> results = pq.eval(input);
+    List<JsonNode> results = JsonNodeBridge.eval(pq, input);
 
     assertNotNull(results);
   }

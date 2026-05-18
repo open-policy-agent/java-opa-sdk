@@ -1,14 +1,12 @@
 package io.github.open_policy_agent.opa.bundle;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.HashMap;
 import java.util.Map;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
 
 public class Bundle {
-  //  public RegoObject data;
   public final Policy irPolicy;
-  public final JsonNode manifest;
+  public final Map<String, Object> manifest;
   public final Map<String, String> rego;
 
   private Bundle(Builder builder) {
@@ -19,7 +17,7 @@ public class Bundle {
 
   public static class Builder {
     private final Map<String, String> rego = new HashMap<>();
-    private JsonNode manifest;
+    private Map<String, Object> manifest;
     private Policy irPolicy;
 
     public Builder withRego(String path, String rego) {
@@ -27,7 +25,7 @@ public class Bundle {
       return this;
     }
 
-    public Builder withManifest(JsonNode manifest) {
+    public Builder withManifest(Map<String, Object> manifest) {
       this.manifest = manifest;
       return this;
     }

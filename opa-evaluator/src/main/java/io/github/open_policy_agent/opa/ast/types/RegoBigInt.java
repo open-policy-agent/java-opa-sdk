@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -19,7 +18,6 @@ public class RegoBigInt implements RegoValue, RegoNumber {
         this.value = i;
     }
 
-    @JsonValue
     public BigInteger getValue() {
         return value;
     }

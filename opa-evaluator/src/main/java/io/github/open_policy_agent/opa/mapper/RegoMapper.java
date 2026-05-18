@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.mapper;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -169,9 +168,10 @@ public class RegoMapper {
   // --- Forward conversion helpers ---
 
   private RegoValue enumToRegoValue(Enum<?> e) {
-    // Check for @JsonValue method on the enum class
+    // Check for an @JsonValue (or equivalent) method on the enum class via the introspector
+    AnnotationIntrospector introspector = AnnotationIntrospectors.get();
     for (Method method : e.getClass().getDeclaredMethods()) {
-      if (method.isAnnotationPresent(JsonValue.class) && method.getParameterCount() == 0) {
+      if (introspector.isJsonValue(method) && method.getParameterCount() == 0) {
         try {
           method.setAccessible(true);
           Object result = method.invoke(e);

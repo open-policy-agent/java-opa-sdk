@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.math.BigInteger;
 import java.util.Objects;
 
@@ -22,7 +21,6 @@ public class RegoDecimal implements RegoValue, RegoNumber {
     this.value = f.doubleValue();
     }
 
-  @JsonValue
   public Double getValue() {
         return value;
     }

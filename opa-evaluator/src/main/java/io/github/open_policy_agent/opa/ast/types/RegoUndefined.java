@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 
 public class RegoUndefined implements RegoValue {
 
@@ -8,7 +7,6 @@ public class RegoUndefined implements RegoValue {
 
   private RegoUndefined() {}
 
-  @JsonValue
   private Object getProperty() {
     return null;
   }

@@ -47,8 +47,8 @@ public abstract class AbstractStore implements Store {
   public String getDefaultEntrypoint() {
     return bundles.values().stream()
         .filter(bundle -> bundle.manifest != null)
-        .filter(bundle -> bundle.manifest.has("default_decision"))
-        .map(bundle -> bundle.manifest.get("default_decision").asText())
+        .filter(bundle -> bundle.manifest.containsKey("default_decision"))
+        .map(bundle -> String.valueOf(bundle.manifest.get("default_decision")))
         .findFirst()
         .orElse("");
   }
@@ -77,10 +77,10 @@ public abstract class AbstractStore implements Store {
    * @return the root path (empty string for global root)
    */
   private String extractRoot(Bundle bundle) {
-    if (bundle.manifest != null && bundle.manifest.has("roots")) {
-      var rootsNode = bundle.manifest.get("roots");
-      if (rootsNode.isArray() && !rootsNode.isEmpty()) {
-        return rootsNode.get(0).asText();
+    if (bundle.manifest != null && bundle.manifest.get("roots") instanceof java.util.List) {
+      java.util.List<?> roots = (java.util.List<?>) bundle.manifest.get("roots");
+      if (!roots.isEmpty()) {
+        return String.valueOf(roots.get(0));
       }
     }
     // No manifest or no roots field, default to empty root (global data root)

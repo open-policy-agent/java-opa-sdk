@@ -4,8 +4,6 @@ import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ir.PolicyReader;
 import io.github.open_policy_agent.opa.storage.Store;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,7 +32,6 @@ import java.util.ServiceLoader;
  * }</pre>
  */
 public class BundleAssembler {
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class)
           .findFirst()
@@ -43,6 +40,15 @@ public class BundleAssembler {
                   new IllegalStateException(
                       "No PolicyReader implementation found on the classpath. "
                           + "Add a module that provides PolicyReader (e.g. opa-jackson)."));
+
+  static final BundleParser BUNDLE_PARSER =
+      ServiceLoader.load(BundleParser.class)
+          .findFirst()
+          .orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "No BundleParser implementation found on the classpath. "
+                          + "Add a module that provides BundleParser (e.g. opa-jackson)."));
 
   private final Bundle.Builder builder = new Bundle.Builder();
   private RegoObject data;
@@ -64,8 +70,7 @@ public class BundleAssembler {
    * @param in the data.json input stream
    */
   public void loadData(String path, InputStream in) throws IOException {
-    JsonNode root = MAPPER.readTree(in);
-    RegoObject parsed = MAPPER.treeToValue(root, RegoObject.class);
+    RegoObject parsed = BUNDLE_PARSER.parseData(in);
 
     if (data == null) {
       data = new RegoObject();
@@ -101,7 +106,7 @@ public class BundleAssembler {
 
   /** Load bundle metadata from a {@code .manifest} stream. */
   public void loadManifest(InputStream in) throws IOException {
-    builder.withManifest(MAPPER.readTree(in));
+    builder.withManifest(BUNDLE_PARSER.parseManifest(in));
   }
 
   /** Add a Rego source file by its relative path. */

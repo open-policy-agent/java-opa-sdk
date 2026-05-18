@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 
 public class RegoBoolean implements RegoValue {
 
@@ -13,7 +12,6 @@ public class RegoBoolean implements RegoValue {
     this.value = value;
   }
 
-  @JsonValue
   public boolean getValue() {
     return value;
   }

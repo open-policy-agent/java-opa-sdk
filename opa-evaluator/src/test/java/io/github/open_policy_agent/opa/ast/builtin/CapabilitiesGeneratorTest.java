@@ -107,7 +107,7 @@ public class CapabilitiesGeneratorTest {
     Capabilities capabilities = BuiltinRegistry.generateCapabilities();
 
     // Should be able to serialize to JSON
-    String json = capabilities.toJson();
+    String json = io.github.open_policy_agent.opa.jackson.JacksonCapabilities.toJson(capabilities);
     assertNotNull(json);
     assertFalse(json.isEmpty());
 
@@ -118,7 +118,9 @@ public class CapabilitiesGeneratorTest {
       StringBuilder errorMsg =
           new StringBuilder("JSON contains null field values. Problematic builtins:\n");
       for (Descriptor d : capabilities.builtins) {
-        String individualJson = new Capabilities(List.of(d)).toJson();
+        String individualJson =
+            io.github.open_policy_agent.opa.jackson.JacksonCapabilities.toJson(
+                new Capabilities(List.of(d)));
         if (individualJson.contains(": null")) {
           errorMsg.append("  - ").append(d.name).append("\n");
           errorMsg
@@ -131,7 +133,8 @@ public class CapabilitiesGeneratorTest {
     }
 
     // Should be able to deserialize back
-    Capabilities deserialized = Capabilities.fromJson(json);
+    Capabilities deserialized =
+        io.github.open_policy_agent.opa.jackson.JacksonCapabilities.fromJson(json);
     assertNotNull(deserialized);
     assertEquals(capabilities.builtins.size(), deserialized.builtins.size());
   }

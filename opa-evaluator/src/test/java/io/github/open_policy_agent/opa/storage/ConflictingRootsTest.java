@@ -2,9 +2,10 @@ package io.github.open_policy_agent.opa.storage;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
@@ -14,12 +15,10 @@ import io.github.open_policy_agent.opa.bundle.Bundle;
 public class ConflictingRootsTest {
 
   private Store store;
-  private ObjectMapper mapper;
 
   @BeforeEach
   void setUp() {
     store = new InMem();
-    mapper = new ObjectMapper();
   }
 
   // Helper method to create a bundle with specified roots
@@ -27,11 +26,12 @@ public class ConflictingRootsTest {
     Bundle.Builder builder = new Bundle.Builder();
 
     if (roots.length > 0) {
-      ObjectNode manifest = mapper.createObjectNode();
-      ArrayNode rootsArray = manifest.putArray("roots");
+      Map<String, Object> manifest = new HashMap<>();
+      List<String> rootList = new ArrayList<>();
       for (String root : roots) {
-        rootsArray.add(root);
+        rootList.add(root);
       }
+      manifest.put("roots", rootList);
       builder.withManifest(manifest);
     }
 

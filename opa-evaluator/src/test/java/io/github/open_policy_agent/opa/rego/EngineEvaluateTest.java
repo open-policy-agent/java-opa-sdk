@@ -45,7 +45,7 @@ import io.github.open_policy_agent.opa.storage.Store;
  */
 class EngineEvaluateTest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
   private static final String ENTRYPOINT = "authz/allow";
@@ -100,7 +100,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("alice"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("alice"));
 
       assertTrue(resultBoolean(results));
     }
@@ -110,7 +110,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("kurt"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("kurt"));
 
       assertTrue(resultBoolean(results));
     }
@@ -120,7 +120,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"admin\":{\"privileged\":true}}}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("bob", "admin"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("bob", "admin"));
 
       assertTrue(resultBoolean(results));
     }
@@ -130,7 +130,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("bob"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("bob"));
 
       assertFalse(resultBoolean(results));
     }
@@ -140,7 +140,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"basic\":{}}}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("bob", "basic"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("bob", "basic"));
 
       assertFalse(resultBoolean(results));
     }
@@ -150,7 +150,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"admin\":{\"privileged\":true}}}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("alice", "admin"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("alice", "admin"));
 
       assertTrue(resultBoolean(results));
     }
@@ -164,7 +164,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("alice"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("alice"));
 
       assertTrue(resultBoolean(results));
     }
@@ -174,7 +174,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("bob"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("bob"));
 
       assertFalse(resultBoolean(results));
     }
@@ -185,7 +185,7 @@ class EngineEvaluateTest {
           buildEngine("{\"groups\":{\"super\":{\"privileged\":true}}}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("bob", "super"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("bob", "super"));
 
       assertTrue(resultBoolean(results));
     }
@@ -195,7 +195,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"basic\":{}}}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("bob", "basic"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("bob", "basic"));
 
       assertFalse(resultBoolean(results));
     }
@@ -227,7 +227,7 @@ class EngineEvaluateTest {
       Engine engine = new Engine.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(inputJson);
+      List<JsonNode> results = JsonNodeBridge.eval(pq, inputJson);
 
       // CLI input has id=alicex (not alice/kurt) but groups=["super"]
       // data has groups.super.privileged=true, so it should be allowed via group rule

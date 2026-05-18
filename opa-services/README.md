@@ -11,7 +11,7 @@ The services module provides the `Opa` class, which wraps the core evaluator wit
 ### Configuration File
 
 ```java
-import io.github.openpolicyagent.opa.Opa;
+import io.github.open_policy_agent.opa.Opa;
 
 Opa opa = new Opa.Builder()
     .withConfigFile("opa-config.yaml")
@@ -27,8 +27,8 @@ String decisionId = result.getId();
 ### Programmatic Configuration
 
 ```java
-import io.github.openpolicyagent.opa.Opa;
-import io.github.openpolicyagent.opa.config.Config;
+import io.github.open_policy_agent.opa.Opa;
+import io.github.open_policy_agent.opa.config.Config;
 
 Config config = new Config()
     .addService(new Config.ServiceConfig()
@@ -124,8 +124,8 @@ opa.close();
 ### Custom Plugins
 
 ```java
-import io.github.openpolicyagent.opa.plugins.Plugin;
-import io.github.openpolicyagent.opa.plugins.PluginManager;
+import io.github.open_policy_agent.opa.plugins.Plugin;
+import io.github.open_policy_agent.opa.plugins.PluginManager;
 
 Plugin myPlugin = new Plugin() {
     @Override

@@ -112,11 +112,10 @@ The Engine API provides direct policy evaluation without plugin infrastructure. 
 (when using FileSystemBundleLoader, the IR plan.json is expected to be in the given path)
 
 ```java
-import io.github.open-policy-agent.rego.Engine;
-import io.github.open-policy-agent.bundle.FileSystemBundleLoader;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.open_policy_agent.opa.rego.Engine;
+import io.github.open_policy_agent.opa.bundle.FileSystemBundleLoader;
 import java.util.List;
+import java.util.Map;
 
 // Build the engine with the example policy bundle
 Engine engine = new Engine.Builder()
@@ -128,11 +127,11 @@ Engine engine = new Engine.Builder()
 Engine.PreparedQuery query = engine.prepareForEvaluation().build();
 
 // Evaluate with input - alice is an authorized reader
-ObjectMapper mapper = new ObjectMapper();
-JsonNode input = mapper.readTree("{\"user\": \"alice\", \"action\": \"read\"}");
-List<JsonNode> results = query.eval(input);
+Map<String, Object> input = Map.of("user", "alice", "action", "read");
+List<Object> results = query.eval(input);
 
-boolean allowed = results.get(0).get("result").asBoolean(); // true
+@SuppressWarnings("unchecked")
+boolean allowed = (Boolean) ((Map<String, Object>) results.get(0)).get("result"); // true
 ```
 
 ### Opa API (Full Runtime)
@@ -143,8 +142,8 @@ The Opa API provides a complete OPA runtime with plugin support. Best for produc
 #### Opa API with Programmatic Config
 
 ```java
-import io.github.open-policy-agent.Opa;
-import io.github.open-policy-agent.config.Config;
+import io.github.open_policy_agent.opa.Opa;
+import io.github.open_policy_agent.opa.config.Config;
 
 Config config = new Config()
     .addService(new Config.ServiceConfig()
@@ -170,7 +169,7 @@ boolean allowed = decision.getResult().asBoolean(); // true
 
 
 ```java
-import io.github.open-policy-agent.Opa;
+import io.github.open_policy_agent.opa.Opa;
 
 // Initialize with a YAML configuration file
 Opa opa = new Opa.Builder()
@@ -373,8 +372,8 @@ Engine.PreparedQuery query = engine.prepareForEvaluation()
     .build();
 
 // Evaluate many times
-for (JsonNode input : inputs) {
-    List<JsonNode> results = query.eval(input);
+for (Object input : inputs) {
+    List<Object> results = query.eval(input);
 }
 ```
 
@@ -419,7 +418,7 @@ Engine engine = new Engine.Builder()
 engine.refresh();
 
 // Next evaluation uses the new policy; data is already live
-List<JsonNode> results = engine.evaluate(ctx, input);
+List<Object> results = engine.evaluate(ctx, input);
 ```
 
 ### PreparedQuery behavior
@@ -441,7 +440,7 @@ Engine.PreparedQuery newPq = engine.prepareForEvaluation().build();
 Register custom builtin functions to extend policy capabilities:
 
 ```java
-import io.github.open-policy-agent.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.*;
 
 Engine engine = new Engine.Builder()
     .withBundleLoader(new FileSystemBundleLoader("authz", Path.of("/policy")))
@@ -470,8 +469,8 @@ allow if {
 OPA's `print()` builtin is supported for debugging policy evaluation. By default, print output is written via the `Logger` interface. Configure a custom `PrintHook` to redirect output:
 
 ```java
-import io.github.open-policy-agent.rego.PrintHook;
-import io.github.open-policy-agent.logging.Logger;
+import io.github.open_policy_agent.opa.rego.PrintHook;
+import io.github.open_policy_agent.opa.logging.Logger;
 
 // Use a Logger instance
 Logger myLogger = new Logger.StandardLogger();
@@ -503,12 +502,12 @@ When evaluated, this prints: `evaluating user: alice action: read`
 All SDK exceptions extend `OpaException` and support contextual information via `.withContext()`:
 
 ```java
-import io.github.open-policy-agent.OpaException;
-import io.github.open-policy-agent.PolicyNotFoundException;
-import io.github.open-policy-agent.EvaluationException;
+import io.github.open_policy_agent.opa.OpaException;
+import io.github.open_policy_agent.opa.ir.PolicyNotFoundException;
+import io.github.open_policy_agent.opa.ir.EvaluationException;
 
 try {
-    List<JsonNode> results = query.eval(input);
+    List<Object> results = query.eval(input);
 } catch (PolicyNotFoundException e) {
     System.err.println("Policy not found: " + e.getMessage());
 } catch (EvaluationException e) {
