@@ -1,8 +1,5 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.Operand;
@@ -14,24 +11,15 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * If the intermediate nodes in the Local referred to by the Path do not exist, they will be
  * created. When the WithStmt finishes, the Local is reset to its original value.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class WithStmt extends BaseStmt {
     public static final String StmtType = "WithStmt";
 
-    @JsonProperty("local")
     private int local;
 
-    @JsonProperty("path")
     private List<Integer> path;
 
-    @JsonProperty("value")
     private Operand value;
 
-    @JsonProperty("block")
     private Block block;
 
     public WithStmt() {

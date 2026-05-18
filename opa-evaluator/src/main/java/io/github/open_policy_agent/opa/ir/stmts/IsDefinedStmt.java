@@ -1,21 +1,12 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * IsDefinedStmt represents a check of whether a local variable is defined.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class IsDefinedStmt extends BaseStmt {
     public static final String StmtType = "IsDefinedStmt";
 
-    @JsonProperty("source")
     private int source;
 
     public IsDefinedStmt() {

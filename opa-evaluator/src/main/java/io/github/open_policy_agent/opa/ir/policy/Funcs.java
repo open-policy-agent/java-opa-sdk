@@ -1,14 +1,10 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 
 /** Funcs represents a collection of planned functions to include in the policy. */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Funcs {
-  @JsonProperty("funcs")
   private List<Func> funcs;
 
   public Funcs(List<Func> funcs) {

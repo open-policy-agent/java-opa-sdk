@@ -1,24 +1,14 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * MakeArrayStmt constructs a local variable that refers to an array value.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class MakeArrayStmt extends BaseStmt {
     public static final String StmtType = "MakeArrayStmt";
 
-    @JsonProperty("capacity")
     private int capacity;
 
-    @JsonProperty("target")
     private int target;
 
     public MakeArrayStmt(int capacity, int target) {

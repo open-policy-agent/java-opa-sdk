@@ -1,16 +1,11 @@
 package io.github.open_policy_agent.opa.ir.vals;
 
 import java.util.Objects;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Local represents a plan-scoped variable. */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class LocalVal implements Val {
-  @JsonProperty("type")
   private String type;
 
-  @JsonProperty("value")
   private int value;
 
   public LocalVal() {}

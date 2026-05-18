@@ -1,32 +1,20 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.Operand;
 
 /**
  * ObjectInsertStmt represents a dynamic insert operation of a key/value pair into an object.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class ObjectInsertStmt extends BaseStmt {
     public static final String StmtType = "ObjectInsertStmt";
 
-    @JsonProperty("key")
     private Operand key;
 
-    @JsonProperty("value")
     private Operand value;
 
-    @JsonProperty("object")
     private int object;
 
-    @JsonProperty("source")
     private int source;
 
     public ObjectInsertStmt() {

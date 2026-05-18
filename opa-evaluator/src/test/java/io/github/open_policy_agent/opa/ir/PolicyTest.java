@@ -79,7 +79,7 @@ class PolicyTest {
     Plans plans = new Plans(List.of(plan));
 
     Policy golden = new Policy();
-    golden.setStaticField(goldenStaticData);
+    golden.setStatic(goldenStaticData);
     golden.setFuncs(goldenFuncs);
     golden.setPlans(plans);
     assertEquals(golden, policy);
@@ -119,7 +119,7 @@ class PolicyTest {
             new StringConst("policy")));
 
     Policy golden = new Policy();
-    golden.setStaticField(goldenStaticData);
+    golden.setStatic(goldenStaticData);
     assertEquals(golden, policy);
   }
 
@@ -159,7 +159,7 @@ class PolicyTest {
                 new FunctionType(List.of(new NumberType(), new NumberType()), new NumberType()))));
 
     Policy golden = new Policy();
-    golden.setStaticField(goldenStatic);
+    golden.setStatic(goldenStatic);
     assertEquals(golden, policy);
   }
 
@@ -1062,7 +1062,7 @@ class PolicyTest {
     Policy policy = policyReader.read(Files.newInputStream(jsonFile.toPath()));
     assertNotNull(policy, "Policy should not be null");
     assertNull(policy.getFuncs());
-    assertNull(policy.getStaticField());
+    assertNull(policy.getStatic());
     assertNull(policy.getPlans());
   }
 }

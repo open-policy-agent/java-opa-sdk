@@ -1,13 +1,9 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.*;
 
 /** Represents a collection of named query plans to expose in the policy. */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Plans {
-  @JsonProperty("plans")
   private List<Plan> plans;
 
   private final Map<String, Plan> planMap;

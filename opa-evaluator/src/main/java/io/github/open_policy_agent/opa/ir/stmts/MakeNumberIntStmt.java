@@ -1,24 +1,14 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * MakeNumberIntStmt constructs a local variable that refers to an integer value.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class MakeNumberIntStmt extends BaseStmt {
     public static final String StmtType = "MakeNumberIntStmt";
 
-    @JsonProperty("value")
     private long value;
 
-    @JsonProperty("target")
     private int target;
 
     public MakeNumberIntStmt(long value, int target) {

@@ -1,18 +1,11 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import io.github.open_policy_agent.opa.ir.Frame;
 import io.github.open_policy_agent.opa.ir.IREvaluationContext;
 
 /**
  * NopStmt adds a nop instruction. Useful during development and debugging only.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class NopStmt extends BaseStmt {
     public static final String StmtType = "NopStmt";
 

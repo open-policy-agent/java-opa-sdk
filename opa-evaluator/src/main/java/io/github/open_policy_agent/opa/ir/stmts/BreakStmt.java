@@ -1,23 +1,14 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * BreakStmt represents a jump out of the current block. The index specifies how many blocks to jump
  * starting from zero (the current block). Execution will continue from the end of the block that is
  * jumped to.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class BreakStmt extends BaseStmt {
     public static final String StmtType = "BreakStmt";
 
-    @JsonProperty("index")
     private int index;
 
     public BreakStmt() {

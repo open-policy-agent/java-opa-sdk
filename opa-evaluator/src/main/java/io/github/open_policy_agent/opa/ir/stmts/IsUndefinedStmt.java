@@ -1,21 +1,12 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 /**
  * IsUndefinedStmt represents a check of whether a local variable is undefined.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class IsUndefinedStmt extends BaseStmt {
     public static final String StmtType = "IsUndefinedStmt";
 
-    @JsonProperty("source")
     private int source;
 
     public IsUndefinedStmt(int source) {

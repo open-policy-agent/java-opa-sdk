@@ -380,9 +380,9 @@ public class Engine {
       java.util.Set<String> missingFunctions = new java.util.LinkedHashSet<>();
 
       // Check all required builtin functions from the policy's static section
-      if (policy.getStaticField() != null && policy.getStaticField().getBuiltinFuncs() != null) {
+      if (policy.getStatic() != null && policy.getStatic().getBuiltinFuncs() != null) {
         for (io.github.open_policy_agent.opa.ir.policy.BuiltinFunc builtinFunc :
-            policy.getStaticField().getBuiltinFuncs()) {
+            policy.getStatic().getBuiltinFuncs()) {
           String funcName = builtinFunc.getName();
           if (!registry.hasBuiltIn(funcName)) {
             missingFunctions.add(funcName);

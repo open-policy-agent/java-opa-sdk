@@ -1,12 +1,8 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class StringConst {
-  @JsonProperty("value")
   private String value;
 
   public StringConst(String value) {

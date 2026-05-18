@@ -1,28 +1,16 @@
 package io.github.open_policy_agent.opa.ir.policy.types;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-//import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Objects;
 
 /** Function represents a function type. */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the parent's deserializer run again.
-@JsonDeserialize
 public class FunctionType implements Type {
   public static final String TypeMarker = "function";
 
-  @JsonProperty("args")
   private List<Type> args;
 
-  @JsonProperty("result")
   private Type result;
 
-  @JsonProperty("variadic")
   private Type variadic;
 
   public FunctionType() {}

@@ -1,16 +1,11 @@
 package io.github.open_policy_agent.opa.ir;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.policy.types.Type;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ObjectTypeStaticProperty {
-  @JsonProperty("key")
   private Object key;
 
-  @JsonProperty("value")
   private Type value;
 
   public ObjectTypeStaticProperty() {}

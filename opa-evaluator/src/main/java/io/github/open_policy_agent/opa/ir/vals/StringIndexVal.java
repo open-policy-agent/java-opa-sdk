@@ -1,18 +1,13 @@
 package io.github.open_policy_agent.opa.ir.vals;
 
 import java.util.Objects;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * StringIndex represents the index into the plan's list of constant strings of a constant string.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class StringIndexVal implements Val {
-  @JsonProperty("type")
   private String type;
 
-  @JsonProperty("value")
   private int value;
 
   public StringIndexVal() {}
