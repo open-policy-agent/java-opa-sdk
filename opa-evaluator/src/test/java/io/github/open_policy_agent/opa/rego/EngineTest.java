@@ -116,6 +116,35 @@ class EngineTest {
   }
 
   @Test
+  void preparedQuery_eval_acceptsNonDictionaryInput() throws IOException {
+    // OPA supports any input value type (string, number, array, etc.) — not just objects.
+    // This test loads a real policy and evaluates it with a top-level non-dict input to
+    // verify the engine doesn't force inputs through a RegoObject conversion.
+    File jsonFile =
+        new File(
+            Objects.requireNonNull(
+                    getClass()
+                        .getClassLoader()
+                        .getResource("ir/testdata/policy-verify-BreakStmt.json"))
+                .getFile());
+
+    Policy policy = policyReader.read(Files.newInputStream(jsonFile.toPath()));
+    Store store = new InMem();
+    Bundle bundle = new Bundle.Builder().withIrPolicy(policy).build();
+    store.write("policy", bundle, new RegoObject());
+
+    Engine engine = new Engine.Builder().withStore(store).withEntrypoint("policy").build();
+    Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
+
+    // String input (non-dict).
+    assertNotNull(pq.eval("hello"));
+    // List input (non-dict).
+    assertNotNull(pq.eval(List.of(1, 2, 3)));
+    // Number input (non-dict).
+    assertNotNull(pq.eval(42));
+  }
+
+  @Test
   void preparedQuery_builder_acceptsMetrics() {
     Store store = new InMem();
     Block block = new Block(List.of());

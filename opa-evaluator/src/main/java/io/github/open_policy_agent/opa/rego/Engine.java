@@ -63,6 +63,22 @@ import java.util.stream.Collectors;
  *     .build()
  *     .eval(input, MyResult.class);
  * }</pre>
+ *
+ * <p><b>JSON IO is pluggable.</b> The evaluator module has no direct dependency on a JSON
+ * library. JSON parsing and POJO introspection are provided by external modules through SPIs
+ * discovered via {@link java.util.ServiceLoader}:
+ *
+ * <ul>
+ *   <li>{@link io.github.open_policy_agent.opa.ir.PolicyReader} — parses {@code plan.json}
+ *   <li>{@link io.github.open_policy_agent.opa.bundle.BundleParser} — parses {@code data.json}
+ *       and {@code .manifest}
+ *   <li>{@link io.github.open_policy_agent.opa.mapper.AnnotationIntrospector} — reads JSON
+ *       binding annotations on user POJOs
+ * </ul>
+ *
+ * <p>The {@code opa-jackson} module supplies a Jackson-backed implementation of all three. To
+ * use a different JSON library, implement these SPIs and register them via {@code
+ * META-INF/services}.
  */
 public class Engine {
   private static final RegoMapper REGO_MAPPER = new RegoMapper();
@@ -135,7 +151,7 @@ public class Engine {
    * @return list of result objects (Map/List/primitive trees)
    */
   public List<Object> evaluate(EvaluationContext ctx, Object pojoInput) {
-    RegoObject regoInput = parsePojoInput(ctx, pojoInput);
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(null, ctx, regoInput);
     return marshalRawResults(ctx, results);
   }
@@ -151,21 +167,21 @@ public class Engine {
    * @return list of typed results
    */
   public <T> List<T> evaluate(EvaluationContext ctx, Object pojoInput, Class<T> resultType) {
-    RegoObject regoInput = parsePojoInput(ctx, pojoInput);
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(null, ctx, regoInput);
     return marshalPojoResults(ctx, results, resultType);
   }
 
   List<Object> evaluateWithPreparedPlan(
       PreparedPlan preparedPlan, EvaluationContext ctx, Object pojoInput) {
-    RegoObject regoInput = parsePojoInput(ctx, pojoInput);
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(preparedPlan, ctx, regoInput);
     return marshalRawResults(ctx, results);
   }
 
   <T> List<T> evaluateWithPreparedPlan(
       PreparedPlan preparedPlan, EvaluationContext ctx, Object pojoInput, Class<T> resultType) {
-    RegoObject regoInput = parsePojoInput(ctx, pojoInput);
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(preparedPlan, ctx, regoInput);
     return marshalPojoResults(ctx, results, resultType);
   }
@@ -186,10 +202,12 @@ public class Engine {
     }
   }
 
-  private RegoObject parsePojoInput(EvaluationContext ctx, Object input) {
+  private RegoValue parseInput(EvaluationContext ctx, Object input) {
     try {
       ctx.metrics.timer("rego_parse_pojo_input").start();
-      return REGO_MAPPER.toRegoObject(input);
+      // OPA supports any value type as input (object, array, string, etc.), so we
+      // convert via toRegoValue rather than forcing a top-level RegoObject.
+      return REGO_MAPPER.toRegoValue(input);
     } catch (Exception e) {
       throw new RuntimeException("Failed to parse POJO input", e);
     } finally {

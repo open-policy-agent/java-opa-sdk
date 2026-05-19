@@ -19,7 +19,6 @@ import io.github.open_policy_agent.opa.ast.types.RegoNumber;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoSet;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
-import io.github.open_policy_agent.opa.ast.types.RegoUndefined;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 
 import java.io.IOException;
@@ -34,6 +33,11 @@ import java.util.TreeMap;
  * Rego AST value types. Replaces the in-source {@code @JsonValue}/{@code @JsonAnySetter}
  * annotations the AST types previously carried, so the evaluator module has no Jackson
  * dependency.
+ *
+ * <p>Only a {@link RegoObject} deserializer is registered. Reading JSON directly into a typed
+ * Rego value (i.e. {@code mapper.readValue(json, T.class)}) is only used with {@link RegoObject}
+ * as the target type; the deserializer recursively builds nested {@link RegoValue}s of the right
+ * subtype from the JSON tree, so no separate per-type deserializer is required.
  *
  * <p>Usage:
  *
@@ -53,7 +57,6 @@ public class RegoValueModule extends SimpleModule {
     addSerializer(RegoDecimal.class, new RegoDecimalSerializer());
     addSerializer(RegoBoolean.class, new RegoBooleanSerializer());
     addSerializer(RegoNull.class, new RegoNullSerializer());
-    addSerializer(RegoUndefined.class, new RegoUndefinedSerializer());
     addSerializer(RegoArray.class, new RegoArraySerializer());
     addSerializer(RegoSet.class, new RegoSetSerializer());
     addSerializer(RegoObject.class, new RegoObjectSerializer());
@@ -98,14 +101,6 @@ public class RegoValueModule extends SimpleModule {
   private static final class RegoNullSerializer extends JsonSerializer<RegoNull> {
     @Override
     public void serialize(RegoNull v, JsonGenerator g, SerializerProvider p) throws IOException {
-      g.writeNull();
-    }
-  }
-
-  private static final class RegoUndefinedSerializer extends JsonSerializer<RegoUndefined> {
-    @Override
-    public void serialize(RegoUndefined v, JsonGenerator g, SerializerProvider p)
-        throws IOException {
       g.writeNull();
     }
   }

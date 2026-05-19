@@ -8,6 +8,7 @@ public abstract class BaseStmt implements Stmt {
     private int file; // index of source filename
     private int col; // column in the source file
     private int row; // row in the source file
+    private Location cachedLocation;
 
     protected BaseStmt(int file, int col, int row) {
         this.file = file;
@@ -23,12 +24,19 @@ public abstract class BaseStmt implements Stmt {
         this.file = file;
         this.col = col;
         this.row = row;
-        return new Location(file, col, row);
+        Location loc = new Location(file, col, row);
+        this.cachedLocation = loc;
+        return loc;
     }
 
     @Override
     public Location getLocation() {
-        return new Location(file, col, row);
+        Location loc = cachedLocation;
+        if (loc == null) {
+            loc = new Location(file, col, row);
+            cachedLocation = loc;
+        }
+        return loc;
     }
 
     public int getFile() {
@@ -37,6 +45,7 @@ public abstract class BaseStmt implements Stmt {
 
     public void setFile(int file) {
         this.file = file;
+        this.cachedLocation = null;
     }
 
     public int getCol() {
@@ -45,6 +54,7 @@ public abstract class BaseStmt implements Stmt {
 
     public void setCol(int col) {
         this.col = col;
+        this.cachedLocation = null;
     }
 
     public int getRow() {
@@ -53,6 +63,7 @@ public abstract class BaseStmt implements Stmt {
 
     public void setRow(int row) {
         this.row = row;
+        this.cachedLocation = null;
     }
 
   /** Helper method to extract local value from an Operand if it contains a LocalVal */

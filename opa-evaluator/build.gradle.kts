@@ -10,12 +10,8 @@ repositories {
 
 dependencies {
     // The evaluator has no direct dependency on a JSON library. JSON IO is provided by external
-    // modules through SPIs:
-    //   - PolicyReader (io.github.open_policy_agent.opa.ir)
-    //   - BundleParser (io.github.open_policy_agent.opa.bundle)
-    //   - AnnotationIntrospector (io.github.open_policy_agent.opa.mapper)
-    // The opa-jackson module supplies a Jackson-backed implementation of all three.
-
+    // modules through SPIs (see Engine javadoc); opa-jackson is one such implementation, used here
+    // for testing.
     testImplementation(project(":opa-jackson"))
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.17.0")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
