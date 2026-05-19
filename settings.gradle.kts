@@ -14,6 +14,7 @@ rootProject.name = "java-opa-sdk"
 
 include("opa-evaluator")
 include("opa-jackson")
+include("opa-gson")
 include("opa-services")
 include("opa-builtins")
 include("opa-builtins:opa-builtins-time")
