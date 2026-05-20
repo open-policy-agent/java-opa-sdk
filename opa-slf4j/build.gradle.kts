@@ -13,8 +13,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testImplementation("org.assertj:assertj-core:3.27.6")
     // Log4j 2 as the SLF4J backend for tests
-    testImplementation("org.apache.logging.log4j:log4j-core:2.24.3")
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.24.3")
+    testImplementation("org.apache.logging.log4j:log4j-core:2.26.0")
+    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.26.0")
 }
 
 java {
