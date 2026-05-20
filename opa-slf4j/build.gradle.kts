@@ -8,7 +8,7 @@ repositories {
 
 dependencies {
     api(project(":opa-evaluator"))
-    implementation("org.slf4j:slf4j-api:2.0.16")
+    implementation("org.slf4j:slf4j-api:2.0.18")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testImplementation("org.assertj:assertj-core:3.27.6")
