@@ -21,7 +21,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
     testImplementation("org.assertj:assertj-core:3.27.6")
-    testImplementation("org.mockito:mockito-core:5.16.1")
+    testImplementation("org.mockito:mockito-core:5.23.0")
     testImplementation(project(":opa-jackson"))
 }
 

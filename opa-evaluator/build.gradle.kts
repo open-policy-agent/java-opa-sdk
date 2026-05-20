@@ -19,7 +19,7 @@ dependencies {
     testImplementation("org.json:json:20250517")
     testImplementation("org.assertj:assertj-core:3.27.6")
     testImplementation("org.skyscreamer:jsonassert:1.5.3")
-    testImplementation("org.mockito:mockito-core:5.16.1")
+    testImplementation("org.mockito:mockito-core:5.23.0")
     testImplementation(project(":opa-builtins"))
 }
 
