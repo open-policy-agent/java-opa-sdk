@@ -51,7 +51,7 @@ jobs:
 
   github-release:
     name: Create GitHub Release
-    needs: test-and-lint
+    needs: publish-maven-central
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:

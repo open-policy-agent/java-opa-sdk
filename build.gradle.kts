@@ -56,6 +56,10 @@ subprojects {
                         connection.set("scm:git:git://github.com/open-policy-agent/java-opa-sdk.git")
                         developerConnection.set("scm:git:ssh://github.com/open-policy-agent/java-opa-sdk.git")
                     }
+                    issueManagement {
+                        system.set("GitHub")
+                        url.set("https://github.com/open-policy-agent/java-opa-sdk/issues")
+                    }
                 }
             }
         }
