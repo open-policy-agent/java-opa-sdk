@@ -1,4 +1,4 @@
-# java-opa-sdk
+# Java OPA SDK
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.open-policy-agent/opa-services.svg?label=Maven%20Central)](https://central.sonatype.com/namespace/io.github.open-policy-agent)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
