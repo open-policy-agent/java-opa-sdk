@@ -91,7 +91,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Generate POMs
         run: ./gradlew generatePomFileForMavenPublication
       # Maven's built-in model validator catches the rule that bit us at v0.1.0:
