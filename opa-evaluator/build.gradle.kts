@@ -16,7 +16,7 @@ dependencies {
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
-    testImplementation("org.json:json:20250517")
+    testImplementation("org.json:json:20260522")
     testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation("org.skyscreamer:jsonassert:1.5.3")
     testImplementation("org.mockito:mockito-core:5.23.0")
