@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.*;
 import io.github.open_policy_agent.opa.ir.stmts.CallStmt;
 import io.github.open_policy_agent.opa.ir.stmts.Stmt;
+import io.github.open_policy_agent.opa.ir.stmts.Stmt.STMT_TYPE;
 
 /**
  * Simple implementation of StatementProfiler that tracks statement execution time and frequency.
@@ -66,7 +67,7 @@ public class SimpleStatementProfiler implements StatementProfiler {
    * @return a human-readable name for the statement
    */
   private String getStatementName(Stmt stmt) {
-    if ("CallStmt".equals(stmt.getType())) {
+    if (stmt.getType() == STMT_TYPE.CALL) {
       return ((CallStmt) stmt).getFunc();
     } else {
       return stmt.getType().getTypeName();
