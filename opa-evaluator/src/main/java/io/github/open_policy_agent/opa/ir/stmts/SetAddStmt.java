@@ -1,26 +1,16 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.Operand;
 
 /**
  * SetAddStmt represents a dynamic add operation of an element into a set.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class SetAddStmt extends BaseStmt {
     public static final String StmtType = "SetAddStmt";
 
-    @JsonProperty("value")
     private Operand value;
 
-    @JsonProperty("set")
     private int set;
 
     public SetAddStmt() {

@@ -1,23 +1,14 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Static {
-  @JsonProperty("strings")
-  @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private List<StringConst> strings;
 
-  @JsonProperty("builtin_funcs")
-  @JsonInclude(value = JsonInclude.Include.NON_NULL)
+  // JSON key is snake_case "builtin_funcs"; the mapper's SNAKE_CASE naming strategy maps it.
   private List<BuiltinFunc> builtinFuncs;
 
-  @JsonProperty("files")
-  @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private List<StringConst> files;
 
   public Static() {}

@@ -1,28 +1,24 @@
 package io.github.open_policy_agent.opa.ir;
 
 import java.util.Objects;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.open_policy_agent.opa.ir.vals.Val;
 
 /** Operand represents a value that a statement operates on. */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Operand {
-  @JsonProperty("value")
-  private Val val;
+  private Val value;
 
-  public Operand(Val val) {
-    this.val = val;
+  public Operand(Val value) {
+    this.value = value;
   }
 
   public Operand() {}
 
-  public Val getVal() {
-    return val;
+  public Val getValue() {
+    return value;
   }
 
-  public void setVal(Val val) {
-    this.val = val;
+  public void setValue(Val value) {
+    this.value = value;
   }
 
   @Override
@@ -32,16 +28,16 @@ public class Operand {
 
     Operand operand = (Operand) o;
 
-    return Objects.equals(val, operand.val);
+    return Objects.equals(value, operand.value);
   }
 
   @Override
   public int hashCode() {
-    return val != null ? val.hashCode() : 0;
+    return value != null ? value.hashCode() : 0;
   }
 
   @Override
   public String toString() {
-    return "Operand{" + "val=" + val + '}';
+    return "Operand{" + "value=" + value + '}';
   }
 }

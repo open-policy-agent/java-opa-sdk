@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.metrics;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.time.Duration;
 import java.util.*;
 
@@ -31,7 +30,6 @@ public class SimpleMetrics implements Metrics {
               end = System.nanoTime();
             }
 
-            @JsonValue
             @Override
             public Duration value() {
               return Duration.ofNanos(end - start);

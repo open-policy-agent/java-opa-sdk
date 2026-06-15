@@ -17,6 +17,7 @@
 build/
 target/
 out/
+.out/
 
 # Gradle
 .gradle/
@@ -58,3 +59,4 @@ nb-configuration.xml
 # OS files
 .DS_Store
 Thumbs.db
+

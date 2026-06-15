@@ -1,7 +1,5 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 
@@ -10,15 +8,12 @@ import java.util.Objects;
  *
  * <p>Plan execution stops when a return statement is reached. Blocks are executed in-order.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Plan {
 
   private int maxLocal = Integer.MIN_VALUE;
 
-  @JsonProperty("name")
   private String name;
 
-  @JsonProperty("blocks")
   private List<Block> blocks;
 
   public Plan(String name, List<Block> blocks) {

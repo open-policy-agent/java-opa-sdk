@@ -1,93 +1,39 @@
 package io.github.open_policy_agent.opa.tracing;
 
-import java.time.Duration;
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.Map;
 import io.github.open_policy_agent.opa.ir.Location;
 
-public class Profiler {
-  private final Map<Loc, EvalTotal> durations = new HashMap<>();
+/**
+ * Hook that receives a callback for every IR statement executed during policy evaluation, keyed by
+ * the statement's source location.
+ *
+ * <p>Two callbacks are made per statement: {@link #addStart()} fires when the statement is about
+ * to evaluate, {@link #addEntry(Location, long)} fires when it completes (with its wall-clock
+ * duration). Implementations can use either or both, e.g.
+ *
+ * <ul>
+ *   <li>{@link DurationProfiler} — records exclusive time per source location for time-by-line
+ *       profiling.
+ *   <li>{@link CoverageProfiler} — records the set of source rows that executed for line-coverage
+ *       reporting.
+ * </ul>
+ *
+ * <p>{@link io.github.open_policy_agent.opa.rego.EvaluationContext} accepts multiple profilers via
+ * repeated calls to {@code withProfiler}; each profiler receives every callback in registration
+ * order.
+ */
+public interface Profiler {
 
-  private final Deque<Duration> backoffs = new ArrayDeque<>();
+  /**
+   * Called when a statement is about to begin evaluation. {@link DurationProfiler} uses this to
+   * push a backoff frame for exclusive timing; coverage-style implementations can ignore it.
+   */
+  void addStart();
 
-  public void addStart() {
-    backoffs.push(Duration.ZERO);
-  }
-
-  public void addEntry(Location location, long duration) {
-    // need to back off all the child times so just the actual statement time is reported
-    Duration backoff = backoffs.pop();
-    if (!backoffs.isEmpty()) {
-      Duration adjusted = backoffs.pop().plus(Duration.ofNanos(duration));
-      backoffs.push(adjusted);
-    }
-    Duration myTime = Duration.ofNanos(duration).minus(backoff);
-    Loc loc = Loc.fromLocation(location);
-    if (!durations.containsKey(loc)) {
-      durations.put(loc, new EvalTotal());
-    }
-    durations.put(loc, durations.get(loc).plus(myTime));
-  }
-
-  public Map<Loc, EvalTotal> getDurations() {
-    return durations;
-  }
-
-  public static final class Loc {
-    private final int file;
-    private final int row;
-
-    Loc(int file, int row) {
-      this.file = file;
-      this.row = row;
-    }
-
-    static Loc fromLocation(Location location) {
-      return new Loc(location.getFile(), location.getRow());
-    }
-
-    public int getFile() {
-      return file;
-    }
-
-    public int getRow() {
-      return row;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (!(o instanceof Loc)) return false;
-
-      Loc loc = (Loc) o;
-      return file == loc.file && row == loc.row;
-    }
-
-    @Override
-    public int hashCode() {
-      int result = file;
-      result = 31 * result + row;
-      return result;
-    }
-  }
-
-  public static final class EvalTotal {
-    private int count = 0;
-    private Duration totalDuration = Duration.ZERO;
-
-    public EvalTotal plus(Duration duration) {
-      count++;
-      totalDuration = totalDuration.plus(duration);
-      return this;
-    }
-
-    public int getCount() {
-      return count;
-    }
-
-    public Duration getTotalDuration() {
-      return totalDuration;
-    }
-  }
+  /**
+   * Called when a statement has finished evaluating.
+   *
+   * @param location the statement's source location
+   * @param duration wall-clock duration of the statement, in nanoseconds
+   */
+  void addEntry(Location location, long duration);
 }

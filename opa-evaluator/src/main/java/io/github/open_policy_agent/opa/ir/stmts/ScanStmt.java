@@ -1,8 +1,5 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Arrays;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.policy.Block;
@@ -11,24 +8,15 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * ScanStmt represents a linear scan over a composite value. The source may be a scalar in which
  * case the block will never execute.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class ScanStmt extends BaseStmt {
     public static final String StmtType = "ScanStmt";
 
-    @JsonProperty("source")
     private int source;
 
-    @JsonProperty("key")
     private int key;
 
-    @JsonProperty("value")
     private int value;
 
-    @JsonProperty("block")
     private Block block;
 
     public ScanStmt() {

@@ -4,11 +4,11 @@ import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ir.PolicyReader;
 import io.github.open_policy_agent.opa.storage.Store;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ServiceLoader;
 
 /**
@@ -34,15 +34,42 @@ import java.util.ServiceLoader;
  * }</pre>
  */
 public class BundleAssembler {
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-  static final PolicyReader POLICY_READER =
-      ServiceLoader.load(PolicyReader.class)
-          .findFirst()
-          .orElseThrow(
-              () ->
-                  new IllegalStateException(
-                      "No PolicyReader implementation found on the classpath. "
-                          + "Add a module that provides PolicyReader (e.g. opa-jackson)."));
+  static final PolicyReader POLICY_READER = loadSingleton(PolicyReader.class);
+
+  static final BundleParser BUNDLE_PARSER = loadSingleton(BundleParser.class);
+
+  /**
+   * Loads exactly one implementation of the given SPI from the classpath. Throws if zero or more
+   * than one implementation is registered, since either case produces an ambiguous runtime.
+   */
+  private static <T> T loadSingleton(Class<T> spi) {
+    List<T> impls = new ArrayList<>();
+    for (T impl : ServiceLoader.load(spi)) {
+      impls.add(impl);
+    }
+    if (impls.isEmpty()) {
+      throw new IllegalStateException(
+          "No "
+              + spi.getSimpleName()
+              + " implementation found on the classpath. Add a module that provides "
+              + spi.getSimpleName()
+              + " (e.g. opa-jackson).");
+    }
+    if (impls.size() > 1) {
+      StringBuilder names = new StringBuilder();
+      for (int i = 0; i < impls.size(); i++) {
+        if (i > 0) names.append(", ");
+        names.append(impls.get(i).getClass().getName());
+      }
+      throw new IllegalStateException(
+          "Multiple "
+              + spi.getSimpleName()
+              + " implementations found on the classpath: "
+              + names
+              + ". Only one provider may be registered.");
+    }
+    return impls.get(0);
+  }
 
   private final Bundle.Builder builder = new Bundle.Builder();
   private RegoObject data;
@@ -64,8 +91,7 @@ public class BundleAssembler {
    * @param in the data.json input stream
    */
   public void loadData(String path, InputStream in) throws IOException {
-    JsonNode root = MAPPER.readTree(in);
-    RegoObject parsed = MAPPER.treeToValue(root, RegoObject.class);
+    RegoObject parsed = BUNDLE_PARSER.parseData(in);
 
     if (data == null) {
       data = new RegoObject();
@@ -101,7 +127,7 @@ public class BundleAssembler {
 
   /** Load bundle metadata from a {@code .manifest} stream. */
   public void loadManifest(InputStream in) throws IOException {
-    builder.withManifest(MAPPER.readTree(in));
+    builder.withManifest(BUNDLE_PARSER.parseManifest(in));
   }
 
   /** Add a Rego source file by its relative path. */

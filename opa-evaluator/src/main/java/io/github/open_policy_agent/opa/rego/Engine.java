@@ -15,8 +15,6 @@ import io.github.open_policy_agent.opa.storage.InMem;
 import io.github.open_policy_agent.opa.storage.Store;
 import io.github.open_policy_agent.opa.tracing.Profiler;
 import io.github.open_policy_agent.opa.tracing.QueryTracer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,14 +58,29 @@ import java.util.stream.Collectors;
  *     .withEntrypoint("example/allow")
  *     .build();
  *
- * JsonNode input = mapper.readTree("{\"user\": \"alice\"}");
- * List<JsonNode> results = engine.prepareForEvaluation()
+ * Map<String, Object> input = Map.of("user", "alice");
+ * List<MyResult> results = engine.prepareForEvaluation()
  *     .build()
- *     .eval(input);
+ *     .eval(input, MyResult.class);
  * }</pre>
+ *
+ * <p><b>JSON IO is pluggable.</b> The evaluator module has no direct dependency on a JSON
+ * library. JSON parsing and POJO introspection are provided by external modules through SPIs
+ * discovered via {@link java.util.ServiceLoader}:
+ *
+ * <ul>
+ *   <li>{@link io.github.open_policy_agent.opa.ir.PolicyReader} — parses {@code plan.json}
+ *   <li>{@link io.github.open_policy_agent.opa.bundle.BundleParser} — parses {@code data.json}
+ *       and {@code .manifest}
+ *   <li>{@link io.github.open_policy_agent.opa.mapper.AnnotationIntrospector} — reads JSON
+ *       binding annotations on user POJOs
+ * </ul>
+ *
+ * <p>The {@code opa-jackson} module supplies a Jackson-backed implementation of all three. To
+ * use a different JSON library, implement these SPIs and register them via {@code
+ * META-INF/services}.
  */
 public class Engine {
-  private static final ObjectMapper MAPPER = new ObjectMapper();
   private static final RegoMapper REGO_MAPPER = new RegoMapper();
 
   private volatile Evaluator evaluator;
@@ -129,47 +142,46 @@ public class Engine {
   }
 
   /**
-   * Evaluate with a JsonNode input and return JsonNode results. Uses the engine's current policy
-   * (updated by {@link #refresh()}) and reads data live from the store.
+   * Evaluate with a POJO input and return raw result objects. Each result is the full
+   * evaluation output (typically a single-key map wrapping the decision). Use this overload
+   * when the caller needs the wrapper structure (e.g., for re-serialization).
    *
    * @param ctx the evaluation context
-   * @param input the input as a Jackson JsonNode
-   * @return list of JsonNode results
+   * @param pojoInput the input as a POJO (any JavaBean-compatible object, Map, List, etc.)
+   * @return list of result objects (Map/List/primitive trees)
    */
-  public List<JsonNode> evaluate(EvaluationContext ctx, JsonNode input) {
-    RegoObject regoInput = parseJsonInput(ctx, input);
+  public List<Object> evaluate(EvaluationContext ctx, Object pojoInput) {
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(null, ctx, regoInput);
-    return marshalJsonResults(ctx, results);
+    return marshalRawResults(ctx, results);
   }
 
   /**
-   * Evaluate with a POJO input and return typed results. This bypasses intermediate JsonNode
-   * allocations by converting the POJO directly to RegoValue and the results directly to the target
-   * type. Uses the engine's current policy (updated by {@link #refresh()}) and reads data live from
-   * the store.
+   * Evaluate with a POJO input and return typed results. Uses the engine's current policy
+   * (updated by {@link #refresh()}) and reads data live from the store.
    *
    * @param <T> the result type
    * @param ctx the evaluation context
-   * @param pojoInput the input as a POJO (any JavaBean-compatible object)
+   * @param pojoInput the input as a POJO (any JavaBean-compatible object, Map, List, etc.)
    * @param resultType the class of the desired result type
    * @return list of typed results
    */
   public <T> List<T> evaluate(EvaluationContext ctx, Object pojoInput, Class<T> resultType) {
-    RegoObject regoInput = parsePojoInput(ctx, pojoInput);
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(null, ctx, regoInput);
     return marshalPojoResults(ctx, results, resultType);
   }
 
-  List<JsonNode> evaluateWithPreparedPlan(
-      PreparedPlan preparedPlan, EvaluationContext ctx, JsonNode input) {
-    RegoObject regoInput = parseJsonInput(ctx, input);
+  List<Object> evaluateWithPreparedPlan(
+      PreparedPlan preparedPlan, EvaluationContext ctx, Object pojoInput) {
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(preparedPlan, ctx, regoInput);
-    return marshalJsonResults(ctx, results);
+    return marshalRawResults(ctx, results);
   }
 
   <T> List<T> evaluateWithPreparedPlan(
       PreparedPlan preparedPlan, EvaluationContext ctx, Object pojoInput, Class<T> resultType) {
-    RegoObject regoInput = parsePojoInput(ctx, pojoInput);
+    RegoValue regoInput = parseInput(ctx, pojoInput);
     RegoValue[] results = evaluateCore(preparedPlan, ctx, regoInput);
     return marshalPojoResults(ctx, results, resultType);
   }
@@ -190,38 +202,16 @@ public class Engine {
     }
   }
 
-  private RegoObject parseJsonInput(EvaluationContext ctx, JsonNode input) {
-    try {
-      ctx.metrics.timer("rego_parse_json_input").start();
-      return MAPPER.treeToValue(input, RegoObject.class);
-    } catch (Exception e) {
-      throw new RuntimeException("Failed to parse JsonNode input", e);
-    } finally {
-      ctx.metrics.timer("rego_parse_json_input").stop();
-    }
-  }
-
-  private RegoObject parsePojoInput(EvaluationContext ctx, Object input) {
+  private RegoValue parseInput(EvaluationContext ctx, Object input) {
     try {
       ctx.metrics.timer("rego_parse_pojo_input").start();
-      return REGO_MAPPER.toRegoObject(input);
+      // OPA supports any value type as input (object, array, string, etc.), so we
+      // convert via toRegoValue rather than forcing a top-level RegoObject.
+      return REGO_MAPPER.toRegoValue(input);
     } catch (Exception e) {
       throw new RuntimeException("Failed to parse POJO input", e);
     } finally {
       ctx.metrics.timer("rego_parse_pojo_input").stop();
-    }
-  }
-
-  private List<JsonNode> marshalJsonResults(EvaluationContext ctx, RegoValue[] results) {
-    try {
-      ctx.metrics.timer("rego_marshal_json_results").start();
-      List<JsonNode> jsonResults = new ArrayList<>(results.length);
-      for (RegoValue result : results) {
-        jsonResults.add(MAPPER.valueToTree(result));
-      }
-      return jsonResults;
-    } finally {
-      ctx.metrics.timer("rego_marshal_json_results").stop();
     }
   }
 
@@ -239,6 +229,19 @@ public class Engine {
       return typedResults;
     } finally {
       ctx.metrics.timer("rego_marshal_pojo_results").stop();
+    }
+  }
+
+  private List<Object> marshalRawResults(EvaluationContext ctx, RegoValue[] results) {
+    try {
+      ctx.metrics.timer("rego_marshal_raw_results").start();
+      List<Object> rawResults = new ArrayList<>(results.length);
+      for (RegoValue result : results) {
+        rawResults.add(REGO_MAPPER.fromRegoValue(result, Object.class));
+      }
+      return rawResults;
+    } finally {
+      ctx.metrics.timer("rego_marshal_raw_results").stop();
     }
   }
 
@@ -380,9 +383,9 @@ public class Engine {
       java.util.Set<String> missingFunctions = new java.util.LinkedHashSet<>();
 
       // Check all required builtin functions from the policy's static section
-      if (policy.getStaticField() != null && policy.getStaticField().getBuiltinFuncs() != null) {
+      if (policy.getStatic() != null && policy.getStatic().getBuiltinFuncs() != null) {
         for (io.github.open_policy_agent.opa.ir.policy.BuiltinFunc builtinFunc :
-            policy.getStaticField().getBuiltinFuncs()) {
+            policy.getStatic().getBuiltinFuncs()) {
           String funcName = builtinFunc.getName();
           if (!registry.hasBuiltIn(funcName)) {
             missingFunctions.add(funcName);
@@ -464,19 +467,19 @@ public class Engine {
     }
 
     /**
-     * Evaluate with a JsonNode input and return JsonNode results. Uses the policy captured at
-     * preparation time and reads data live from the store.
+     * Evaluate with a POJO input and return raw result objects. Each result is the full
+     * evaluation output (typically a single-key map wrapping the decision). Use this overload
+     * when the caller needs the wrapper structure.
      *
-     * @param input the input as a Jackson JsonNode
-     * @return list of JsonNode results
+     * @param input the input as a POJO (any JavaBean-compatible object, Map, List, etc.)
+     * @return list of result objects (Map/List/primitive trees)
      */
-    public List<JsonNode> eval(JsonNode input) {
+    public List<Object> eval(Object input) {
       return engine.evaluateWithPreparedPlan(preparedPlan, contextBuilder.build(), input);
     }
 
     /**
-     * Evaluate with a POJO input and return typed results. This is the most efficient
-     * evaluation path — it bypasses all intermediate JsonNode allocations. Uses the policy captured
+     * Evaluate with a POJO input and return typed results. Uses the policy captured
      * at preparation time and reads data live from the store.
      *
      * <pre>{@code
@@ -484,7 +487,7 @@ public class Engine {
      * }</pre>
      *
      * @param <T> the result type
-     * @param input the input as a POJO (any JavaBean-compatible object)
+     * @param input the input as a POJO (any JavaBean-compatible object, Map, List, etc.)
      * @param resultType the class of the desired result type
      * @return list of typed results
      */
@@ -519,7 +522,7 @@ public class Engine {
       private QueryTracer tracer;
       private Metrics metrics;
       private StatementProfiler statementProfiler;
-      private Profiler profiler;
+      private final List<Profiler> profilers = new ArrayList<>();
       private String entrypoint;
       private PreparedPlan preparedPlan;
       private PrintHook printHook;
@@ -572,14 +575,16 @@ public class Engine {
       }
 
       /**
-       * Enable profiling. The profiler provides detailed performance information about which
-       * parts of the policy took the most time.
+       * Register a profiler. Profilers receive a callback for every executed statement, keyed by
+       * source location, and can be used for time-by-line profiling, line coverage, or any other
+       * location-based analysis. May be called multiple times to register more than one profiler;
+       * each receives every callback in registration order.
        *
        * @param profiler the profiler implementation
        * @return this builder
        */
       public Builder withProfiler(Profiler profiler) {
-        this.profiler = profiler;
+        this.profilers.add(profiler);
         return this;
       }
 
@@ -625,8 +630,8 @@ public class Engine {
         if (statementProfiler != null) {
           contextBuilder.withStatementProfiler(statementProfiler);
         }
-        if (profiler != null) {
-          contextBuilder.withProfiler(profiler);
+        for (Profiler p : profilers) {
+          contextBuilder.withProfiler(p);
         }
         if (entrypoint != null) {
           contextBuilder.withEntrypoint(entrypoint);

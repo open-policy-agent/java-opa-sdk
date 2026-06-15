@@ -45,7 +45,7 @@ import io.github.open_policy_agent.opa.storage.Store;
  */
 class EngineEvaluateTest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
   private static final String ENTRYPOINT = "authz/allow";
@@ -100,7 +100,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("alice"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("alice"));
 
       assertTrue(resultBoolean(results));
     }
@@ -110,7 +110,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("kurt"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("kurt"));
 
       assertTrue(resultBoolean(results));
     }
@@ -120,7 +120,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"admin\":{\"privileged\":true}}}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("bob", "admin"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("bob", "admin"));
 
       assertTrue(resultBoolean(results));
     }
@@ -130,7 +130,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("bob"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("bob"));
 
       assertFalse(resultBoolean(results));
     }
@@ -140,7 +140,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"basic\":{}}}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("bob", "basic"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("bob", "basic"));
 
       assertFalse(resultBoolean(results));
     }
@@ -150,7 +150,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"admin\":{\"privileged\":true}}}");
       EvaluationContext ctx = new EvaluationContext.Builder().withEntrypoint(ENTRYPOINT).build();
 
-      List<JsonNode> results = engine.evaluate(ctx, input("alice", "admin"));
+      List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, input("alice", "admin"));
 
       assertTrue(resultBoolean(results));
     }
@@ -164,7 +164,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("alice"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("alice"));
 
       assertTrue(resultBoolean(results));
     }
@@ -174,7 +174,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("bob"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("bob"));
 
       assertFalse(resultBoolean(results));
     }
@@ -185,7 +185,7 @@ class EngineEvaluateTest {
           buildEngine("{\"groups\":{\"super\":{\"privileged\":true}}}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("bob", "super"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("bob", "super"));
 
       assertTrue(resultBoolean(results));
     }
@@ -195,7 +195,7 @@ class EngineEvaluateTest {
       Engine engine = buildEngine("{\"groups\":{\"basic\":{}}}");
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(input("bob", "basic"));
+      List<JsonNode> results = JsonNodeBridge.eval(pq, input("bob", "basic"));
 
       assertFalse(resultBoolean(results));
     }
@@ -227,7 +227,7 @@ class EngineEvaluateTest {
       Engine engine = new Engine.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
       Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-      List<JsonNode> results = pq.eval(inputJson);
+      List<JsonNode> results = JsonNodeBridge.eval(pq, inputJson);
 
       // CLI input has id=alicex (not alice/kurt) but groups=["super"]
       // data has groups.super.privileged=true, so it should be allowed via group rule
@@ -340,6 +340,118 @@ class EngineEvaluateTest {
       public void setGroups(List<String> groups) {
         this.groups = groups;
       }
+    }
+  }
+
+  /**
+   * Tests {@link Engine.PreparedQuery#eval(Object, Class)} against a policy that returns a
+   * structured object so the result type isn't just a primitive.
+   */
+  @Nested
+  class StructuredResultEval {
+
+    private static final String DECISION_ENTRYPOINT = "authz/decision";
+
+    private Engine buildDecisionEngine() throws IOException {
+      File policyFile =
+          new File(
+              Objects.requireNonNull(
+                      EngineEvaluateTest.class
+                          .getClassLoader()
+                          .getResource("engine/testdata/decision-policy.json"))
+                  .getFile());
+      Policy decisionPolicy = POLICY_READER.read(Files.newInputStream(policyFile.toPath()));
+      Store store = new InMem();
+      Bundle bundle = new Bundle.Builder().withIrPolicy(decisionPolicy).build();
+      store.write(DECISION_ENTRYPOINT, bundle, new RegoObject());
+      return new Engine.Builder().withStore(store).withEntrypoint(DECISION_ENTRYPOINT).build();
+    }
+
+    @Test
+    void preparedQuery_pojoResultType_aliceAllowed() throws IOException {
+      Engine engine = buildDecisionEngine();
+      Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
+
+      AuthzInput input = new AuthzInput();
+      input.setUser(new AuthzInput.User("alice", List.of()));
+
+      List<Decision> results = pq.eval(input, Decision.class);
+
+      assertNotNull(results);
+      assertFalse(results.isEmpty());
+      Decision decision = results.get(0);
+      assertTrue(decision.isAllowed());
+      assertTrue("alice".equals(decision.getUserId()));
+      assertTrue("matched-user-id".equals(decision.getReason()));
+    }
+
+    @Test
+    void preparedQuery_pojoResultType_unknownUserDenied() throws IOException {
+      Engine engine = buildDecisionEngine();
+      Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
+
+      AuthzInput input = new AuthzInput();
+      input.setUser(new AuthzInput.User("eve", List.of()));
+
+      List<Decision> results = pq.eval(input, Decision.class);
+
+      assertNotNull(results);
+      assertFalse(results.isEmpty());
+      Decision decision = results.get(0);
+      assertFalse(decision.isAllowed());
+      assertTrue("eve".equals(decision.getUserId()));
+      assertTrue("denied".equals(decision.getReason()));
+    }
+
+    @Test
+    void directEvaluate_pojoResultType_aliceAllowed() throws IOException {
+      Engine engine = buildDecisionEngine();
+      EvaluationContext ctx =
+          new EvaluationContext.Builder().withEntrypoint(DECISION_ENTRYPOINT).build();
+
+      AuthzInput input = new AuthzInput();
+      input.setUser(new AuthzInput.User("alice", List.of()));
+
+      List<Decision> results = engine.evaluate(ctx, input, Decision.class);
+
+      assertNotNull(results);
+      assertFalse(results.isEmpty());
+      assertTrue(results.get(0).isAllowed());
+    }
+  }
+
+  public static class Decision {
+    private boolean allowed;
+
+    @com.fasterxml.jackson.annotation.JsonProperty("user_id")
+    private String userId;
+
+    private String reason;
+
+    public Decision() {}
+
+    public boolean isAllowed() {
+      return allowed;
+    }
+
+    public void setAllowed(boolean allowed) {
+      this.allowed = allowed;
+    }
+
+    public String getUserId() {
+      return userId;
+    }
+
+    public void setUserId(String userId) {
+      this.userId = userId;
+    }
+
+    public String getReason() {
+      return reason;
+    }
+
+    public void setReason(String reason) {
+      this.reason = reason;
     }
   }
 }

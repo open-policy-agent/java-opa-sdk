@@ -1,22 +1,16 @@
 package io.github.open_policy_agent.opa.ir;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.open_policy_agent.opa.ir.stmts.LocationStmt;
 
 /**
  * Records the file index, and the row and column inside that file that a statement can be connected
  * to.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Location implements LocationStmt {
-  @JsonProperty("file")
   private int file; // index of source filename where this statement originated
 
-  @JsonProperty("col")
   private int col; // column in the source file where this statement originated
 
-  @JsonProperty("row")
   private int row; // row in the source file where this statement originated
 
   public Location(int file, int col, int row) {

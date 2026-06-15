@@ -1,23 +1,15 @@
 package io.github.open_policy_agent.opa.ir.policy.types;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Objects;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the parent's deserializer run again.
-@JsonDeserialize
 public class ArrayType implements Type {
   public static final String TypeMarker = "array";
 
-  @JsonProperty("static")
+  // Field is named "staticItems" because "static" is a Java reserved word.
+  // Accessors are named getStatic / setStatic so Jackson auto-detects the JSON "static" key.
   private List<Type> staticItems;
 
-  @JsonProperty("dynamic")
   private Type dynamic;
 
   public ArrayType() {}
@@ -32,11 +24,11 @@ public class ArrayType implements Type {
     return TypeMarker;
   }
 
-  public List<Type> getStaticItems() {
+  public List<Type> getStatic() {
     return staticItems;
   }
 
-  public void setStaticItems(List<Type> staticItems) {
+  public void setStatic(List<Type> staticItems) {
     this.staticItems = staticItems;
   }
 

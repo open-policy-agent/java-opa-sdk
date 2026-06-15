@@ -102,9 +102,9 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 Implement the `BuiltinProvider` interface and register via ServiceLoader:
 
 ```java
-import io.github.openpolicyagent.opa.ast.builtin.BuiltinProvider;
-import io.github.openpolicyagent.opa.rego.EvaluationContext;
-import io.github.openpolicyagent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
+import io.github.open_policy_agent.opa.rego.EvaluationContext;
+import io.github.open_policy_agent.opa.ast.types.*;
 import java.util.Map;
 import java.util.function.BiFunction;
 
@@ -121,7 +121,7 @@ public class MyBuiltinProvider implements BuiltinProvider {
 }
 ```
 
-Register in `META-INF/services/io.github.openpolicyagent.opa.ast.builtin.BuiltinProvider`:
+Register in `META-INF/services/io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider`:
 
 ```
 com.example.MyBuiltinProvider

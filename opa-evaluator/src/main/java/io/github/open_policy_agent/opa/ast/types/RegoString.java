@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.math.BigInteger;
 import java.util.Objects;
@@ -12,7 +11,6 @@ public class RegoString implements RegoValue {
         this.value = value;
     }
 
-    @JsonValue
     public String getValue() {
         return value;
     }

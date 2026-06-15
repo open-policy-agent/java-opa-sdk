@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.mapper;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -9,8 +8,9 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Metadata for a {@code @JsonCreator} constructor or static factory method: the callable itself plus
- * the ordered list of parameter names and types.
+ * Metadata for an annotated creator constructor or static factory method: the callable itself plus
+ * the ordered list of parameter names and types. Annotation-driven name resolution goes through
+ * the {@link AnnotationIntrospector} SPI so this class doesn't depend on a specific JSON library.
  */
 final class CreatorInfo {
   private final Constructor<?> constructor;
@@ -79,15 +79,15 @@ final class CreatorInfo {
     }
 
     /**
-     * Resolve the JSON property name from a {@code @JsonProperty} annotation on a parameter.
-     * Returns null if the annotation is missing or has an empty value.
+     * Resolve the JSON property name from the active {@link AnnotationIntrospector}. Returns null
+     * if no annotated name is present.
      */
     static CreatorParam fromParameter(Parameter param) {
-      JsonProperty jp = param.getAnnotation(JsonProperty.class);
-      if (jp == null || jp.value().isEmpty()) {
+      String name = AnnotationIntrospectors.get().findCreatorParamName(param);
+      if (name == null || name.isEmpty()) {
         return null;
       }
-      return new CreatorParam(jp.value(), param.getType(), param.getParameterizedType());
+      return new CreatorParam(name, param.getType(), param.getParameterizedType());
     }
   }
 }

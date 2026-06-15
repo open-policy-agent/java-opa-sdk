@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.ServiceLoader;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,7 +34,7 @@ import io.github.open_policy_agent.opa.storage.Store;
  */
 class CrossBundleDataTest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
   private static final String ENTRYPOINT = "authz/allow";
@@ -54,16 +54,14 @@ class CrossBundleDataTest {
   }
 
   private static Bundle createBundleWithRoot(String root) {
-    ObjectNode manifest = MAPPER.createObjectNode();
-    ArrayNode rootsArray = manifest.putArray("roots");
-    rootsArray.add(root);
+    Map<String, Object> manifest = new HashMap<>();
+    manifest.put("roots", List.of(root));
     return new Bundle.Builder().withManifest(manifest).build();
   }
 
   private static Bundle createPolicyBundleWithRoot(String root) {
-    ObjectNode manifest = MAPPER.createObjectNode();
-    ArrayNode rootsArray = manifest.putArray("roots");
-    rootsArray.add(root);
+    Map<String, Object> manifest = new HashMap<>();
+    manifest.put("roots", List.of(root));
     return new Bundle.Builder().withIrPolicy(authzPolicy).withManifest(manifest).build();
   }
 
@@ -97,7 +95,7 @@ class CrossBundleDataTest {
     Engine engine = new Engine.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
     Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-    List<JsonNode> results = pq.eval(bobInGroup("super"));
+    List<JsonNode> results = JsonNodeBridge.eval(pq, bobInGroup("super"));
 
     assertTrue(
         resultBoolean(results),
@@ -119,7 +117,7 @@ class CrossBundleDataTest {
     Engine engine = new Engine.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
     Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-    List<JsonNode> results = pq.eval(bobInGroup("super"));
+    List<JsonNode> results = JsonNodeBridge.eval(pq, bobInGroup("super"));
 
     assertFalse(
         resultBoolean(results),
@@ -142,7 +140,7 @@ class CrossBundleDataTest {
     Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
     // Initially denied
-    assertFalse(resultBoolean(pq.eval(bobInGroup("super"))), "bob should be denied initially");
+    assertFalse(resultBoolean(JsonNodeBridge.eval(pq, bobInGroup("super"))), "bob should be denied initially");
 
     // Update data bundle with privileged group — no engine refresh needed
     RegoObject updatedData =
@@ -151,7 +149,7 @@ class CrossBundleDataTest {
 
     // Data changes are live
     assertTrue(
-        resultBoolean(pq.eval(bobInGroup("super"))),
+        resultBoolean(JsonNodeBridge.eval(pq, bobInGroup("super"))),
         "bob should be allowed after data-bundle update — cross-bundle data is live");
   }
 }

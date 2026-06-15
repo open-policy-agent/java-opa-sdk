@@ -254,8 +254,8 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
               }
               // Determine if the source local is data-derived (i.e., obtained via direct data
               // reference traversal). AssignVarStmt does NOT propagate this flag.
-              boolean srcDataDerived = (ds.getSource().getVal() instanceof LocalVal)
-                  && frame.isDataDerived(((LocalVal) ds.getSource().getVal()).getValue());
+              boolean srcDataDerived = (ds.getSource().getValue() instanceof LocalVal)
+                  && frame.isDataDerived(((LocalVal) ds.getSource().getValue()).getValue());
               if (source instanceof RegoString) {
                 return false;
               } else if (source instanceof RegoSet) {
@@ -786,17 +786,17 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
   }
 
   private RegoValue resolveOperand(Operand op, IREvaluationContext ctx, Frame frame) {
-    if (op.getVal() instanceof BoolVal) {
-      BoolVal bv = (BoolVal) op.getVal();
+    if (op.getValue() instanceof BoolVal) {
+      BoolVal bv = (BoolVal) op.getValue();
       return RegoBoolean.of(bv.isValue());
-    } else if (op.getVal() instanceof StringIndexVal) {
-      StringIndexVal siv = (StringIndexVal) op.getVal();
+    } else if (op.getValue() instanceof StringIndexVal) {
+      StringIndexVal siv = (StringIndexVal) op.getValue();
       return new RegoString(ctx.staticStrings.get(siv.getValue()));
-    } else if (op.getVal() instanceof LocalVal) {
-      LocalVal lv = (LocalVal) op.getVal();
+    } else if (op.getValue() instanceof LocalVal) {
+      LocalVal lv = (LocalVal) op.getValue();
       return frame.getLocal(lv.getValue());
     } else {
-      throw new EvaluationException("Unexpected value: " + op.getVal());
+      throw new EvaluationException("Unexpected value: " + op.getValue());
     }
   }
 
@@ -923,7 +923,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
       }
 
       List<StringConst> strings =
-          policy.getStaticField() != null ? policy.getStaticField().getStrings() : null;
+          policy.getStatic() != null ? policy.getStatic().getStrings() : null;
       if (strings != null) {
         this.staticStrings = new ArrayList<>(strings.size());
         for (StringConst sc : strings) {

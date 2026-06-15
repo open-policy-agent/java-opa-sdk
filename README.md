@@ -1,4 +1,7 @@
-# java-opa-sdk
+# Java OPA SDK
+
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.open-policy-agent/opa-services.svg?label=Maven%20Central)](https://central.sonatype.com/namespace/io.github.open-policy-agent)
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 A Java SDK for evaluating [Open Policy Agent](https://www.openpolicyagent.org/) (OPA) policies using the Intermediate Representation (IR) format.
 
@@ -13,12 +16,14 @@ A Java SDK for evaluating [Open Policy Agent](https://www.openpolicyagent.org/) 
 
 ## Project Structure
 
-| Module | Description |
-|--------|-------------|
-| **[opa-evaluator](opa-evaluator/)** | Core OPA plan evaluator and Engine API for direct policy evaluation |
-| **[opa-builtins](opa-builtins/)** | Aggregator that brings in all extended builtin sub-modules |
-| **[opa-jackson](opa-jackson/)** | Jackson-based IR deserialization (auto-discovered via ServiceLoader) |
-| **[opa-services](opa-services/)** | Full OPA runtime with plugin support (bundles, decision logs, status, discovery) |
+| Module | Description | Javadoc |
+|--------|-------------|---------|
+| **[opa-evaluator](opa-evaluator/)** | Core OPA plan evaluator and Engine API for direct policy evaluation | [javadoc.io](https://javadoc.io/doc/io.github.open-policy-agent/opa-evaluator) |
+| **[opa-builtins](opa-builtins/)** | Aggregator that brings in all extended builtin sub-modules | [javadoc.io](https://javadoc.io/doc/io.github.open-policy-agent/opa-builtins) |
+| **[opa-jackson](opa-jackson/)** | Jackson-based IR deserialization (auto-discovered via ServiceLoader) | [javadoc.io](https://javadoc.io/doc/io.github.open-policy-agent/opa-jackson) |
+| **[opa-gson](opa-gson/)** | Gson-based IR deserialization (alternative to opa-jackson) | [javadoc.io](https://javadoc.io/doc/io.github.open-policy-agent/opa-gson) |
+| **[opa-services](opa-services/)** | Full OPA runtime with plugin support (bundles, decision logs, status, discovery) | [javadoc.io](https://javadoc.io/doc/io.github.open-policy-agent/opa-services) |
+| **[opa-slf4j](opa-slf4j/)** | SLF4J adapter for the SDK's `Logger` interface | [javadoc.io](https://javadoc.io/doc/io.github.open-policy-agent/opa-slf4j) |
 
 ## Building IR Bundles
 
@@ -46,6 +51,8 @@ The resulting `bundle.tar.gz` file contains the compiled IR plan and any static 
 A pre-built example bundle is included at [`examples/bundle.tar.gz`](examples/), compiled from the policy and data in that directory. The example policy grants access if the user is `"admin"`, or if the action is `"read"` and the user is in the authorized readers list (defined in `data.json`).
 
 ## Installation
+
+Artifacts are published to [Maven Central under `io.github.open-policy-agent`](https://central.sonatype.com/namespace/io.github.open-policy-agent).
 
 Most applications should depend on the `opa-services` module, which transitively includes `opa-evaluator` and `opa-jackson`. Add `opa-builtins` if your policies use extended builtins (crypto, JWT, networking, etc.):
 
@@ -104,6 +111,11 @@ runtimeOnly("io.github.open-policy-agent:opa-builtins:0.1.0")
 </dependency>
 ```
 
+### Optional modules
+
+- **`opa-gson`** — drop-in alternative to `opa-jackson` for projects already using Gson. Swap `opa-jackson` for `opa-gson` in the snippets above.
+- **`opa-slf4j`** — routes the SDK's `Logger` interface through SLF4J. Add as a runtime dependency alongside your SLF4J binding of choice.
+
 ## Quick Start
 
 ### Engine API (Lightweight)
@@ -112,11 +124,10 @@ The Engine API provides direct policy evaluation without plugin infrastructure. 
 (when using FileSystemBundleLoader, the IR plan.json is expected to be in the given path)
 
 ```java
-import io.github.open-policy-agent.rego.Engine;
-import io.github.open-policy-agent.bundle.FileSystemBundleLoader;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.open_policy_agent.opa.rego.Engine;
+import io.github.open_policy_agent.opa.bundle.FileSystemBundleLoader;
 import java.util.List;
+import java.util.Map;
 
 // Build the engine with the example policy bundle
 Engine engine = new Engine.Builder()
@@ -128,11 +139,11 @@ Engine engine = new Engine.Builder()
 Engine.PreparedQuery query = engine.prepareForEvaluation().build();
 
 // Evaluate with input - alice is an authorized reader
-ObjectMapper mapper = new ObjectMapper();
-JsonNode input = mapper.readTree("{\"user\": \"alice\", \"action\": \"read\"}");
-List<JsonNode> results = query.eval(input);
+Map<String, Object> input = Map.of("user", "alice", "action", "read");
+List<Object> results = query.eval(input);
 
-boolean allowed = results.get(0).get("result").asBoolean(); // true
+@SuppressWarnings("unchecked")
+boolean allowed = (Boolean) ((Map<String, Object>) results.get(0)).get("result"); // true
 ```
 
 ### Opa API (Full Runtime)
@@ -143,8 +154,8 @@ The Opa API provides a complete OPA runtime with plugin support. Best for produc
 #### Opa API with Programmatic Config
 
 ```java
-import io.github.open-policy-agent.Opa;
-import io.github.open-policy-agent.config.Config;
+import io.github.open_policy_agent.opa.Opa;
+import io.github.open_policy_agent.opa.config.Config;
 
 Config config = new Config()
     .addService(new Config.ServiceConfig()
@@ -170,7 +181,7 @@ boolean allowed = decision.getResult().asBoolean(); // true
 
 
 ```java
-import io.github.open-policy-agent.Opa;
+import io.github.open_policy_agent.opa.Opa;
 
 // Initialize with a YAML configuration file
 Opa opa = new Opa.Builder()
@@ -381,8 +392,8 @@ Engine.PreparedQuery query = engine.prepareForEvaluation()
     .build();
 
 // Evaluate many times
-for (JsonNode input : inputs) {
-    List<JsonNode> results = query.eval(input);
+for (Object input : inputs) {
+    List<Object> results = query.eval(input);
 }
 ```
 
@@ -427,7 +438,7 @@ Engine engine = new Engine.Builder()
 engine.refresh();
 
 // Next evaluation uses the new policy; data is already live
-List<JsonNode> results = engine.evaluate(ctx, input);
+List<Object> results = engine.evaluate(ctx, input);
 ```
 
 ### PreparedQuery behavior
@@ -449,7 +460,7 @@ Engine.PreparedQuery newPq = engine.prepareForEvaluation().build();
 Register custom builtin functions to extend policy capabilities:
 
 ```java
-import io.github.open-policy-agent.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.*;
 
 Engine engine = new Engine.Builder()
     .withBundleLoader(new FileSystemBundleLoader("authz", Path.of("/policy")))
@@ -478,8 +489,8 @@ allow if {
 OPA's `print()` builtin is supported for debugging policy evaluation. By default, print output is written via the `Logger` interface. Configure a custom `PrintHook` to redirect output:
 
 ```java
-import io.github.open-policy-agent.rego.PrintHook;
-import io.github.open-policy-agent.logging.Logger;
+import io.github.open_policy_agent.opa.rego.PrintHook;
+import io.github.open_policy_agent.opa.logging.Logger;
 
 // Use a Logger instance
 Logger myLogger = new Logger.StandardLogger();
@@ -511,12 +522,12 @@ When evaluated, this prints: `evaluating user: alice action: read`
 All SDK exceptions extend `OpaException` and support contextual information via `.withContext()`:
 
 ```java
-import io.github.open-policy-agent.OpaException;
-import io.github.open-policy-agent.PolicyNotFoundException;
-import io.github.open-policy-agent.EvaluationException;
+import io.github.open_policy_agent.opa.OpaException;
+import io.github.open_policy_agent.opa.ir.PolicyNotFoundException;
+import io.github.open_policy_agent.opa.ir.EvaluationException;
 
 try {
-    List<JsonNode> results = query.eval(input);
+    List<Object> results = query.eval(input);
 } catch (PolicyNotFoundException e) {
     System.err.println("Policy not found: " + e.getMessage());
 } catch (EvaluationException e) {
@@ -569,6 +580,7 @@ Releases are automated via GitHub Actions. Pushing a tag triggers the [Publish R
 The workflow will publish these artifacts to Maven Central:
 - `io.github.open-policy-agent:opa-evaluator`
 - `io.github.open-policy-agent:opa-jackson`
+- `io.github.open-policy-agent:opa-gson`
 - `io.github.open-policy-agent:opa-services`
 - `io.github.open-policy-agent:opa-builtins`
 - `io.github.open-policy-agent:opa-builtins-time`

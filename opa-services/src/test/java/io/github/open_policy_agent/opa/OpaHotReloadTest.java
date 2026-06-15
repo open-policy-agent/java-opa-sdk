@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
@@ -31,7 +32,7 @@ import static org.mockito.Mockito.mock;
  */
 class OpaHotReloadTest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
 
@@ -75,6 +76,17 @@ class OpaHotReloadTest {
     return POLICY_READER.read(new ByteArrayInputStream(ALLOW_PLAN.getBytes()));
   }
 
+  /** Bridge from Engine's POJO results to JsonNode for test assertions. */
+  private static List<JsonNode> evalJson(Engine engine, EvaluationContext ctx, JsonNode input) {
+    Object pojoInput = MAPPER.convertValue(input, Object.class);
+    List<Object> raw = engine.evaluate(ctx, pojoInput);
+    List<JsonNode> out = new ArrayList<>(raw.size());
+    for (Object o : raw) {
+      out.add(MAPPER.valueToTree(o));
+    }
+    return out;
+  }
+
   @Test
   void bundleActivationListener_triggersEngineRefresh() throws IOException {
     Store store = new InMem();
@@ -99,7 +111,7 @@ class OpaHotReloadTest {
     JsonNode input = MAPPER.readTree("{}");
     EvaluationContext ctx =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> results = engine.evaluate(ctx, input);
+    List<JsonNode> results = evalJson(engine, ctx, input);
     assertNotNull(results);
     assertFalse(results.isEmpty(), "allow policy should produce results");
 
@@ -110,7 +122,7 @@ class OpaHotReloadTest {
 
     EvaluationContext ctx2 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> refreshedResults = engine.evaluate(ctx2, input);
+    List<JsonNode> refreshedResults = evalJson(engine, ctx2, input);
     assertFalse(
         refreshedResults.get(0).get("result").asBoolean(),
         "after bundle activation, deny policy should return false");
@@ -141,7 +153,7 @@ class OpaHotReloadTest {
     JsonNode input = MAPPER.readTree("{}");
     EvaluationContext ctx =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> results = engine.evaluate(ctx, input);
+    List<JsonNode> results = evalJson(engine, ctx, input);
     assertTrue(results.get(0).get("result").asBoolean(), "allow policy should return true");
 
     RegoObject newData = MAPPER.readValue("{\"key\":\"updated\"}", RegoObject.class);
@@ -150,7 +162,7 @@ class OpaHotReloadTest {
 
     EvaluationContext ctx2 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> dataResults = engine.evaluate(ctx2, input);
+    List<JsonNode> dataResults = evalJson(engine, ctx2, input);
     assertTrue(
         dataResults.get(0).get("result").asBoolean(),
         "data changes are live -- policy still allows (same allow policy, updated data)");
@@ -162,7 +174,7 @@ class OpaHotReloadTest {
 
     EvaluationContext ctx3 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> policyResults = engine.evaluate(ctx3, input);
+    List<JsonNode> policyResults = evalJson(engine, ctx3, input);
     assertFalse(
         policyResults.get(0).get("result").asBoolean(),
         "policy change requires notification/refresh to take effect");

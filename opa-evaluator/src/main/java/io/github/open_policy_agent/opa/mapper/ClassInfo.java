@@ -1,11 +1,5 @@
 package io.github.open_policy_agent.opa.mapper;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -22,18 +16,22 @@ import java.util.Set;
  * Cached introspection metadata for a JavaBean class. Built once per class, then reused for all
  * subsequent conversions.
  *
- * <p>Property discovery follows Jackson conventions:
+ * <p>Property discovery follows JavaBean conventions:
  *
  * <ol>
  *   <li>JavaBean getters ({@code getX()}/{@code isX()}) — always discovered
  *   <li>Public fields — discovered if no getter exists for the same property
- *   <li>{@code @JsonProperty}-annotated fields — discovered regardless of visibility
+ *   <li>Annotation-tagged fields (per the active {@link AnnotationIntrospector}) — discovered
+ *       regardless of visibility
  * </ol>
  *
- * <p>Jackson annotations ({@code @JsonProperty}, {@code @JsonIgnore}, {@code @JsonInclude})
- * override defaults when present on the getter or the backing field.
+ * <p>Annotation-driven overrides (property name, ignore, NON_NULL inclusion, creator, visibility)
+ * are resolved through the {@link AnnotationIntrospector} SPI so this class has no direct
+ * dependency on a specific JSON library.
  */
 final class ClassInfo {
+  private static final AnnotationIntrospector INTROSPECTOR = AnnotationIntrospectors.get();
+
   private final List<PropertyInfo> properties;
   private final Constructor<?> noArgConstructor;
   private final CreatorInfo creatorInfo;
@@ -89,16 +87,16 @@ final class ClassInfo {
         claimedFieldNames.add(backingField.getName());
       }
 
-      // Check @JsonIgnore on getter or field
-      if (hasAnnotation(method, backingField, JsonIgnore.class)) {
+      // Check if the property is annotated as ignored (via getter or backing field)
+      if (INTROSPECTOR.isIgnored(method, backingField)) {
         continue;
       }
 
-      // Resolve JSON name: @JsonProperty overrides derived name
+      // Resolve JSON name: annotation override beats derived name
       String jsonName = resolveJsonName(method, backingField, propertyName);
 
-      // Check @JsonInclude(NON_NULL) on getter or field
-      boolean includeNonNull = hasIncludeNonNull(method, backingField);
+      // Check if NON_NULL inclusion is annotated on getter or field
+      boolean includeNonNull = INTROSPECTOR.isNonNullInclude(method, backingField);
 
       Class<?> rawType = method.getReturnType();
       Type genericType = method.getGenericReturnType();
@@ -117,11 +115,10 @@ final class ClassInfo {
     }
 
     // Phase 2: Discover properties via fields not already found through getters.
-    // Honors @JsonAutoDetect(fieldVisibility) when present; otherwise defaults to
-    // public fields and @JsonProperty-annotated fields.
-    JsonAutoDetect.Visibility fieldVisibility = resolveFieldVisibility(clazz);
+    // Field visibility comes from the introspector when present; otherwise PUBLIC_ONLY.
+    AnnotationIntrospector.Visibility fieldVisibility = resolveFieldVisibility(clazz);
     for (Field field : getAllFields(clazz)) {
-      if (field.isAnnotationPresent(JsonIgnore.class)) {
+      if (INTROSPECTOR.isIgnored(null, field)) {
         continue;
       }
       if (Modifier.isStatic(field.getModifiers())) {
@@ -133,23 +130,19 @@ final class ClassInfo {
         continue;
       }
 
-      boolean hasJsonProperty = field.isAnnotationPresent(JsonProperty.class);
-      if (!hasJsonProperty && !isFieldVisible(field, fieldVisibility)) {
+      String annotatedName = INTROSPECTOR.findPropertyName(null, field);
+      boolean hasAnnotatedName = annotatedName != null && !annotatedName.isEmpty();
+      if (!hasAnnotatedName && !isFieldVisible(field, fieldVisibility)) {
         continue;
       }
 
-      JsonProperty jp = field.getAnnotation(JsonProperty.class);
-      String jsonName = (jp != null && !jp.value().isEmpty()) ? jp.value() : field.getName();
+      String jsonName = hasAnnotatedName ? annotatedName : field.getName();
 
       if (discoveredNames.contains(jsonName)) {
         continue;
       }
 
-      boolean includeNonNull = false;
-      JsonInclude ji = field.getAnnotation(JsonInclude.class);
-      if (ji != null && ji.value() == JsonInclude.Include.NON_NULL) {
-        includeNonNull = true;
-      }
+      boolean includeNonNull = INTROSPECTOR.isNonNullInclude(null, field);
 
       if (!setAccessibleQuietly(field)) {
         continue;
@@ -168,17 +161,14 @@ final class ClassInfo {
     return new ClassInfo(props, ctor, creatorInfo);
   }
 
-  /** Resolve field visibility from {@code @JsonAutoDetect}, defaulting to PUBLIC_ONLY. */
-  private static JsonAutoDetect.Visibility resolveFieldVisibility(Class<?> clazz) {
-    JsonAutoDetect ann = clazz.getAnnotation(JsonAutoDetect.class);
-    if (ann != null && ann.fieldVisibility() != JsonAutoDetect.Visibility.DEFAULT) {
-      return ann.fieldVisibility();
-    }
-    return JsonAutoDetect.Visibility.PUBLIC_ONLY;
+  /** Resolve field visibility from the introspector, defaulting to PUBLIC_ONLY. */
+  private static AnnotationIntrospector.Visibility resolveFieldVisibility(Class<?> clazz) {
+    AnnotationIntrospector.Visibility v = INTROSPECTOR.findFieldVisibility(clazz);
+    return v != null ? v : AnnotationIntrospector.Visibility.PUBLIC_ONLY;
   }
 
   /** Check if a field is visible under the given visibility level. */
-  private static boolean isFieldVisible(Field field, JsonAutoDetect.Visibility visibility) {
+  private static boolean isFieldVisible(Field field, AnnotationIntrospector.Visibility visibility) {
     switch (visibility) {
       case ANY:
         return true;
@@ -293,41 +283,9 @@ final class ClassInfo {
     return null;
   }
 
-  private static <A extends Annotation> boolean hasAnnotation(
-      Method getter, Field field, Class<A> annotationType) {
-    if (getter.isAnnotationPresent(annotationType)) {
-      return true;
-    }
-    return field != null && field.isAnnotationPresent(annotationType);
-  }
-
   private static String resolveJsonName(Method getter, Field field, String defaultName) {
-    // Method annotation takes precedence
-    JsonProperty methodAnnotation = getter.getAnnotation(JsonProperty.class);
-    if (methodAnnotation != null && !methodAnnotation.value().isEmpty()) {
-      return methodAnnotation.value();
-    }
-    if (field != null) {
-      JsonProperty fieldAnnotation = field.getAnnotation(JsonProperty.class);
-      if (fieldAnnotation != null && !fieldAnnotation.value().isEmpty()) {
-        return fieldAnnotation.value();
-      }
-    }
-    return defaultName;
-  }
-
-  private static boolean hasIncludeNonNull(Method getter, Field field) {
-    JsonInclude methodAnnotation = getter.getAnnotation(JsonInclude.class);
-    if (methodAnnotation != null
-        && methodAnnotation.value() == JsonInclude.Include.NON_NULL) {
-      return true;
-    }
-    if (field != null) {
-      JsonInclude fieldAnnotation = field.getAnnotation(JsonInclude.class);
-      return fieldAnnotation != null
-          && fieldAnnotation.value() == JsonInclude.Include.NON_NULL;
-    }
-    return false;
+    String name = INTROSPECTOR.findPropertyName(getter, field);
+    return (name != null && !name.isEmpty()) ? name : defaultName;
   }
 
   private static Method findSetter(Class<?> clazz, String propertyName, Class<?> type) {
@@ -364,17 +322,13 @@ final class ClassInfo {
   }
 
   /**
-   * Scan for a {@code @JsonCreator} annotated constructor or static factory method. Each parameter
-   * must have {@code @JsonProperty} with an explicit name. Returns null if none found.
+   * Scan for an annotated creator constructor or static factory method via the introspector. Each
+   * parameter must have an annotated name. Returns null if none found.
    */
   private static CreatorInfo findJsonCreator(Class<?> clazz) {
     // Check constructors first
     for (Constructor<?> ctor : clazz.getDeclaredConstructors()) {
-      if (!ctor.isAnnotationPresent(JsonCreator.class)) {
-        continue;
-      }
-      JsonCreator annotation = ctor.getAnnotation(JsonCreator.class);
-      if (annotation.mode() == JsonCreator.Mode.DELEGATING) {
+      if (!INTROSPECTOR.isJsonCreator(ctor)) {
         continue;
       }
       List<CreatorInfo.CreatorParam> params = resolveCreatorParams(ctor.getParameters());
@@ -385,14 +339,10 @@ final class ClassInfo {
 
     // Check static factory methods
     for (Method method : clazz.getDeclaredMethods()) {
-      if (!method.isAnnotationPresent(JsonCreator.class)) {
+      if (!INTROSPECTOR.isJsonCreator(method)) {
         continue;
       }
       if (!Modifier.isStatic(method.getModifiers())) {
-        continue;
-      }
-      JsonCreator annotation = method.getAnnotation(JsonCreator.class);
-      if (annotation.mode() == JsonCreator.Mode.DELEGATING) {
         continue;
       }
       List<CreatorInfo.CreatorParam> params = resolveCreatorParams(method.getParameters());
@@ -405,8 +355,7 @@ final class ClassInfo {
   }
 
   /**
-   * Resolve creator parameters. Returns null if any parameter lacks a {@code @JsonProperty} with a
-   * non-empty value.
+   * Resolve creator parameters. Returns null if any parameter lacks an annotated name.
    */
   private static List<CreatorInfo.CreatorParam> resolveCreatorParams(Parameter[] parameters) {
     List<CreatorInfo.CreatorParam> params = new ArrayList<>();

@@ -14,7 +14,7 @@ import io.github.open_policy_agent.opa.config.ConfigurationException;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.plugins.Plugin;
 import io.github.open_policy_agent.opa.plugins.PluginManager;
-import io.github.open_policy_agent.opa.tracing.Profiler;
+import io.github.open_policy_agent.opa.tracing.DurationProfiler;
 
 class OpaTest {
   private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -197,7 +197,7 @@ class OpaTest {
             .setInput(input)
             .setStrictBuiltinErrors(true)
             .showMetrics()
-            .setProfiler(new Profiler())
+            .setProfiler(new DurationProfiler())
             .setInstrument(true)
             .setDecisionID("test-decision-id");
 

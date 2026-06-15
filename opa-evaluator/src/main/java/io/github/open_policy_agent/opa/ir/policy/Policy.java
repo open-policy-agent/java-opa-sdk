@@ -1,23 +1,15 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /** Represents a planned policy query. */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Policy {
-  @JsonProperty("static")
-  @JsonInclude(value = JsonInclude.Include.NON_NULL)
+  // Field is named "staticField" because "static" is a Java reserved word.
+  // Accessors are named getStatic / setStatic so Jackson auto-detects the JSON "static" key.
   private Static staticField;
 
-  @JsonProperty("plans")
-  @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private Plans plans;
 
-  @JsonProperty("funcs")
-  @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private Funcs funcs;
 
   public Policy(Static staticField, Plans plans, Funcs funcs) {
@@ -33,11 +25,11 @@ public class Policy {
     return "Policy{" + "staticField=" + staticField + ", plans=" + plans + ", funcs=" + funcs + '}';
   }
 
-  public Static getStaticField() {
+  public Static getStatic() {
     return staticField;
   }
 
-  public void setStaticField(Static staticField) {
+  public void setStatic(Static staticField) {
     this.staticField = staticField;
   }
 

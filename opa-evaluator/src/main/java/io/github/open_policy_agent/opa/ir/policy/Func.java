@@ -1,8 +1,5 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 
@@ -11,24 +8,19 @@ import java.util.Objects;
  * parameters and return a value. By convention, the input document and data documents are always
  * passed as the first and second arguments (respectively).
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Func {
   private int maxLocal = Integer.MIN_VALUE;
 
-  @JsonProperty("name")
   private String name;
 
-  @JsonProperty("params")
   private List<Integer> params;
 
-  @JsonProperty("return")
+  // Field is named "returnVal" because "return" is a Java reserved word.
+  // Accessors are named getReturn / setReturn so Jackson auto-detects the JSON "return" key.
   private int returnVal;
 
-  @JsonProperty("blocks")
   private List<Block> blocks;
 
-  @JsonProperty("path")
-  @JsonInclude(value = JsonInclude.Include.NON_NULL)
   private List<String> path;
 
   public Func() {}
@@ -45,7 +37,7 @@ public class Func {
   public int getMaxLocalForFunction() {
     if (maxLocal == Integer.MIN_VALUE) {
       int funcStmtMax = getBlocks().stream().mapToInt(Block::maxLocal).max().orElse(-1);
-      maxLocal = Math.max(funcStmtMax, getReturnVal());
+      maxLocal = Math.max(funcStmtMax, getReturn());
     }
     return maxLocal;
   }
@@ -107,11 +99,11 @@ public class Func {
     this.params = params;
   }
 
-  public int getReturnVal() {
+  public int getReturn() {
     return returnVal;
   }
 
-  public void setReturnVal(int returnVal) {
+  public void setReturn(int returnVal) {
     this.returnVal = returnVal;
   }
 

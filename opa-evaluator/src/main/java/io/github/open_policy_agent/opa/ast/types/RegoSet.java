@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,7 +33,6 @@ public class RegoSet implements RegoValue, RegoCollection {
     }
   }
 
-    @JsonValue
     @SuppressWarnings("PMD.CompareObjectsWithEquals")
     public Set<RegoValue> getValue() {
     if (!sorted) {

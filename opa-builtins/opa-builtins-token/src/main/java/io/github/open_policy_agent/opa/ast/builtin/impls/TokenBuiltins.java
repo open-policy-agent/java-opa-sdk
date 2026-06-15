@@ -41,7 +41,9 @@ public class TokenBuiltins implements BuiltinProvider {
   private static final RegoString CERT_PROPERTY = new RegoString("cert");
   private static final RegoString SECRET_PROPERTY = new RegoString("secret");
   private static final RegoObject BLANK_OBJECT = new RegoObject();
-  private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+  // Auto-register RegoValueModule (and any other Jackson modules on the classpath) via SPI so
+  // RegoObject (de)serialization works without the AST types carrying Jackson annotations.
+  private static final ObjectMapper JSON_MAPPER = new ObjectMapper().findAndRegisterModules();
 
   static {
     Security.addProvider(new BouncyCastleProvider());

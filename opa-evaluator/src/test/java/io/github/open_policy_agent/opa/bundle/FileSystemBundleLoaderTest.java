@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FileSystemBundleLoaderTest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
 
   private Path testResource(String name) {
     return Paths.get(
@@ -77,7 +77,7 @@ class FileSystemBundleLoaderTest {
     Bundle bundle = new FileSystemBundleLoader("test", dir).load(store);
 
     assertNotNull(bundle.manifest);
-    assertEquals("abc123", bundle.manifest.get("revision").asText());
+    assertEquals("abc123", bundle.manifest.get("revision"));
   }
 
   @Test
@@ -212,7 +212,9 @@ class FileSystemBundleLoaderTest {
     JsonNode input =
         MAPPER.readTree(
             "{\"user\":{\"id\":\"alice\",\"groups\":[]}}");
-    List<JsonNode> results = engine.prepareForEvaluation().build().eval(input);
+    List<JsonNode> results =
+        io.github.open_policy_agent.opa.rego.JsonNodeBridge.eval(
+            engine.prepareForEvaluation().build(), input);
 
     assertEquals(1, results.size());
     assertTrue(results.get(0).has("result"));
@@ -242,7 +244,9 @@ class FileSystemBundleLoaderTest {
     JsonNode input =
         MAPPER.readTree(
             "{\"user\":{\"id\":\"bob\",\"groups\":[\"super\"]}}");
-    List<JsonNode> results = engine.prepareForEvaluation().build().eval(input);
+    List<JsonNode> results =
+        io.github.open_policy_agent.opa.rego.JsonNodeBridge.eval(
+            engine.prepareForEvaluation().build(), input);
 
     assertEquals(1, results.size());
     assertTrue(results.get(0).get("result").asBoolean(),

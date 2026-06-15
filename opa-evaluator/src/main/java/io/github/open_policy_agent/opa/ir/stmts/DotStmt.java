@@ -1,8 +1,5 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.Operand;
 
@@ -10,21 +7,13 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * DotStmt represents a lookup operation on a value (e.g., array, object, etc.). The source of a
  * DotStmt may be a scalar value, in which case the statement will be undefined.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class DotStmt extends BaseStmt {
     public static final String StmtType = "DotStmt";
 
-    @JsonProperty("source")
     private Operand source;
 
-    @JsonProperty("key")
     private Operand key;
 
-    @JsonProperty("target")
     private int target;
 
     public DotStmt() {

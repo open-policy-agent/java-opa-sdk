@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 
 public class RegoNull implements RegoValue {
 
@@ -8,7 +7,6 @@ public class RegoNull implements RegoValue {
 
   private RegoNull() {}
 
-    @JsonValue
     private Object getProperty() {
         return null;
     }

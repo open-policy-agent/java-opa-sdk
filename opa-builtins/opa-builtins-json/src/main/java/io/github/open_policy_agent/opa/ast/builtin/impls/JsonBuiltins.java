@@ -83,9 +83,11 @@ public class JsonBuiltins implements BuiltinProvider {
           };
 
   static {
-    JSON_MAPPER = new ObjectMapper();
+    // findAndRegisterModules picks up RegoValueModule (from opa-jackson) via SPI so
+    // RegoString/RegoArray/RegoObject etc. (de)serialize without annotations on the AST types.
+    JSON_MAPPER = new ObjectMapper().findAndRegisterModules();
 
-    // Register custom serializers for Rego numeric types
+    // Register custom serializers for Rego numeric types (overrides RegoValueModule defaults).
     SimpleModule module = new SimpleModule();
     module.addSerializer(RegoDecimal.class, REGO_DECIMAL_SERIALIZER);
     module.addSerializer(RegoBigInt.class, REGO_BIG_INT_SERIALIZER);
@@ -101,7 +103,8 @@ public class JsonBuiltins implements BuiltinProvider {
 
     YAML_MAPPER =
             new ObjectMapper(
-                    YAMLFactory.builder().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER).build());
+                    YAMLFactory.builder().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER).build())
+                .findAndRegisterModules();
     YAML_MAPPER.registerModule(yamlModule);
   }
 

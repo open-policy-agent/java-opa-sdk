@@ -1,8 +1,5 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.Operand;
@@ -11,21 +8,13 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * CallDynamicStmt represents an indirect (data) function call. The result should be stored in the
  * result local.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class CallDynamicStmt extends BaseStmt {
     public static final String StmtType = "CallDynamicStmt";
 
-    @JsonProperty("path")
     private List<Operand> path;
 
-    @JsonProperty("args")
     private List<Integer> args;
 
-    @JsonProperty("result")
     private int result;
 
     public CallDynamicStmt() {

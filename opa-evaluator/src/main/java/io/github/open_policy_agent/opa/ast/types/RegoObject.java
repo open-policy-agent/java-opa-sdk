@@ -1,13 +1,10 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.*;
 import java.util.stream.Stream;
 
 public class RegoObject implements RegoValue {
-  @JsonIgnore private final Map<RegoValue, RegoValue> value;
+  private final Map<RegoValue, RegoValue> value;
 
   public RegoObject() {
     this.value = new LinkedHashMap<>();
@@ -29,24 +26,7 @@ public class RegoObject implements RegoValue {
     return value.containsKey(property);
   }
 
-  /**
-   * For JSON serialization - Jackson uses this to convert to JSON. We convert RegoValue keys to
-   * strings for JSON compatibility, and sort them to match OPA's output format.
-   */
-  @JsonValue
-  public Map<String, RegoValue> getPropertiesAsStringMap() {
-    // For JSON serialization, convert keys to strings and sort them
-    // OPA (written in Go) outputs JSON with sorted keys, so we match that behavior
-    Map<String, RegoValue> stringMap = new TreeMap<>();
-    for (Map.Entry<RegoValue, RegoValue> entry : value.entrySet()) {
-      String key = keyToString(entry.getKey());
-      stringMap.put(key, entry.getValue());
-    }
-    return stringMap;
-  }
-
   /** Get the internal map with RegoValue keys. This is used for runtime operations. */
-  @JsonIgnore
   public Map<RegoValue, RegoValue> getProperties() {
     return value;
   }
@@ -56,33 +36,12 @@ public class RegoObject implements RegoValue {
   }
 
   /**
-   * For JSON deserialization - Jackson calls this for each property. We convert string keys to
-   * RegoString for internal storage.
+   * Programmatic setter used by callers that want to add a property by string name. The
+   * {@code opa-jackson} {@code RegoValueModule} converts JSON values directly during
+   * deserialization, so this method no longer needs to dispatch on a generic {@link Object}.
    */
-  @JsonAnySetter
-  public void setProperty(String name, Object value) {
-    // Convert the raw Object to appropriate RegoValue
-    RegoValue regoValue = convertToRegoValue(value);
-    // Try to parse the key as a number, otherwise use as string
-    RegoValue key = parseKeyFromString(name);
-    this.value.put(key, regoValue);
-  }
-
-  private RegoValue parseKeyFromString(String key) {
-    // JSON object keys are always strings per the JSON spec.
-    // OPA coerces integer references to string keys during data traversal (handled in the
-    // evaluator's DotStmt), not at deserialization time.
-    return new RegoString(key);
-  }
-
-  private String keyToString(RegoValue key) {
-    if (key instanceof RegoString) {
-      return ((RegoString) key).getValue();
-    } else if (key instanceof RegoNumber) {
-      return ((RegoNumber) key).getBigIntValue().toString();
-    } else {
-      return key.toString();
-    }
+  public void setProperty(String name, RegoValue value) {
+    this.value.put(new RegoString(name), value);
   }
 
   public Stream<Map.Entry<RegoValue, RegoValue>> stream() {
@@ -101,45 +60,6 @@ public class RegoObject implements RegoValue {
       nativeMap.put(entry.getKey().nativeValue(), entry.getValue().nativeValue());
     }
     return nativeMap;
-  }
-
-  private RegoValue convertToRegoValue(Object value) {
-    if (value == null) {
-      return RegoNull.INSTANCE;
-    } else if (value instanceof RegoValue) {
-      return (RegoValue) value;
-    } else if (value instanceof Boolean) {
-      return RegoBoolean.of((Boolean) value);
-    } else if (value instanceof String) {
-      return new RegoString((String) value);
-    } else if (value instanceof Integer) {
-      return RegoInt32.of((Integer) value);
-    } else if (value instanceof Long) {
-      return new RegoBigInt((Long) value);
-    } else if (value instanceof java.math.BigDecimal) {
-      // BigDecimal from Jackson when USE_BIG_DECIMAL_FOR_FLOATS is enabled
-      return new RegoDecimal(((java.math.BigDecimal) value).doubleValue());
-    } else if (value instanceof Double || value instanceof Float) {
-      // Handle Double and Float
-      return new RegoDecimal(((Number) value).doubleValue());
-    } else if (value instanceof Map) {
-      RegoObject obj = new RegoObject();
-      for (Map.Entry<?, ?> entry : ((Map<?, ?>) value).entrySet()) {
-        if (entry.getKey() instanceof String) {
-          obj.setProperty((String) entry.getKey(), convertToRegoValue(entry.getValue()));
-        }
-      }
-      return obj;
-    } else if (value instanceof java.util.List) {
-      RegoArray array = new RegoArray();
-      for (Object item : (java.util.List<?>) value) {
-        array.addValue(convertToRegoValue(item));
-      }
-      return array;
-    } else {
-      // For numbers and other types, convert to string for now
-      return new RegoString(value.toString());
-    }
   }
 
   /**

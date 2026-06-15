@@ -27,7 +27,7 @@ public class EvaluationContext {
   public final StatementProfiler statementProfiler;
   private QueryTracer tracer;
   private final long evalStartTime = System.currentTimeMillis();
-  private Profiler profiler;
+  private final List<Profiler> profilers;
   private final boolean strictBuiltinErrors;
   public final boolean sortSets;
   private final NdBuiltinCache ndBuiltinCache;
@@ -50,7 +50,7 @@ public class EvaluationContext {
     this.tracer = other.tracer;
     this.metrics = other.metrics;
     this.statementProfiler = other.statementProfiler;
-    this.profiler = other.profiler;
+    this.profilers = other.profilers;
     this.strictBuiltinErrors = other.strictBuiltinErrors;
     this.sortSets = other.sortSets;
     this.ndBuiltinCache = other.ndBuiltinCache;
@@ -67,9 +67,7 @@ public class EvaluationContext {
     }
     this.metrics = builder.metrics;
     this.statementProfiler = builder.statementProfiler;
-    if (builder.profiler != null) {
-      this.profiler = builder.profiler;
-    }
+    this.profilers = List.copyOf(builder.profilers);
     this.strictBuiltinErrors = builder.strictBuiltinErrors;
     this.sortSets = builder.sortSets;
     this.ndBuiltinCache = builder.ndBuiltinCache;
@@ -103,8 +101,9 @@ public class EvaluationContext {
       this.tracer.TraceEvent(
           new StatementEvent(Operation.ENTER, stmt, stmtKind, stmt.getLocation(), blockIndex, stmtIndex));
     }
-    if (this.profiler != null) {
-      this.profiler.addStart();
+
+    for (Profiler p : this.profilers) {
+      p.addStart();
     }
   }
 
@@ -114,8 +113,9 @@ public class EvaluationContext {
       this.tracer.TraceEvent(
           new StatementEvent(Operation.EXIT, stmt, stmtKind, stmt.getLocation(), blockIndex, stmtIndex));
     }
-    if (profiler != null) {
-      profiler.addEntry(stmt.getLocation(), duration);
+
+    for (Profiler p : profilers) {
+      p.addEntry(stmt.getLocation(), duration);
     }
   }
 
@@ -186,7 +186,7 @@ public class EvaluationContext {
     private QueryTracer tracer;
     Metrics metrics;
     StatementProfiler statementProfiler;
-    private Profiler profiler;
+    final List<Profiler> profilers = new ArrayList<>();
     private boolean strictBuiltinErrors = false;
     private boolean sortSets = false;
     private NdBuiltinCache ndBuiltinCache;
@@ -237,8 +237,13 @@ public class EvaluationContext {
       return this;
     }
 
+    /**
+     * Register a profiler. May be called multiple times to register more than one profiler; each
+     * receives every {@code addStart} / {@code addEntry} callback during evaluation in
+     * registration order.
+     */
     public Builder withProfiler(Profiler profiler) {
-      this.profiler = profiler;
+      this.profilers.add(profiler);
       return this;
     }
 

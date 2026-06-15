@@ -1,18 +1,13 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.policy.types.FunctionType;
 
 // BuiltinFunc represents a built-in function that may be required by the
 // policy.
-@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public class BuiltinFunc {
-  @JsonProperty("name")
   private String name;
 
-  @JsonProperty("decl")
   private FunctionType decl;
 
   public BuiltinFunc() {}

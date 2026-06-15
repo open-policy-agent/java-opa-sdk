@@ -119,7 +119,7 @@ public class ComplianceTest {
                 .map(Path::toFile)
                 .flatMap(f -> {
                     try {
-                      ObjectMapper mapper = new ObjectMapper();
+                      ObjectMapper mapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
                       JsonNode root = mapper.readTree(f);
                       List<JsonNode> cases = new ArrayList<>();
                       root.get("cases").forEach(cases::add);
@@ -344,7 +344,7 @@ public class ComplianceTest {
   @MethodSource("getComplianceTestData")
   public void testEvaluate(String caseName, JsonNode root) {
     try {
-      ObjectMapper mapper = new ObjectMapper();
+      ObjectMapper mapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
 
       if (root.has("skip") && root.get("skip").asBoolean()) {
         System.out.println("skipping: " + caseName);

@@ -9,11 +9,10 @@ The evaluator module provides the `Engine` class for direct policy evaluation. I
 ## Usage
 
 ```java
-import io.github.openpolicyagent.opa.rego.Engine;
-import io.github.openpolicyagent.opa.bundle.FileSystemBundleLoader;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.open_policy_agent.opa.rego.Engine;
+import io.github.open_policy_agent.opa.bundle.FileSystemBundleLoader;
 import java.util.List;
+import java.util.Map;
 
 Engine engine = new Engine.Builder()
     .withBundleLoader(new FileSystemBundleLoader("authz", Path.of("policy")))
@@ -22,14 +21,13 @@ Engine engine = new Engine.Builder()
 
 Engine.PreparedQuery query = engine.prepareForEvaluation().build();
 
-ObjectMapper mapper = new ObjectMapper();
-JsonNode input = mapper.readTree("{\"user\": \"alice\"}");
-List<JsonNode> results = query.eval(input);
+Map<String, Object> input = Map.of("user", "alice");
+List<Object> results = query.eval(input);
 ```
 
 ### POJO Input/Output
 
-The Engine supports typed input and output via Jackson:
+The Engine supports typed input and output:
 
 ```java
 List<MyResult> results = engine.prepareForEvaluation()
@@ -40,27 +38,29 @@ List<MyResult> results = engine.prepareForEvaluation()
 ### Multiple Queries
 
 ```java
+Map<String, Object> input = Map.of("user", "alice");
+
 // Default query
 Engine.PreparedQuery allowQuery = engine.prepareForEvaluation().build();
-List<JsonNode> allowResults = allowQuery.eval(input);
+List<Object> allowResults = allowQuery.eval(input);
 
 // Override with a different query
 Engine.PreparedQuery denyQuery = engine.prepareForEvaluation()
     .withEntrypoint("example/deny")
     .build();
-List<JsonNode> denyResults = denyQuery.eval(input);
+List<Object> denyResults = denyQuery.eval(input);
 ```
 
 ### Metrics and Profiling
 
 ```java
-import io.github.openpolicyagent.opa.metrics.Metrics;
-import io.github.openpolicyagent.opa.tracing.Profiler;
+import io.github.open_policy_agent.opa.metrics.Metrics;
+import io.github.open_policy_agent.opa.tracing.Profiler;
 
 Metrics metrics = new SimpleMetrics();
 Profiler profiler = new Profiler();
 
-List<JsonNode> results = engine.prepareForEvaluation()
+List<Object> results = engine.prepareForEvaluation()
     .withMetrics(metrics)
     .withProfiler(profiler)
     .build()
@@ -70,7 +70,7 @@ List<JsonNode> results = engine.prepareForEvaluation()
 ### Custom Builtins
 
 ```java
-import io.github.openpolicyagent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.*;
 
 Engine engine = new Engine.Builder()
     .withBundleLoader(new FileSystemBundleLoader("authz", Path.of("/policy")))
@@ -99,7 +99,7 @@ public class MyBuiltinProvider implements BuiltinProvider {
 }
 ```
 
-Register in `META-INF/services/io.github.openpolicyagent.opa.ast.builtin.BuiltinProvider`.
+Register in `META-INF/services/io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider`.
 
 ### PolicyReader SPI
 
@@ -122,7 +122,7 @@ The Engine supports hot-reloading of policies and data, following the same seman
 engine.refresh();  // picks up new policy from store
 
 // Direct evaluate uses the new policy immediately
-List<JsonNode> results = engine.evaluate(ctx, input);
+List<Object> results = engine.evaluate(ctx, input);
 
 // Existing PreparedQuery still uses old policy -- re-prepare to pick up changes
 Engine.PreparedQuery freshPq = engine.prepareForEvaluation().build();

@@ -1,29 +1,19 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.github.open_policy_agent.opa.ir.Location;
 import io.github.open_policy_agent.opa.ir.Operand;
 import io.github.open_policy_agent.opa.ir.vals.LocalVal;
 
 public abstract class BaseStmt implements Stmt {
-    @JsonIgnore
-    private Location location;
-
-    @JsonProperty("file")
     private int file; // index of source filename
-
-    @JsonProperty("col")
     private int col; // column in the source file
-
-    @JsonProperty("row")
     private int row; // row in the source file
+    private Location cachedLocation;
 
     protected BaseStmt(int file, int col, int row) {
         this.file = file;
         this.col = col;
         this.row = row;
-        this.location = new Location(file, col, row);
     }
 
     protected BaseStmt() {
@@ -34,18 +24,19 @@ public abstract class BaseStmt implements Stmt {
         this.file = file;
         this.col = col;
         this.row = row;
-        this.location = new Location(file, col, row);
-        return this.location;
+        Location loc = new Location(file, col, row);
+        this.cachedLocation = loc;
+        return loc;
     }
 
     @Override
     public Location getLocation() {
-        return this.location;
-    }
-
-    public Location setLocation(Location location) {
-        this.location = location;
-        return this.location;
+        Location loc = cachedLocation;
+        if (loc == null) {
+            loc = new Location(file, col, row);
+            cachedLocation = loc;
+        }
+        return loc;
     }
 
     public int getFile() {
@@ -54,6 +45,7 @@ public abstract class BaseStmt implements Stmt {
 
     public void setFile(int file) {
         this.file = file;
+        this.cachedLocation = null;
     }
 
     public int getCol() {
@@ -62,6 +54,7 @@ public abstract class BaseStmt implements Stmt {
 
     public void setCol(int col) {
         this.col = col;
+        this.cachedLocation = null;
     }
 
     public int getRow() {
@@ -70,19 +63,16 @@ public abstract class BaseStmt implements Stmt {
 
     public void setRow(int row) {
         this.row = row;
+        this.cachedLocation = null;
     }
 
   /** Helper method to extract local value from an Operand if it contains a LocalVal */
   protected int getLocalFromOperand(Operand operand) {
-    if (operand != null && operand.getVal() instanceof LocalVal) {
-      return ((LocalVal) operand.getVal()).getValue();
+    if (operand != null && operand.getValue() instanceof LocalVal) {
+      return ((LocalVal) operand.getValue()).getValue();
     }
     return -1;
   }
-
-//  public abstract String getType();
-//
-//  public abstract void evaluate(Frame caller, IREvaluationContext ctx);
 
     @Override
     public boolean equals(Object o) {

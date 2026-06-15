@@ -173,8 +173,9 @@ public final class StatusPlugin implements Plugin {
       if (storeBundles != null) {
         for (Map.Entry<String, Bundle> entry : storeBundles.entrySet()) {
           ObjectNode bundleInfo = MAPPER.createObjectNode();
-          if (entry.getValue().manifest != null && entry.getValue().manifest.has("revision")) {
-            bundleInfo.put("revision", entry.getValue().manifest.get("revision").asText());
+          if (entry.getValue().manifest != null
+              && entry.getValue().manifest.containsKey("revision")) {
+            bundleInfo.put("revision", String.valueOf(entry.getValue().manifest.get("revision")));
           }
           bundleInfo.put("active", true);
           bundles.set(entry.getKey(), bundleInfo);

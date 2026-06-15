@@ -374,8 +374,9 @@ public final class DecisionLogPlugin implements Plugin {
         ObjectNode bundlesNode = MAPPER.createObjectNode();
         for (Map.Entry<String, Bundle> entry : bundles.entrySet()) {
           ObjectNode bundleInfo = MAPPER.createObjectNode();
-          if (entry.getValue().manifest != null && entry.getValue().manifest.has("revision")) {
-            bundleInfo.put("revision", entry.getValue().manifest.get("revision").asText());
+          if (entry.getValue().manifest != null
+              && entry.getValue().manifest.containsKey("revision")) {
+            bundleInfo.put("revision", String.valueOf(entry.getValue().manifest.get("revision")));
           }
           bundlesNode.set(entry.getKey(), bundleInfo);
         }

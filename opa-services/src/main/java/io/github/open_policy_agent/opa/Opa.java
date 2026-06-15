@@ -97,6 +97,7 @@ import io.github.open_policy_agent.opa.tracing.Profiler;
 public class Opa {
 
   private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
+  private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
   private final String id;
   private final Logger logger;
@@ -187,12 +188,16 @@ public class Opa {
   public DecisionResult makeDecision(DecisionOptions options) {
     String decisionId = resolveDecisionId(options);
     EvaluationContext ctx = buildContext(options);
-    List<JsonNode> result = engine.evaluate(ctx, options.getInput());
+    // Engine now operates on POJO trees (Map/List/primitives) so the evaluator stays Jackson-free.
+    // Bridge JsonNode <-> POJO here at the opa-services boundary.
+    Object pojoInput = JSON_MAPPER.convertValue(options.getInput(), Object.class);
+    List<Object> rawResults = engine.evaluate(ctx, pojoInput);
+    JsonNode resultNode = JSON_MAPPER.valueToTree(rawResults.get(0));
 
-    logDecision(decisionId, options.getInput(), result.get(0), options, ctx);
+    logDecision(decisionId, options.getInput(), resultNode, options, ctx);
 
     return new DecisionResult()
-        .setResult(result.get(0))
+        .setResult(resultNode)
         .setId(decisionId)
         .setProvenance(buildProvenance());
   }
@@ -286,9 +291,9 @@ public class Opa {
     Map<String, Provenance.ProvenanceBundle> bundleProvenance = new HashMap<>();
     for (Map.Entry<String, Bundle> entry : store.getBundles().entrySet()) {
       Bundle bundle = entry.getValue();
-      if (bundle.manifest != null && bundle.manifest.has("revision")) {
+      if (bundle.manifest != null && bundle.manifest.containsKey("revision")) {
         Provenance.ProvenanceBundle pb = new Provenance.ProvenanceBundle();
-        pb.setRevision(bundle.manifest.get("revision").asText());
+        pb.setRevision(String.valueOf(bundle.manifest.get("revision")));
         bundleProvenance.put(entry.getKey(), pb);
       }
     }

@@ -1,26 +1,19 @@
 package io.github.open_policy_agent.opa.ast.builtin;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 /** Descriptor for an OPA builtin function, matching the format from opa-cap.json */
 public class Descriptor {
-  @JsonProperty("name")
   public String name;
 
-  @JsonProperty("description")
   public String description;
 
-  @JsonProperty("categories")
   public List<String> categories;
 
-  @JsonProperty("decl")
   public Declaration decl;
 
-  @JsonProperty("infix")
   public String infix;
 
-  @JsonProperty("nondeterministic")
   public Boolean nondeterministic;
 
   public Descriptor() {}
@@ -35,13 +28,10 @@ public class Descriptor {
   }
 
   public static class Declaration {
-    @JsonProperty("type")
     public String type = "function";
 
-    @JsonProperty("args")
     public List<Argument> args;
 
-    @JsonProperty("result")
     public Argument result;
 
     public Declaration() {}
@@ -53,19 +43,14 @@ public class Descriptor {
   }
 
   public static class Argument {
-    @JsonProperty("type")
     public String type;
 
-    @JsonProperty("name")
     public String name;
 
-    @JsonProperty("description")
     public String description;
 
-    @JsonProperty("of")
     public List<Argument> of;
 
-    @JsonProperty("dynamic")
     public Dynamic dynamic;
 
     public Argument() {}
@@ -88,13 +73,10 @@ public class Descriptor {
 
   /** Represents dynamic type information for collections */
   public static class Dynamic {
-    @JsonProperty("type")
     public String type;
 
-    @JsonProperty("key")
     public Argument key;
 
-    @JsonProperty("value")
     public Argument value;
 
     public Dynamic() {}

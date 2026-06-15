@@ -14,14 +14,14 @@ jobs:
     name: Test and Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           java-version: "11"
           distribution: "corretto"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-disabled: true
       - run: ./gradlew test checkstyleMain checkstyleTest pmdMain pmdTest
@@ -31,14 +31,14 @@ jobs:
     needs: test-and-lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           java-version: "11"
           distribution: "corretto"
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
         with:
           cache-disabled: true
       - name: Publish to Maven Central
@@ -51,13 +51,13 @@ jobs:
 
   github-release:
     name: Create GitHub Release
-    needs: test-and-lint
+    needs: publish-maven-central
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Set TAG_NAME

@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class EngineHotReloadTest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
   private static final String ENTRYPOINT = "authz/allow";
@@ -91,7 +91,7 @@ class EngineHotReloadTest {
 
     EvaluationContext ctx =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> results = engine.evaluate(ctx, aliceInput());
+    List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, aliceInput());
     assertTrue(resultBoolean(results), "alice should be allowed by the original policy");
 
     // Now update the store with a deny policy (default allow := false)
@@ -100,7 +100,7 @@ class EngineHotReloadTest {
 
     EvaluationContext ctx2 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> staleResults = engine.evaluate(ctx2, aliceInput());
+    List<JsonNode> staleResults = JsonNodeBridge.eval(engine, ctx2, aliceInput());
 
     assertTrue(
         resultBoolean(staleResults),
@@ -117,7 +117,7 @@ class EngineHotReloadTest {
 
     EvaluationContext ctx =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> results = engine.evaluate(ctx, aliceInput());
+    List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, aliceInput());
     assertTrue(resultBoolean(results), "alice should be allowed by the original policy");
 
     // Update the store with a deny policy (default allow := false)
@@ -128,7 +128,7 @@ class EngineHotReloadTest {
 
     EvaluationContext ctx2 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> refreshedResults = engine.evaluate(ctx2, aliceInput());
+    List<JsonNode> refreshedResults = JsonNodeBridge.eval(engine, ctx2, aliceInput());
     assertFalse(
         resultBoolean(refreshedResults), "after refresh, deny policy should return false");
   }
@@ -145,7 +145,7 @@ class EngineHotReloadTest {
     JsonNode bobInput = MAPPER.readTree("{\"user\":{\"id\":\"bob\",\"groups\":[\"super\"]}}");
     EvaluationContext ctx =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> results = engine.evaluate(ctx, bobInput);
+    List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, bobInput);
     assertFalse(resultBoolean(results), "bob should be denied with no privileged groups");
 
     // Update ONLY data (same policy) -- add privileged group
@@ -156,7 +156,7 @@ class EngineHotReloadTest {
     // Evaluate WITHOUT calling refresh() -- data should be visible immediately
     EvaluationContext ctx2 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> liveResults = engine.evaluate(ctx2, bobInput);
+    List<JsonNode> liveResults = JsonNodeBridge.eval(engine, ctx2, bobInput);
     assertTrue(
         resultBoolean(liveResults),
         "data changes should be visible without refresh (live from store)");
@@ -176,7 +176,7 @@ class EngineHotReloadTest {
     JsonNode bobInput = MAPPER.readTree("{\"user\":{\"id\":\"bob\",\"groups\":[\"super\"]}}");
     EvaluationContext ctx =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> results = engine.evaluate(ctx, bobInput);
+    List<JsonNode> results = JsonNodeBridge.eval(engine, ctx, bobInput);
     assertTrue(resultBoolean(results), "bob should be allowed via privileged group");
 
     // Update store with deny policy (data doesn't matter -- policy always returns false)
@@ -186,7 +186,7 @@ class EngineHotReloadTest {
     // Without refresh, old policy still allows bob
     EvaluationContext ctx2 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> staleResults = engine.evaluate(ctx2, bobInput);
+    List<JsonNode> staleResults = JsonNodeBridge.eval(engine, ctx2, bobInput);
     assertTrue(resultBoolean(staleResults), "policy should be stale without refresh");
 
     // After refresh, deny policy takes effect
@@ -194,7 +194,7 @@ class EngineHotReloadTest {
 
     EvaluationContext ctx3 =
         new EvaluationContext.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
-    List<JsonNode> refreshedResults = engine.evaluate(ctx3, bobInput);
+    List<JsonNode> refreshedResults = JsonNodeBridge.eval(engine, ctx3, bobInput);
     assertFalse(
         resultBoolean(refreshedResults),
         "after refresh, deny policy should return false regardless of data");
@@ -215,7 +215,7 @@ class EngineHotReloadTest {
 
     // Bob is denied (no privileged groups)
     JsonNode bobInput = MAPPER.readTree("{\"user\":{\"id\":\"bob\",\"groups\":[\"super\"]}}");
-    assertFalse(resultBoolean(pq.eval(bobInput)), "bob should be denied with no data");
+    assertFalse(resultBoolean(JsonNodeBridge.eval(pq, bobInput)), "bob should be denied with no data");
 
     // Update data only -- add privileged group
     RegoObject newData =
@@ -224,7 +224,7 @@ class EngineHotReloadTest {
 
     // PreparedQuery picks up data changes without refresh (data is live from store)
     assertTrue(
-        resultBoolean(pq.eval(bobInput)),
+        resultBoolean(JsonNodeBridge.eval(pq, bobInput)),
         "PreparedQuery should see live data changes without refresh");
   }
 
@@ -237,7 +237,7 @@ class EngineHotReloadTest {
     Engine engine = new Engine.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
     Engine.PreparedQuery pq = engine.prepareForEvaluation().build();
 
-    assertTrue(resultBoolean(pq.eval(aliceInput())), "alice allowed initially");
+    assertTrue(resultBoolean(JsonNodeBridge.eval(pq, aliceInput())), "alice allowed initially");
 
     // Update store with deny policy + refresh engine
     Bundle denyBundle = new Bundle.Builder().withIrPolicy(denyPolicy()).build();
@@ -246,7 +246,7 @@ class EngineHotReloadTest {
 
     // The OLD PreparedQuery still uses its warmed plan from the original policy
     assertTrue(
-        resultBoolean(pq.eval(aliceInput())),
+        resultBoolean(JsonNodeBridge.eval(pq, aliceInput())),
         "existing PreparedQuery retains old policy even after engine.refresh()");
   }
 
@@ -259,7 +259,7 @@ class EngineHotReloadTest {
     Engine engine = new Engine.Builder().withStore(store).withEntrypoint(ENTRYPOINT).build();
     Engine.PreparedQuery oldPq = engine.prepareForEvaluation().build();
 
-    assertTrue(resultBoolean(oldPq.eval(aliceInput())), "alice allowed initially");
+    assertTrue(resultBoolean(JsonNodeBridge.eval(oldPq, aliceInput())), "alice allowed initially");
 
     // Update store with deny policy + refresh engine
     Bundle denyBundle = new Bundle.Builder().withIrPolicy(denyPolicy()).build();
@@ -270,7 +270,7 @@ class EngineHotReloadTest {
     Engine.PreparedQuery newPq = engine.prepareForEvaluation().build();
 
     assertFalse(
-        resultBoolean(newPq.eval(aliceInput())),
+        resultBoolean(JsonNodeBridge.eval(newPq, aliceInput())),
         "re-prepared PreparedQuery should use the new deny policy");
   }
 }

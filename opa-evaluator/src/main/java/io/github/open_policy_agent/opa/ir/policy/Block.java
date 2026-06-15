@@ -1,7 +1,5 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 import io.github.open_policy_agent.opa.ir.stmts.Stmt;
@@ -20,10 +18,8 @@ import io.github.open_policy_agent.opa.ir.stmts.Stmt;
  * <p>If all statements are defined but no return statement is encountered, the block is considered
  * undefined.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class Block {
 
-  @JsonProperty("stmts")
   private List<Stmt> stmts;
 
   public Block(List<Stmt> stmts) {

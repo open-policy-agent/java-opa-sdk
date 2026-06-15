@@ -1,25 +1,15 @@
 package io.github.open_policy_agent.opa.ir.stmts;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.Objects;
 
 /**
  * AssignIntStmt represents a dynamic append operation of a value onto an array.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-// subclasses have "same" @JsonDeserialize annotation as their parent class, therefore we add an
-// empty one to
-// avoid having the `StmtDeserializer` run again.
-@JsonDeserialize
 public class AssignIntStmt extends BaseStmt {
     public static final String StmtType = "AssignIntStmt";
 
-    @JsonProperty("value")
     private Long value;
 
-    @JsonProperty("target")
     private int target;
 
     public AssignIntStmt() {

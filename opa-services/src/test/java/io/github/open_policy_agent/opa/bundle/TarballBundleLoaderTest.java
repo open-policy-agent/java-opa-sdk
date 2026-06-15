@@ -78,7 +78,7 @@ class TarballBundleLoaderTest {
     Bundle bundle = new TarballBundleLoader("test", tarball).load(store);
 
     assertNotNull(bundle.manifest);
-    assertEquals("abc123", bundle.manifest.get("revision").asText());
+    assertEquals("abc123", bundle.manifest.get("revision"));
   }
 
   @Test

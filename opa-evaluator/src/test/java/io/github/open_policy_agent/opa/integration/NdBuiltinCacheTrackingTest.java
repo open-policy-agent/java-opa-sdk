@@ -124,7 +124,7 @@ public class NdBuiltinCacheTrackingTest {
     Map<String, List<EvaluationContext.CacheCall>> ndCache = ctx.getNdCacheValues();
 
     // Serialize to JSON (simulating what DecisionLogPlugin does)
-    ObjectMapper mapper = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
     JsonNode cacheNode = mapper.valueToTree(ndCache);
 
     // This test verifies that the cache values can be serialized
