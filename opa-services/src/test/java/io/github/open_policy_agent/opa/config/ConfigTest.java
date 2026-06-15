@@ -364,13 +364,13 @@ class ConfigTest {
   void config_mtlsDefaults() {
     Config.TlsConfig tls = new Config.TlsConfig();
     assertFalse(tls.isSystemCaRequired());
-    assertEquals(null, tls.getCaCert());
+    assertNull(tls.getCaCert());
 
     Config.ClientTlsConfig clientTls = new Config.ClientTlsConfig();
-    assertEquals(null, clientTls.getCert());
-    assertEquals(null, clientTls.getPrivateKey());
-    assertEquals(null, clientTls.getPrivateKeyPassphrase());
-    assertEquals(null, clientTls.getCertRereadIntervalSeconds());
+    assertNull(clientTls.getCert());
+    assertNull(clientTls.getPrivateKey());
+    assertNull(clientTls.getPrivateKeyPassphrase());
+    assertNull(clientTls.getCertRereadIntervalSeconds());
   }
 
   @Test

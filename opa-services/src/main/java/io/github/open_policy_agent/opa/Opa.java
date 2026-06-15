@@ -12,6 +12,7 @@ import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.config.ConfigurationException;
+import io.github.open_policy_agent.opa.config.EnvInterpolator;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.mapper.RegoMapper;
 import io.github.open_policy_agent.opa.metrics.Metrics;
@@ -708,7 +709,16 @@ public class Opa {
       }
       if (config == null) {
         try {
-          config = YAML_MAPPER.readValue(configIn, Config.class);
+          // Read fully so we can apply ${VAR} env-var interpolation before parsing. Avoids
+          // plaintext secrets in committed YAML; matches Go-OPA's config-loading behaviour.
+          char[] buf = new char[8192];
+          StringBuilder raw = new StringBuilder();
+          int n;
+          while ((n = configIn.read(buf)) > 0) {
+            raw.append(buf, 0, n);
+          }
+          String interpolated = EnvInterpolator.interpolate(raw.toString());
+          config = YAML_MAPPER.readValue(interpolated, Config.class);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }

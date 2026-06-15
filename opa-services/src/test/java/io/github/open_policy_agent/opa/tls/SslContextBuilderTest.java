@@ -144,6 +144,76 @@ class SslContextBuilderTest {
         new java.security.cert.X509Certificate[] {clientLeaf}, "RSA");
   }
 
+  @Test
+  void truststore_pkcs12Path_buildsTrustManagers() throws Exception {
+    // Build a PKCS#12 truststore on disk holding the fixture CA, then point Config at it.
+    java.nio.file.Path tsPath = dir.resolve("trust.p12");
+    java.security.cert.X509Certificate userCa = PemLoader.loadCertificates(fx.ca).get(0);
+    char[] pw = "ts-pass".toCharArray();
+    java.security.KeyStore ts = java.security.KeyStore.getInstance("PKCS12");
+    ts.load(null, pw);
+    ts.setCertificateEntry("ca", userCa);
+    try (java.io.OutputStream out = java.nio.file.Files.newOutputStream(tsPath)) {
+      ts.store(out, pw);
+    }
+
+    Config.TlsConfig tlsCfg =
+        new Config.TlsConfig()
+            .setTruststore(
+                new Config.TruststoreConfig().setPath(tsPath.toString()).setPassword("ts-pass"));
+    TrustManager[] tms = SslContextBuilder.buildTrustManagers(tlsCfg);
+    X509TrustManager x = (X509TrustManager) tms[0];
+    java.security.cert.X509Certificate[] accepted = x.getAcceptedIssuers();
+    assertEquals(1, accepted.length);
+    assertEquals(userCa, accepted[0]);
+  }
+
+  @Test
+  void truststore_programmaticKeyStore_buildsTrustManagers() throws Exception {
+    // SDK pass-through path — no file on disk. Reviewer asked specifically for this.
+    java.security.cert.X509Certificate userCa = PemLoader.loadCertificates(fx.ca).get(0);
+    java.security.KeyStore ts = java.security.KeyStore.getInstance("PKCS12");
+    ts.load(null, new char[0]);
+    ts.setCertificateEntry("ca", userCa);
+
+    Config.TlsConfig tlsCfg =
+        new Config.TlsConfig()
+            .setTruststore(new Config.TruststoreConfig().setKeyStore(ts));
+    TrustManager[] tms = SslContextBuilder.buildTrustManagers(tlsCfg);
+    X509TrustManager x = (X509TrustManager) tms[0];
+    java.security.cert.X509Certificate[] accepted = x.getAcceptedIssuers();
+    assertEquals(1, accepted.length);
+    assertEquals(userCa, accepted[0]);
+  }
+
+  @Test
+  void clientTls_keystoreProgrammatic_buildsContext() throws Exception {
+    // Build a programmatic keystore from the fixture client cert + key.
+    java.security.cert.X509Certificate clientLeaf =
+        PemLoader.loadCertificates(fx.client).get(0);
+    java.security.PrivateKey clientKey = PemLoader.loadPrivateKey(fx.clientKey, null);
+    char[] pw = "ks-pass".toCharArray();
+    java.security.KeyStore ks = java.security.KeyStore.getInstance("PKCS12");
+    ks.load(null, pw);
+    ks.setKeyEntry("client", clientKey, pw, new java.security.cert.X509Certificate[] {clientLeaf});
+
+    Config.ServiceConfig cfg =
+        new Config.ServiceConfig()
+            .setName("s")
+            .setTls(new Config.TlsConfig().setCaCert(fx.ca.toString()))
+            .setCredentials(
+                new Config.CredentialsConfig()
+                    .setClientTls(
+                        new Config.ClientTlsConfig()
+                            .setKeystore(
+                                new Config.KeystoreConfig()
+                                    .setKeyStore(ks)
+                                    .setKeyPassword("ks-pass"))));
+    SslContextBuilder.Tls tls = SslContextBuilder.build(cfg, null, LOG);
+
+    assertNotNull(tls.getSslContext());
+  }
+
   private static X509TrustManager acceptAll() {
     return new X509TrustManager() {
       public void checkClientTrusted(

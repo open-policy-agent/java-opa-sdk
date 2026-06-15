@@ -13,6 +13,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -56,7 +57,7 @@ class ReloadingX509KeyManagerTest {
     Logger logger = mock(Logger.class);
     ReloadingX509KeyManager km =
         ReloadingX509KeyManager.create(
-            fx.client, fx.clientKey, null, scheduler, /*interval*/ Long.MAX_VALUE, logger, "svc");
+            fx.client, fx.clientKey, null, scheduler, /*interval*/ Duration.ofDays(365), logger, "svc");
 
     X509Certificate[] first = km.getCertificateChain("key");
     assertNotNull(first);
@@ -86,7 +87,7 @@ class ReloadingX509KeyManagerTest {
     Logger logger = mock(Logger.class);
     ReloadingX509KeyManager km =
         ReloadingX509KeyManager.create(
-            certCopy, keyCopy, null, scheduler, Long.MAX_VALUE, logger, "svc");
+            certCopy, keyCopy, null, scheduler, Duration.ofDays(365), logger, "svc");
 
     X509Certificate[] before = km.getCertificateChain("key");
     assertNotNull(before);
@@ -158,7 +159,7 @@ class ReloadingX509KeyManagerTest {
     Logger logger = mock(Logger.class);
     ReloadingX509KeyManager km =
         ReloadingX509KeyManager.create(
-            certCopy, keyCopy, null, scheduler, Long.MAX_VALUE, logger, "svc");
+            certCopy, keyCopy, null, scheduler, Duration.ofDays(365), logger, "svc");
 
     X509Certificate[] before = km.getCertificateChain("key");
     assertNotNull(before);
@@ -214,23 +215,6 @@ class ReloadingX509KeyManagerTest {
   }
 
   @Test
-  void create_encryptedKey_loadsWithPassphrase() throws Exception {
-    Logger logger = mock(Logger.class);
-    ReloadingX509KeyManager km =
-        ReloadingX509KeyManager.create(
-            fx.client,
-            fx.clientKeyEncrypted,
-            fx.clientKeyPassphrase.toCharArray(),
-            scheduler,
-            Long.MAX_VALUE,
-            logger,
-            "svc");
-
-    assertNotNull(km.getCertificateChain("key"));
-    assertNotNull(km.getPrivateKey("key"));
-  }
-
-  @Test
   void reload_corruptedFile_delegateRetained() throws Exception {
     Path certCopy = dir.resolve("client-bad-test.pem");
     Path keyCopy = dir.resolve("client-bad-test-key.pem");
@@ -240,7 +224,7 @@ class ReloadingX509KeyManagerTest {
     Logger logger = mock(Logger.class);
     ReloadingX509KeyManager km =
         ReloadingX509KeyManager.create(
-            certCopy, keyCopy, null, scheduler, Long.MAX_VALUE, logger, "svc");
+            certCopy, keyCopy, null, scheduler, Duration.ofDays(365), logger, "svc");
 
     X509Certificate[] before = km.getCertificateChain("key");
     assertNotNull(before);

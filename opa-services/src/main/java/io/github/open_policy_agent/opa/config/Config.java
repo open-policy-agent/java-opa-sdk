@@ -3,6 +3,7 @@ package io.github.open_policy_agent.opa.config;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
@@ -475,23 +476,28 @@ public class Config {
       return tls;
     }
 
+    /**
+     * Server-TLS configuration (trust roots) for verifying the service certificate. See {@link
+     * TlsConfig} for the YAML-equivalent fields.
+     */
     public ServiceConfig setTls(TlsConfig tls) {
       this.tls = tls;
       return this;
     }
 
-    /**
-     * Programmatic override for the per-service {@link SSLContext}.
-     *
-     * <p>When set, it is used as-is and file-based TLS fields ({@link TlsConfig},
-     * {@link ClientTlsConfig}) are rejected during validation. Use this for keystores that can't be
-     * expressed in YAML (PKCS12 from an enterprise cert manager, HSM-backed keys, runtime rotation
-     * from an external secret manager, etc.).
-     */
     public SSLContext getSslContext() {
       return sslContext;
     }
 
+    /**
+     * Programmatic override for the per-service {@link SSLContext}.
+     *
+     * <p>When set, it is used as-is and file-based TLS fields ({@link TlsConfig}, {@link
+     * ClientTlsConfig}) are rejected during validation. Use this for keystores that can't be
+     * expressed in YAML (HSM-backed keys, custom KeyManager chains, etc.). For keystores from a
+     * secret manager, prefer the more ergonomic {@link TruststoreConfig#setKeyStore(KeyStore)} /
+     * {@link KeystoreConfig#setKeyStore(KeyStore)} pass-throughs.
+     */
     public ServiceConfig setSslContext(SSLContext sslContext) {
       this.sslContext = sslContext;
       return this;
@@ -560,7 +566,9 @@ public class Config {
   /**
    * Server-TLS configuration for a service (trust roots).
    *
-   * <p>Mirrors Go-OPA's {@code services.<name>.tls} block.
+   * <p>Mirrors Go-OPA's {@code services.<name>.tls} block. {@code ca_cert} is the file-based PEM
+   * path; {@code truststore} is a Java-native JKS / PKCS#12 alternative. The two are mutually
+   * exclusive — pick whichever your deployment already manages.
    */
   public static class TlsConfig {
     @JsonProperty("ca_cert")
@@ -569,10 +577,16 @@ public class Config {
     @JsonProperty("system_ca_required")
     private boolean systemCaRequired = false;
 
+    private TruststoreConfig truststore;
+
     public String getCaCert() {
       return caCert;
     }
 
+    /**
+     * Path to a PEM file containing one or more trust-root certificates used to verify the server
+     * certificate. Mutually exclusive with {@link #setTruststore(TruststoreConfig)}.
+     */
     public TlsConfig setCaCert(String caCert) {
       this.caCert = caCert;
       return this;
@@ -582,14 +596,108 @@ public class Config {
       return systemCaRequired;
     }
 
+    /**
+     * When {@code true}, the JVM's default trust store is also accepted in addition to the
+     * configured {@link #setCaCert(String) ca_cert} or {@link #setTruststore(TruststoreConfig)
+     * truststore}.
+     */
     public TlsConfig setSystemCaRequired(boolean systemCaRequired) {
       this.systemCaRequired = systemCaRequired;
       return this;
     }
 
+    public TruststoreConfig getTruststore() {
+      return truststore;
+    }
+
+    /**
+     * Java-native JKS / PKCS#12 truststore. Use this when your deployment already manages trust
+     * roots in a keystore (typical for Java shops). Mutually exclusive with {@link
+     * #setCaCert(String) ca_cert}.
+     */
+    public TlsConfig setTruststore(TruststoreConfig truststore) {
+      this.truststore = truststore;
+      return this;
+    }
+
     @Override
     public String toString() {
-      return "TlsConfig{caCert='" + caCert + "', systemCaRequired=" + systemCaRequired + '}';
+      return "TlsConfig{caCert='"
+          + caCert
+          + "', systemCaRequired="
+          + systemCaRequired
+          + ", truststore="
+          + truststore
+          + '}';
+    }
+  }
+
+  /**
+   * JKS / PKCS#12 truststore. Either {@link #setPath(String) path} (loaded from disk) or {@link
+   * #setKeyStore(KeyStore) keyStore} (programmatic) must be set, but not both.
+   */
+  public static class TruststoreConfig {
+    private String path;
+    private String password;
+    private String type;
+
+    @JsonIgnore private KeyStore keyStore;
+
+    public String getPath() {
+      return path;
+    }
+
+    public TruststoreConfig setPath(String path) {
+      this.path = path;
+      return this;
+    }
+
+    public String getPassword() {
+      return password;
+    }
+
+    public TruststoreConfig setPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    /**
+     * Keystore type. Defaults to {@code PKCS12} (or inferred from the file extension when {@link
+     * #setPath(String) path} ends in {@code .jks}).
+     */
+    public TruststoreConfig setType(String type) {
+      this.type = type;
+      return this;
+    }
+
+    public KeyStore getKeyStore() {
+      return keyStore;
+    }
+
+    /**
+     * Programmatic SDK pass-through for an in-memory {@link KeyStore} (e.g. loaded from a secret
+     * manager). When set, {@link #setPath(String) path} must be {@code null}.
+     */
+    public TruststoreConfig setKeyStore(KeyStore keyStore) {
+      this.keyStore = keyStore;
+      return this;
+    }
+
+    @Override
+    public String toString() {
+      return "TruststoreConfig{path='"
+          + path
+          + "', type='"
+          + type
+          + "', password="
+          + (password == null ? "null" : "<redacted>")
+          + ", keyStore="
+          + (keyStore == null ? "null" : "<programmatic>")
+          + '}';
     }
   }
 
@@ -626,9 +734,15 @@ public class Config {
   /**
    * Client-TLS credentials for mTLS bundle downloads (and all service HTTP traffic).
    *
-   * <p>Mirrors Go-OPA's {@code services.<name>.credentials.client_tls} block. Only PKCS#8
-   * (encrypted or unencrypted) PEM private keys are supported; convert PKCS#1 keys with {@code
-   * openssl pkcs8 -topk8 -nocrypt -in key.pem -out key-pkcs8.pem}.
+   * <p>Mirrors Go-OPA's {@code services.<name>.credentials.client_tls} block. Two ways to provide
+   * the cert+key pair:
+   *
+   * <ul>
+   *   <li>{@code cert} + {@code private_key}: PEM files on disk, PKCS#8 unencrypted private key.
+   *   <li>{@code keystore}: a JKS / PKCS#12 keystore on disk or supplied programmatically.
+   * </ul>
+   *
+   * <p>Pick one — they are mutually exclusive.
    */
   public static class ClientTlsConfig {
     private String cert;
@@ -642,10 +756,16 @@ public class Config {
     @JsonProperty("cert_reread_interval_seconds")
     private Integer certRereadIntervalSeconds;
 
+    private KeystoreConfig keystore;
+
     public String getCert() {
       return cert;
     }
 
+    /**
+     * Path to a PEM file with the client certificate chain. Mutually exclusive with {@link
+     * #setKeystore(KeystoreConfig)}.
+     */
     public ClientTlsConfig setCert(String cert) {
       this.cert = cert;
       return this;
@@ -655,6 +775,11 @@ public class Config {
       return privateKey;
     }
 
+    /**
+     * Path to an unencrypted PKCS#8 PEM file containing the client private key. PKCS#1 / SEC1 keys
+     * are not supported — convert with {@code openssl pkcs8 -topk8 -nocrypt}, or supply a
+     * keystore via {@link #setKeystore(KeystoreConfig)}.
+     */
     public ClientTlsConfig setPrivateKey(String privateKey) {
       this.privateKey = privateKey;
       return this;
@@ -664,6 +789,10 @@ public class Config {
       return privateKeyPassphrase;
     }
 
+    /**
+     * Reserved. Encrypted PEM keys are not supported by the file-based loader; use a JKS /
+     * PKCS#12 keystore for password-protected keys.
+     */
     public ClientTlsConfig setPrivateKeyPassphrase(String privateKeyPassphrase) {
       this.privateKeyPassphrase = privateKeyPassphrase;
       return this;
@@ -673,8 +802,26 @@ public class Config {
       return certRereadIntervalSeconds;
     }
 
+    /**
+     * If set and {@code > 0}, the cert and private-key files are re-read on this interval (in
+     * seconds) so external rotation tools can swap them in place. Only applies to the
+     * file-based {@code cert}/{@code private_key} fields, not to keystores.
+     */
     public ClientTlsConfig setCertRereadIntervalSeconds(Integer certRereadIntervalSeconds) {
       this.certRereadIntervalSeconds = certRereadIntervalSeconds;
+      return this;
+    }
+
+    public KeystoreConfig getKeystore() {
+      return keystore;
+    }
+
+    /**
+     * JKS / PKCS#12 keystore providing the client cert and key. Mutually exclusive with {@link
+     * #setCert(String) cert} / {@link #setPrivateKey(String) private_key}.
+     */
+    public ClientTlsConfig setKeystore(KeystoreConfig keystore) {
+      this.keystore = keystore;
       return this;
     }
 
@@ -688,6 +835,96 @@ public class Config {
           + (privateKeyPassphrase == null ? "null" : "<redacted>")
           + ", certRereadIntervalSeconds="
           + certRereadIntervalSeconds
+          + ", keystore="
+          + keystore
+          + '}';
+    }
+  }
+
+  /**
+   * JKS / PKCS#12 keystore holding a client certificate and private key. Either {@link
+   * #setPath(String) path} or {@link #setKeyStore(KeyStore) keyStore} must be set, but not both.
+   */
+  public static class KeystoreConfig {
+    private String path;
+    private String password;
+
+    @JsonProperty("key_password")
+    private String keyPassword;
+
+    private String type;
+
+    @JsonIgnore private KeyStore keyStore;
+
+    public String getPath() {
+      return path;
+    }
+
+    public KeystoreConfig setPath(String path) {
+      this.path = path;
+      return this;
+    }
+
+    public String getPassword() {
+      return password;
+    }
+
+    public KeystoreConfig setPassword(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public String getKeyPassword() {
+      return keyPassword;
+    }
+
+    /**
+     * Password for the private key entry within the keystore. Defaults to {@link
+     * #setPassword(String) password} when unset, matching standard {@code keytool} usage.
+     */
+    public KeystoreConfig setKeyPassword(String keyPassword) {
+      this.keyPassword = keyPassword;
+      return this;
+    }
+
+    public String getType() {
+      return type;
+    }
+
+    /**
+     * Keystore type. Defaults to {@code PKCS12} (or inferred from the file extension when {@link
+     * #setPath(String) path} ends in {@code .jks}).
+     */
+    public KeystoreConfig setType(String type) {
+      this.type = type;
+      return this;
+    }
+
+    public KeyStore getKeyStore() {
+      return keyStore;
+    }
+
+    /**
+     * Programmatic SDK pass-through for an in-memory {@link KeyStore}. When set, {@link
+     * #setPath(String) path} must be {@code null}.
+     */
+    public KeystoreConfig setKeyStore(KeyStore keyStore) {
+      this.keyStore = keyStore;
+      return this;
+    }
+
+    @Override
+    public String toString() {
+      return "KeystoreConfig{path='"
+          + path
+          + "', type='"
+          + type
+          + "', password="
+          + (password == null ? "null" : "<redacted>")
+          + ", keyPassword="
+          + (keyPassword == null ? "null" : "<redacted>")
+          + ", keyStore="
+          + (keyStore == null ? "null" : "<programmatic>")
           + '}';
     }
   }

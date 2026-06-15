@@ -1,39 +1,39 @@
 package io.github.open_policy_agent.opa.tls;
 
 import java.io.IOException;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Base64;
+import java.util.Collection;
 import java.util.List;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
-import org.bouncycastle.cert.X509CertificateHolder;
-import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMEncryptedKeyPair;
-import org.bouncycastle.openssl.PEMKeyPair;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.bouncycastle.openssl.jcajce.JceOpenSSLPKCS8DecryptorProviderBuilder;
-import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
-import org.bouncycastle.operator.InputDecryptorProvider;
-import org.bouncycastle.operator.OperatorCreationException;
-import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
-import org.bouncycastle.pkcs.PKCSException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * PEM parsing utilities for X.509 certificates and private keys.
+ * PEM parsing utilities for X.509 certificates and private keys, using only the JDK standard
+ * library.
  *
- * <p>Backed by Bouncy Castle: handles PKCS#8 (encrypted and unencrypted), PKCS#1 RSA, SEC1 EC, and
- * legacy OpenSSL-style encrypted PEM ({@code Proc-Type: 4,ENCRYPTED}).
+ * <p>Supports PKCS#8 PEM ({@code -----BEGIN PRIVATE KEY-----}) keys with any algorithm the JDK
+ * KeyFactory recognises (RSA, EC, DSA). Encrypted PKCS#8 ({@code BEGIN ENCRYPTED PRIVATE KEY}),
+ * PKCS#1 RSA ({@code BEGIN RSA PRIVATE KEY}), and SEC1 EC ({@code BEGIN EC PRIVATE KEY}) are
+ * <em>not</em> supported — convert to unencrypted PKCS#8 first, or supply credentials via a JKS /
+ * PKCS#12 keystore (see {@code credentials.client_tls.keystore}).
  */
 public final class PemLoader {
 
-  private static final BouncyCastleProvider BC_PROVIDER = new BouncyCastleProvider();
+  private static final Pattern PEM_BLOCK =
+      Pattern.compile(
+          "-----BEGIN ([A-Z0-9 ]+?)-----\\s*([A-Za-z0-9+/=\\r\\n\\s]+?)\\s*-----END \\1-----");
 
   private PemLoader() {}
 
@@ -49,18 +49,29 @@ public final class PemLoader {
 
   static List<X509Certificate> parseCertificates(byte[] data, String source) throws IOException {
     List<X509Certificate> certs = new ArrayList<>();
-    JcaX509CertificateConverter converter = new JcaX509CertificateConverter();
-    try (PEMParser parser = new PEMParser(reader(data))) {
-      Object obj;
-      while ((obj = parser.readObject()) != null) {
-        if (obj instanceof X509CertificateHolder) {
-          try {
-            certs.add(converter.getCertificate((X509CertificateHolder) obj));
-          } catch (CertificateException e) {
-            throw new IOException(
-                "Failed to parse certificate in " + source + ": " + e.getMessage(), e);
-          }
+    CertificateFactory factory;
+    try {
+      factory = CertificateFactory.getInstance("X.509");
+    } catch (CertificateException e) {
+      throw new IOException("X.509 CertificateFactory unavailable", e);
+    }
+
+    Matcher m = PEM_BLOCK.matcher(new String(data, StandardCharsets.UTF_8));
+    while (m.find()) {
+      String label = m.group(1).trim();
+      if (!label.equals("CERTIFICATE")) {
+        continue;
+      }
+      byte[] der = decodeBase64(m.group(2), source);
+      try {
+        Collection<? extends java.security.cert.Certificate> parsed =
+            factory.generateCertificates(new java.io.ByteArrayInputStream(der));
+        for (java.security.cert.Certificate c : parsed) {
+          certs.add((X509Certificate) c);
         }
+      } catch (CertificateException e) {
+        throw new IOException(
+            "Failed to parse certificate in " + source + ": " + e.getMessage(), e);
       }
     }
     if (certs.isEmpty()) {
@@ -70,11 +81,12 @@ public final class PemLoader {
   }
 
   /**
-   * Load a private key from a PEM file.
+   * Load an unencrypted PKCS#8 private key from a PEM file.
    *
    * @param path path to a PEM file
-   * @param passphrase passphrase for encrypted keys; ignored for unencrypted keys (pass {@code
-   *     null} when the key is unencrypted)
+   * @param passphrase reserved for future use; encrypted PEM keys are not supported by this
+   *     loader. If non-null, an {@link IOException} is thrown so misconfiguration surfaces early
+   *     rather than silently ignoring the passphrase.
    * @return the parsed private key
    */
   public static PrivateKey loadPrivateKey(Path path, char[] passphrase) throws IOException {
@@ -83,61 +95,63 @@ public final class PemLoader {
 
   static PrivateKey parsePrivateKey(byte[] data, char[] passphrase, String source)
       throws IOException {
-    JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
-    try (PEMParser parser = new PEMParser(reader(data))) {
-      Object obj;
-      while ((obj = parser.readObject()) != null) {
-        try {
-          if (obj instanceof PEMEncryptedKeyPair) {
-            requirePassphrase(passphrase, source);
-            PEMKeyPair kp =
-                ((PEMEncryptedKeyPair) obj)
-                    .decryptKeyPair(
-                        new JcePEMDecryptorProviderBuilder()
-                            .setProvider(BC_PROVIDER)
-                            .build(passphrase));
-            return converter.getKeyPair(kp).getPrivate();
+    Matcher m = PEM_BLOCK.matcher(new String(data, StandardCharsets.UTF_8));
+    while (m.find()) {
+      String label = m.group(1).trim();
+      switch (label) {
+        case "PRIVATE KEY":
+          if (passphrase != null) {
+            throw new IOException(
+                "Key in "
+                    + source
+                    + " is unencrypted PKCS#8 but a passphrase was supplied. Either remove the"
+                    + " passphrase or supply credentials via a JKS / PKCS#12 keystore.");
           }
-          if (obj instanceof PKCS8EncryptedPrivateKeyInfo) {
-            requirePassphrase(passphrase, source);
-            InputDecryptorProvider decryptor =
-                new JceOpenSSLPKCS8DecryptorProviderBuilder()
-                    .setProvider(BC_PROVIDER)
-                    .build(passphrase);
-            PrivateKeyInfo info =
-                ((PKCS8EncryptedPrivateKeyInfo) obj).decryptPrivateKeyInfo(decryptor);
-            return converter.getPrivateKey(info);
-          }
-          if (obj instanceof PEMKeyPair) {
-            return converter.getKeyPair((PEMKeyPair) obj).getPrivate();
-          }
-          if (obj instanceof PrivateKeyInfo) {
-            return converter.getPrivateKey((PrivateKeyInfo) obj);
-          }
-          // Anything else (e.g. an X509CertificateHolder when cert+key share a file) is skipped.
-        } catch (OperatorCreationException | PKCSException e) {
+          return decodePkcs8(decodeBase64(m.group(2), source), source);
+        case "ENCRYPTED PRIVATE KEY":
           throw new IOException(
-              "Failed to decrypt key in "
+              "Encrypted PEM private keys are not supported in "
                   + source
-                  + " (wrong passphrase or unsupported algorithm): "
-                  + e.getMessage(),
-              e);
-        }
+                  + ". Convert to unencrypted PKCS#8 (openssl pkcs8 -topk8 -nocrypt) or use a"
+                  + " JKS / PKCS#12 keystore via credentials.client_tls.keystore.");
+        case "RSA PRIVATE KEY":
+        case "EC PRIVATE KEY":
+          throw new IOException(
+              "PKCS#1 / SEC1 PEM private keys are not supported in "
+                  + source
+                  + " (found '"
+                  + label
+                  + "'). Convert to PKCS#8 with"
+                  + " 'openssl pkcs8 -topk8 -nocrypt -in key.pem -out key-pkcs8.pem'.");
+        default:
+          // Skip unrelated blocks (e.g. CERTIFICATE) when key+chain share a file.
       }
     }
     throw new IOException("No private-key PEM block found in " + source);
   }
 
-  private static void requirePassphrase(char[] passphrase, String source) throws IOException {
-    if (passphrase == null) {
-      throw new IOException(
-          "Key in " + source + " is encrypted but no private_key_passphrase was provided");
+  private static PrivateKey decodePkcs8(byte[] der, String source) throws IOException {
+    PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(der);
+    // Try the algorithms KeyFactory commonly supports. The DER itself encodes the algorithm OID,
+    // so KeyFactory.generatePrivate validates it; we just need to pick the right factory.
+    for (String alg : new String[] {"RSA", "EC", "DSA"}) {
+      try {
+        return KeyFactory.getInstance(alg).generatePrivate(spec);
+      } catch (InvalidKeySpecException ignored) {
+        // try next
+      } catch (GeneralSecurityException e) {
+        throw new IOException("Failed to load private key from " + source + ": " + e.getMessage(), e);
+      }
     }
+    throw new IOException(
+        "Unsupported private-key algorithm in " + source + " (expected RSA, EC, or DSA PKCS#8)");
   }
 
-  private static StringReader reader(byte[] data) {
-    // PEM is ASCII-only by spec, but reading as UTF-8 tolerates a BOM or stray non-ASCII
-    // bytes outside the base64 blocks (e.g. comments) without failing parsing.
-    return new StringReader(new String(data, StandardCharsets.UTF_8));
+  private static byte[] decodeBase64(String body, String source) throws IOException {
+    try {
+      return Base64.getMimeDecoder().decode(body);
+    } catch (IllegalArgumentException e) {
+      throw new IOException("Malformed base64 in PEM block in " + source + ": " + e.getMessage(), e);
+    }
   }
 }

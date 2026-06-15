@@ -47,34 +47,32 @@ class PemLoaderTest {
   }
 
   @Test
-  void loadPrivateKey_encryptedWithPassphrase() throws IOException {
-    PrivateKey key =
-        PemLoader.loadPrivateKey(fx.clientKeyEncrypted, fx.clientKeyPassphrase.toCharArray());
-    assertNotNull(key);
-    assertEquals("RSA", key.getAlgorithm());
-  }
-
-  @Test
-  void loadPrivateKey_encryptedMissingPassphrase_throws() {
-    IOException e =
-        assertThrows(IOException.class, () -> PemLoader.loadPrivateKey(fx.clientKeyEncrypted, null));
-    assertTrue(e.getMessage().contains("no private_key_passphrase"));
-  }
-
-  @Test
-  void loadPrivateKey_wrongPassphrase_throws() {
+  void loadPrivateKey_encryptedPkcs8_throwsWithGuidance() {
+    // Encrypted PEM keys are intentionally unsupported — users are expected to convert to
+    // unencrypted PKCS#8 or supply a JKS / PKCS#12 keystore via credentials.client_tls.keystore.
     IOException e =
         assertThrows(
             IOException.class,
-            () -> PemLoader.loadPrivateKey(fx.clientKeyEncrypted, "wrong".toCharArray()));
-    assertTrue(e.getMessage().contains("Failed to decrypt"));
+            () -> PemLoader.loadPrivateKey(fx.clientKeyEncrypted, fx.clientKeyPassphrase.toCharArray()));
+    assertTrue(
+        e.getMessage().contains("Encrypted PEM private keys are not supported"),
+        "expected encrypted-key guidance, got: " + e.getMessage());
   }
 
   @Test
-  void loadPrivateKey_pkcs1Rsa_loadsViaBouncyCastle() throws IOException, InterruptedException {
+  void loadPrivateKey_passphraseOnUnencrypted_throws() {
+    // A passphrase supplied for an unencrypted key is almost certainly a misconfiguration —
+    // refuse it loudly so a stale passphrase doesn't silently get ignored.
+    IOException e =
+        assertThrows(
+            IOException.class,
+            () -> PemLoader.loadPrivateKey(fx.clientKey, "ignored".toCharArray()));
+    assertTrue(e.getMessage().contains("unencrypted PKCS#8 but a passphrase was supplied"));
+  }
+
+  @Test
+  void loadPrivateKey_pkcs1Rsa_throwsWithConversionHint() throws IOException, InterruptedException {
     Path pkcs1 = dir.resolve("pkcs1.pem");
-    // `openssl rsa -in pkcs8.pem -out out.pem` produces PKCS#1 on LibreSSL and on OpenSSL <3,
-    // and OpenSSL 3.x accepts `-traditional` for the same effect. Try both.
     int rc1 =
         new ProcessBuilder(
                 "openssl", "rsa", "-in", fx.clientKey.toString(), "-out", pkcs1.toString())
@@ -101,9 +99,10 @@ class PemLoaderTest {
         header.contains("BEGIN RSA PRIVATE KEY"),
         "expected PKCS#1 key but got:\n" + header.substring(0, Math.min(header.length(), 120)));
 
-    PrivateKey key = PemLoader.loadPrivateKey(pkcs1, null);
-    assertNotNull(key);
-    assertEquals("RSA", key.getAlgorithm());
+    IOException e = assertThrows(IOException.class, () -> PemLoader.loadPrivateKey(pkcs1, null));
+    assertTrue(
+        e.getMessage().contains("Convert to PKCS#8"),
+        "expected conversion hint, got: " + e.getMessage());
   }
 
   @Test

@@ -10,9 +10,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Principal;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.net.ssl.SSLEngine;
@@ -23,14 +25,16 @@ import io.github.open_policy_agent.opa.logging.Logger;
  * An {@link X509ExtendedKeyManager} that periodically re-reads its cert and private-key files and
  * rebuilds the underlying delegate when the on-disk bytes change.
  *
- * <p>Designed for short-lived certificates (CertManagerV2 issues 24-hour certs) where the
- * deployment refreshes them in place. Mirrors swift-opa-sdk's {@code
- * cert_reread_interval_seconds} semantics: polled reload, SHA-256 dedupe, parse only on change.
+ * <p>Designed for short-lived certificates (e.g. cert-manager issues 24-hour certs) where the
+ * deployment refreshes them in place. Polled reload, SHA-256 dedupe, parse only on change.
  *
  * <p>The key manager delegate is swapped atomically, so in-flight handshakes keep using the old
  * delegate and new handshakes pick up the new one.
+ *
+ * <p>Call {@link #close()} to cancel the reload schedule when the owning service is torn down or
+ * its config is reloaded; otherwise the task continues until the scheduler itself shuts down.
  */
-public final class ReloadingX509KeyManager extends X509ExtendedKeyManager {
+public final class ReloadingX509KeyManager extends X509ExtendedKeyManager implements AutoCloseable {
 
   private final Path certPath;
   private final Path keyPath;
@@ -39,15 +43,16 @@ public final class ReloadingX509KeyManager extends X509ExtendedKeyManager {
   private final String serviceName;
 
   private final AtomicReference<State> state = new AtomicReference<>();
+  private final AtomicReference<ScheduledFuture<?>> reloadFuture = new AtomicReference<>();
 
   /**
    * Build and start a reloading key manager.
    *
    * @param certPath PEM cert-chain path
    * @param keyPath PEM PKCS#8 private-key path
-   * @param keyPassphrase passphrase for encrypted keys (nullable)
+   * @param keyPassphrase reserved; encrypted PEM keys are not supported (pass {@code null})
    * @param scheduler executor used to schedule periodic reloads
-   * @param rereadInterval how often to check the on-disk bytes
+   * @param rereadInterval how often to check the on-disk bytes (must be positive)
    * @param logger logger for reload events
    * @param serviceName name of the owning service (for log messages)
    */
@@ -56,18 +61,23 @@ public final class ReloadingX509KeyManager extends X509ExtendedKeyManager {
       Path keyPath,
       char[] keyPassphrase,
       ScheduledExecutorService scheduler,
-      long rereadIntervalSeconds,
+      Duration rereadInterval,
       Logger logger,
       String serviceName)
       throws IOException, GeneralSecurityException {
+    if (rereadInterval == null || rereadInterval.isNegative() || rereadInterval.isZero()) {
+      throw new IllegalArgumentException("rereadInterval must be positive");
+    }
     ReloadingX509KeyManager mgr =
         new ReloadingX509KeyManager(certPath, keyPath, keyPassphrase, logger, serviceName);
     mgr.loadOrThrow();
-    scheduler.scheduleAtFixedRate(
-        mgr::reloadIfChanged,
-        rereadIntervalSeconds,
-        rereadIntervalSeconds,
-        TimeUnit.SECONDS);
+    long seconds = rereadInterval.getSeconds();
+    if (seconds < 1) {
+      seconds = 1;
+    }
+    ScheduledFuture<?> future =
+        scheduler.scheduleAtFixedRate(mgr::reloadIfChanged, seconds, seconds, TimeUnit.SECONDS);
+    mgr.reloadFuture.set(future);
     return mgr;
   }
 
@@ -117,6 +127,18 @@ public final class ReloadingX509KeyManager extends X509ExtendedKeyManager {
       logger.error(
           "Service '%s': failed to reload client TLS certificate: %s",
           serviceName, e.getMessage());
+    }
+  }
+
+  /**
+   * Cancel the periodic reload task. Idempotent. The currently-loaded delegate keeps serving
+   * in-flight handshakes; only future scheduler ticks are stopped.
+   */
+  @Override
+  public void close() {
+    ScheduledFuture<?> future = reloadFuture.getAndSet(null);
+    if (future != null) {
+      future.cancel(false);
     }
   }
 

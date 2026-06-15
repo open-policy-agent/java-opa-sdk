@@ -111,26 +111,45 @@ services:
       client_tls:
         cert: /etc/ssl/client.pem
         private_key: /etc/ssl/client-key.pem
-        private_key_passphrase: "key-passphrase"
         cert_reread_interval_seconds: 3600
 ```
 
 | Field | Description |
 |-------|-------------|
-| `tls.ca_cert` | PEM file containing one or more trust roots for verifying the server. |
-| `tls.system_ca_required` | When `true`, the JVM's default trust store is also trusted in addition to `ca_cert`. |
-| `credentials.client_tls.cert` | PEM file containing the client certificate (and any intermediates). |
-| `credentials.client_tls.private_key` | PKCS#8 PEM file with the client private key. |
-| `credentials.client_tls.private_key_passphrase` | Passphrase for an encrypted PKCS#8 key. Omit for unencrypted keys. |
+| `tls.ca_cert` | Path to a PEM file containing one or more trust roots for verifying the server. |
+| `tls.truststore.{path,password,type}` | Java-native JKS / PKCS#12 truststore (alternative to `ca_cert`). Mutually exclusive with `ca_cert`. |
+| `tls.system_ca_required` | When `true`, the JVM's default trust store is also trusted in addition to `ca_cert` / `truststore`. |
+| `credentials.client_tls.cert` | Path to a PEM file with the client certificate (and any intermediates). |
+| `credentials.client_tls.private_key` | Path to an unencrypted PKCS#8 PEM file with the client private key. |
 | `credentials.client_tls.cert_reread_interval_seconds` | If set, the cert and key are reloaded from disk on this interval to support runtime rotation. |
+| `credentials.client_tls.keystore.{path,password,key_password,type}` | JKS / PKCS#12 keystore alternative (path is mutually exclusive with `cert` / `private_key`; supports password-protected keys). |
 
-Only PKCS#8 PEM private keys are accepted. Convert PKCS#1 keys with:
+Only **unencrypted PKCS#8** PEM private keys are accepted by the file-based loader (the JDK has no first-class support for legacy PKCS#1 / SEC1 / encrypted PEMs without third-party crypto). Convert PKCS#1 keys with:
 
 ```sh
 openssl pkcs8 -topk8 -nocrypt -in key.pem -out key-pkcs8.pem
 ```
 
-Programmatic equivalent:
+For encrypted or password-protected keys, use a **JKS / PKCS#12 keystore** instead:
+
+```yaml
+services:
+  acmecorp:
+    url: https://policy.example.com
+    tls:
+      truststore:
+        path: /etc/ssl/truststore.jks
+        password: ${TRUSTSTORE_PASSWORD}
+        type: JKS
+    credentials:
+      client_tls:
+        keystore:
+          path: /etc/ssl/client.p12
+          password: ${KEYSTORE_PASSWORD}
+          key_password: ${KEY_PASSWORD}
+```
+
+Programmatic equivalent (file-based mTLS):
 
 ```java
 Config config = new Config()
@@ -144,11 +163,28 @@ Config config = new Config()
             .setClientTls(new Config.ClientTlsConfig()
                 .setCert("/etc/ssl/client.pem")
                 .setPrivateKey("/etc/ssl/client-key.pem")
-                .setPrivateKeyPassphrase("key-passphrase")
                 .setCertRereadIntervalSeconds(3600))));
 ```
 
-For keystores that cannot be expressed as files (HSM-backed keys, secret-manager-driven rotation, custom `KeyManager` chains), supply a fully constructed `SSLContext` directly. When set, file-based TLS fields are rejected during validation:
+Programmatic equivalent (in-memory keystore from a secret manager — no files on disk):
+
+```java
+KeyStore clientStore = loadFromVault();
+KeyStore trustStore  = loadCaTrust();
+
+Config.ServiceConfig service = new Config.ServiceConfig()
+    .setName("acmecorp")
+    .setUrl("https://policy.example.com")
+    .setTls(new Config.TlsConfig()
+        .setTruststore(new Config.TruststoreConfig().setKeyStore(trustStore)))
+    .setCredentials(new Config.CredentialsConfig()
+        .setClientTls(new Config.ClientTlsConfig()
+            .setKeystore(new Config.KeystoreConfig()
+                .setKeyStore(clientStore)
+                .setKeyPassword("vault-issued-key-pw"))));
+```
+
+For keystores that cannot be expressed any other way (HSM-backed keys, custom `KeyManager` chains), supply a fully constructed `SSLContext` directly. When set, file-based and keystore TLS fields are rejected during validation:
 
 ```java
 SSLContext sslContext = buildSslContextFromHsm();
@@ -158,6 +194,25 @@ Config.ServiceConfig service = new Config.ServiceConfig()
     .setUrl("https://policy.example.com")
     .setSslContext(sslContext);
 ```
+
+### Environment-variable interpolation
+
+Any string in YAML / JSON config may reference an environment variable with `${VAR}`. The SDK substitutes references at load time, matching Go-OPA's behaviour, so secrets stay out of committed config files:
+
+```yaml
+services:
+  acmecorp:
+    url: https://policy.example.com
+    credentials:
+      bearer:
+        token: ${OPA_BEARER_TOKEN}
+    tls:
+      truststore:
+        path: /etc/ssl/truststore.jks
+        password: ${TRUSTSTORE_PASSWORD}
+```
+
+Missing variables produce a `ConfigurationException` at startup — silent empty substitution would mask credential and TLS misconfiguration. Escape with a leading backslash to keep a literal `${VAR}` in the config (`\${VAR}`).
 
 ### Lifecycle Management
 

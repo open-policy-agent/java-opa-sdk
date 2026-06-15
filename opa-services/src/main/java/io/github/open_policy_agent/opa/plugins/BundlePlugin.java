@@ -1,6 +1,5 @@
 package io.github.open_policy_agent.opa.plugins;
 
-import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -73,11 +72,10 @@ public final class BundlePlugin implements Plugin {
 
         ServicePlugin.Service svc =
             servicePlugin == null ? null : servicePlugin.getService(bundleConfig.getService());
-        HttpClient client = svc == null ? null : svc.getClient();
 
         plugin.bundles.put(
             name,
-            new Bundle(name, manager, client, svc)
+            new Bundle(name, manager, svc)
                 .setService(bundleConfig.getService())
                 .setResource(bundleConfig.getResource())
                 .setPolling(bundleConfig.getPolling()));
@@ -143,8 +141,8 @@ public final class BundlePlugin implements Plugin {
   /** Bundle downloader that activates policy and data bundles. */
   public static class Bundle extends BundleDownloader {
 
-    private Bundle(String name, PluginManager manager, HttpClient client, ServicePlugin.Service authService) {
-      super(name, manager, client, authService);
+    private Bundle(String name, PluginManager manager, ServicePlugin.Service authService) {
+      super(name, manager, authService);
     }
 
     public String getName() {

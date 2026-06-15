@@ -7,8 +7,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.storage.InMem;
@@ -116,7 +120,6 @@ class ServicePluginTest {
 
   @Test
   void validate_serviceNameFromMapKey_setsName() {
-    // Service without name set - should be set from map key
     Config.ServiceConfig service = new Config.ServiceConfig().setUrl("https://example.com");
     config.setServices(Collections.singletonMap("my-service", service));
 
@@ -137,7 +140,6 @@ class ServicePluginTest {
 
   @Test
   void initialize_noServices_returnsPlugin() {
-    // Empty services map
     config.setServices(new HashMap<>());
 
     manager =
@@ -242,10 +244,8 @@ class ServicePluginTest {
 
     services.put(
         "service1", new Config.ServiceConfig().setName("service1").setUrl("https://example1.com"));
-
     services.put(
         "service2", new Config.ServiceConfig().setName("service2").setUrl("https://example2.com"));
-
     services.put(
         "service3", new Config.ServiceConfig().setName("service3").setUrl("https://example3.com"));
 
@@ -267,7 +267,6 @@ class ServicePluginTest {
 
   @Test
   void initialize_nullServices_returnsPlugin() {
-    // Minimal config: new Config() with no services set (getServices() returns null)
     manager =
         new PluginManager.Builder()
             .withId("test-opa")
@@ -289,8 +288,7 @@ class ServicePluginTest {
 
     services.put(
         "service1", new Config.ServiceConfig().setName("service1").setUrl("https://example1.com"));
-
-    services.put("service2", new Config.ServiceConfig().setName("service2")); // Missing URL
+    services.put("service2", new Config.ServiceConfig().setName("service2"));
 
     config.setServices(services);
 
@@ -310,14 +308,13 @@ class ServicePluginTest {
     assertTrue(errors.stream().anyMatch(e -> e.contains("missing or empty URL")));
   }
 
-  @Test
-  void validate_tls_allowInsecureTlsConflict_returnsError() {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("invalidTlsCases")
+  void validate_tls_invalidCases_returnError(
+      String caseName, Consumer<Config.ServiceConfig> mutator, String expectedFragment) {
     Config.ServiceConfig service =
-        new Config.ServiceConfig()
-            .setName("s")
-            .setUrl("https://example.com")
-            .setAllowInsecureTLS(true)
-            .setSslContext(mock(javax.net.ssl.SSLContext.class));
+        new Config.ServiceConfig().setName("s").setUrl("https://example.com");
+    mutator.accept(service);
     config.setServices(Collections.singletonMap("s", service));
 
     manager =
@@ -329,78 +326,86 @@ class ServicePluginTest {
             .build();
 
     Set<String> errors = new ServicePlugin().validate(manager);
-    assertTrue(errors.stream().anyMatch(e -> e.contains("allow_insecure_tls=true alongside")));
+    assertTrue(
+        errors.stream().anyMatch(e -> e.contains(expectedFragment)),
+        "expected error containing '" + expectedFragment + "' but got " + errors);
+  }
+
+  static java.util.stream.Stream<Arguments> invalidTlsCases() {
+    return java.util.stream.Stream.of(
+        Arguments.of(
+            "allowInsecureTls + programmatic SSLContext",
+            (Consumer<Config.ServiceConfig>)
+                s -> s.setAllowInsecureTLS(true).setSslContext(mock(javax.net.ssl.SSLContext.class)),
+            "allow_insecure_tls=true alongside"),
+        Arguments.of(
+            "programmatic SSLContext + ca_cert",
+            (Consumer<Config.ServiceConfig>)
+                s ->
+                    s.setTls(new Config.TlsConfig().setCaCert("/nonexistent/ca.pem"))
+                        .setSslContext(mock(javax.net.ssl.SSLContext.class)),
+            "programmatic SSLContext alongside"),
+        Arguments.of(
+            "tls block has neither ca_cert nor system_ca_required",
+            (Consumer<Config.ServiceConfig>) s -> s.setTls(new Config.TlsConfig()),
+            "tls block has no effect"),
+        Arguments.of(
+            "tls.ca_cert + tls.truststore",
+            (Consumer<Config.ServiceConfig>)
+                s ->
+                    s.setTls(
+                        new Config.TlsConfig()
+                            .setCaCert("/etc/ca.pem")
+                            .setTruststore(new Config.TruststoreConfig().setPath("/etc/ts.jks"))),
+            "both ca_cert and truststore"),
+        Arguments.of(
+            "client_tls cert without private_key",
+            (Consumer<Config.ServiceConfig>)
+                s ->
+                    s.setCredentials(
+                        new Config.CredentialsConfig()
+                            .setClientTls(new Config.ClientTlsConfig().setCert("/some/cert.pem"))),
+            "must set both cert and private_key"),
+        Arguments.of(
+            "client_tls keystore + cert",
+            (Consumer<Config.ServiceConfig>)
+                s ->
+                    s.setCredentials(
+                        new Config.CredentialsConfig()
+                            .setClientTls(
+                                new Config.ClientTlsConfig()
+                                    .setCert("/c.pem")
+                                    .setPrivateKey("/k.pem")
+                                    .setKeystore(
+                                        new Config.KeystoreConfig().setPath("/etc/ks.p12")))),
+            "both keystore and cert/private_key"),
+        Arguments.of(
+            "negative cert_reread_interval_seconds",
+            (Consumer<Config.ServiceConfig>)
+                s ->
+                    s.setCredentials(
+                        new Config.CredentialsConfig()
+                            .setClientTls(
+                                new Config.ClientTlsConfig()
+                                    .setCert("/c.pem")
+                                    .setPrivateKey("/k.pem")
+                                    .setCertRereadIntervalSeconds(-1))),
+            "cert_reread_interval_seconds must be >= 0"),
+        Arguments.of(
+            "cert_reread_interval_seconds without cert/key",
+            (Consumer<Config.ServiceConfig>)
+                s ->
+                    s.setCredentials(
+                        new Config.CredentialsConfig()
+                            .setClientTls(
+                                new Config.ClientTlsConfig().setCertRereadIntervalSeconds(60))),
+            "cert_reread_interval_seconds requires both cert"));
   }
 
   @Test
-  void validate_tls_programmaticAndFileConflict_returnsError() {
-    Config.ServiceConfig service =
-        new Config.ServiceConfig()
-            .setName("s")
-            .setUrl("https://example.com")
-            .setTls(new Config.TlsConfig().setCaCert("/nonexistent/ca.pem"))
-            .setSslContext(mock(javax.net.ssl.SSLContext.class));
-    config.setServices(Collections.singletonMap("s", service));
-
-    manager =
-        new PluginManager.Builder()
-            .withId("t")
-            .withStore(store)
-            .withConfig(config)
-            .withLogger(mockLogger)
-            .build();
-
-    Set<String> errors = new ServicePlugin().validate(manager);
-    assertTrue(errors.stream().anyMatch(e -> e.contains("programmatic SSLContext alongside")));
-  }
-
-  @Test
-  void validate_tls_emptyBlock_returnsError() {
-    // tls block with neither ca_cert nor system_ca_required=true is a no-op — likely a typo.
-    Config.ServiceConfig service =
-        new Config.ServiceConfig()
-            .setName("s")
-            .setUrl("https://example.com")
-            .setTls(new Config.TlsConfig());
-    config.setServices(Collections.singletonMap("s", service));
-
-    manager =
-        new PluginManager.Builder()
-            .withId("t")
-            .withStore(store)
-            .withConfig(config)
-            .withLogger(mockLogger)
-            .build();
-
-    Set<String> errors = new ServicePlugin().validate(manager);
-    assertTrue(errors.stream().anyMatch(e -> e.contains("tls block has no effect")));
-  }
-
-  @Test
-  void validate_tls_certWithoutKey_returnsError() {
-    Config.ServiceConfig service =
-        new Config.ServiceConfig()
-            .setName("s")
-            .setUrl("https://example.com")
-            .setCredentials(
-                new Config.CredentialsConfig()
-                    .setClientTls(new Config.ClientTlsConfig().setCert("/some/cert.pem")));
-    config.setServices(Collections.singletonMap("s", service));
-
-    manager =
-        new PluginManager.Builder()
-            .withId("t")
-            .withStore(store)
-            .withConfig(config)
-            .withLogger(mockLogger)
-            .build();
-
-    Set<String> errors = new ServicePlugin().validate(manager);
-    assertTrue(errors.stream().anyMatch(e -> e.contains("must set both cert and private_key")));
-  }
-
-  @Test
-  void validate_tls_bearerAndClientTls_returnsError() {
+  void validate_tls_bearerAndClientTls_isAllowed() {
+    // Bearer tokens and mTLS are not mutually exclusive — many APIs combine a session bearer
+    // token with mTLS for client identity. Validate accepts the combination.
     Config.ClientTlsConfig ctls =
         new Config.ClientTlsConfig().setCert("/c.pem").setPrivateKey("/k.pem");
     Config.CredentialsConfig creds =
@@ -420,62 +425,7 @@ class ServicePluginTest {
             .build();
 
     Set<String> errors = new ServicePlugin().validate(manager);
-    assertTrue(
-        errors.stream().anyMatch(e -> e.contains("both bearer and client_tls")),
-        "expected bearer/client_tls conflict but got " + errors);
-  }
-
-  @Test
-  void validate_tls_negativeRereadInterval_returnsError() {
-    Config.ServiceConfig service =
-        new Config.ServiceConfig()
-            .setName("s")
-            .setUrl("https://example.com")
-            .setCredentials(
-                new Config.CredentialsConfig()
-                    .setClientTls(
-                        new Config.ClientTlsConfig()
-                            .setCert("/c.pem")
-                            .setPrivateKey("/k.pem")
-                            .setCertRereadIntervalSeconds(-1)));
-    config.setServices(Collections.singletonMap("s", service));
-
-    manager =
-        new PluginManager.Builder()
-            .withId("t")
-            .withStore(store)
-            .withConfig(config)
-            .withLogger(mockLogger)
-            .build();
-
-    Set<String> errors = new ServicePlugin().validate(manager);
-    assertTrue(errors.stream().anyMatch(e -> e.contains("cert_reread_interval_seconds must be >= 0")));
-  }
-
-  @Test
-  void validate_tls_rereadIntervalWithoutCert_returnsError() {
-    Config.ServiceConfig service =
-        new Config.ServiceConfig()
-            .setName("s")
-            .setUrl("https://example.com")
-            .setCredentials(
-                new Config.CredentialsConfig()
-                    .setClientTls(new Config.ClientTlsConfig().setCertRereadIntervalSeconds(60)));
-    config.setServices(Collections.singletonMap("s", service));
-
-    manager =
-        new PluginManager.Builder()
-            .withId("t")
-            .withStore(store)
-            .withConfig(config)
-            .withLogger(mockLogger)
-            .build();
-
-    Set<String> errors = new ServicePlugin().validate(manager);
-    assertTrue(
-        errors.stream()
-            .anyMatch(e -> e.contains("cert_reread_interval_seconds requires both cert")),
-        "expected reread-without-cert error, got " + errors);
+    assertTrue(errors.isEmpty(), "expected no errors, got: " + errors);
   }
 
   @Test

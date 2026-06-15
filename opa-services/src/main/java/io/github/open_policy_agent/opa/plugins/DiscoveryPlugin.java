@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.net.http.HttpClient;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -78,17 +77,25 @@ public final class DiscoveryPlugin implements Plugin {
       String name = discoveryConfig.getName() != null ? discoveryConfig.getName() : "discovery";
 
       ServicePlugin.Service svc = null;
-      HttpClient client = null;
       Plugin raw = manager.getPlugin("services");
       if (raw instanceof ServicePlugin) {
         svc = ((ServicePlugin) raw).getService(discoveryConfig.getService());
-        if (svc != null) {
-          client = svc.getClient();
+        // Validate caught the missing-service case earlier; assert defensively when the
+        // ServicePlugin IS registered but the lookup fails — never silently fall back to the
+        // default HTTP client and skip the configured TLS context.
+        if (svc == null) {
+          throw new PluginInitializationException(
+                  "Discovery plugin: service '"
+                      + discoveryConfig.getService()
+                      + "' not found in ServicePlugin")
+              .withContext("serviceName", discoveryConfig.getService());
         }
       }
+      // raw==null path: tests that wire DiscoveryPlugin directly without a ServicePlugin.
+      // svc stays null and BundleDownloader falls back to a default HTTP client.
 
       plugin.discoveryBundle =
-          new DiscoveryBundle(name, manager, client, svc)
+          new DiscoveryBundle(name, manager, svc)
               .setService(discoveryConfig.getService())
               .setResource(discoveryConfig.getResource())
               .setPolling(discoveryConfig.getPolling());
@@ -150,12 +157,8 @@ public final class DiscoveryPlugin implements Plugin {
 
     private Config discoveredConfig; // Store the last successfully loaded config
 
-    private DiscoveryBundle(
-        String name,
-        PluginManager manager,
-        HttpClient client,
-        ServicePlugin.Service service) {
-      super(name, manager, client, service);
+    private DiscoveryBundle(String name, PluginManager manager, ServicePlugin.Service service) {
+      super(name, manager, service);
     }
 
     @Override

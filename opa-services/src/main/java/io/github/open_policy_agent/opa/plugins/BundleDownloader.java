@@ -11,7 +11,6 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
@@ -40,10 +39,9 @@ import io.github.open_policy_agent.opa.config.Config;
 public abstract class BundleDownloader {
   protected final String name;
   protected final PluginManager manager;
+  protected final ServicePlugin.Service authService;
   protected final HttpClient httpClient;
   protected final CompletableFuture<Void> initialActivation;
-
-  private final ServicePlugin.Service authService;
 
   protected String service;
   protected String resource;
@@ -56,20 +54,17 @@ public abstract class BundleDownloader {
    *
    * @param name bundle name (used in log messages)
    * @param manager the owning plugin manager
-   * @param httpClient the HTTP client to use for HTTP/HTTPS downloads; may be {@code null} if this
-   *     downloader only ever handles {@code file://} URIs or filesystem paths
-   * @param authService the {@link ServicePlugin.Service} providing credentials for HTTP downloads;
-   *     may be {@code null} to skip auth
+   * @param authService the {@link ServicePlugin.Service} that owns the {@link HttpClient} (with
+   *     its SSLContext, credentials, and headers) used for HTTP downloads. May be {@code null} if
+   *     this downloader only ever handles {@code file://} URIs or filesystem paths; in that case
+   *     a default HTTP client is used for any unauthenticated HTTP fallback.
    */
   protected BundleDownloader(
-      String name,
-      PluginManager manager,
-      HttpClient httpClient,
-      ServicePlugin.Service authService) {
+      String name, PluginManager manager, ServicePlugin.Service authService) {
     this.name = name;
     this.manager = manager;
-    this.httpClient = httpClient != null ? httpClient : defaultHttpClient();
     this.authService = authService;
+    this.httpClient = authService != null ? authService.getClient() : defaultHttpClient();
     this.initialActivation = new CompletableFuture<>();
   }
 
@@ -304,16 +299,7 @@ public abstract class BundleDownloader {
 
     if (authService != null) {
       requestBuilder = authService.applyCredentials(requestBuilder);
-    }
-
-    Config.ServiceConfig serviceConfig = manager.getConfig().getService(service);
-    if (serviceConfig != null && serviceConfig.getHeaders() != null) {
-      for (Map.Entry<String, String> h : serviceConfig.getHeaders().entrySet()) {
-        // setHeader (not header) so user-supplied entries replace built-in headers like
-        // Authorization rather than producing duplicates — RFC 7230 forbids multiple
-        // Authorization headers, and HttpRequest.Builder#header is additive.
-        requestBuilder.setHeader(h.getKey(), h.getValue());
-      }
+      requestBuilder = authService.applyHeaders(requestBuilder);
     }
 
     HttpRequest request = requestBuilder.build();

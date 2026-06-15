@@ -275,16 +275,25 @@ nd_builtin_cache: true
 |-------|------|---------|-------------|
 | `url` | string | - | Base URL of the service |
 | `credentials.bearer.token` | string | - | Bearer token for authentication |
-| `credentials.client_tls.cert` | string | - | PEM file with the client certificate (mTLS) |
-| `credentials.client_tls.private_key` | string | - | PKCS#8 PEM file with the client private key |
-| `credentials.client_tls.private_key_passphrase` | string | - | Passphrase for an encrypted PKCS#8 key |
+| `credentials.client_tls.cert` | path | - | PEM file path with the client certificate (mTLS) |
+| `credentials.client_tls.private_key` | path | - | PKCS#8 PEM file path with the client private key |
+| `credentials.client_tls.private_key_passphrase` | string | - | (Reserved — encrypted PEM keys not supported. Use a JKS / PKCS#12 keystore instead.) |
 | `credentials.client_tls.cert_reread_interval_seconds` | int | - | Interval to reload the client cert/key from disk for rotation |
-| `tls.ca_cert` | string | - | PEM file with trust roots used to verify the server cert |
-| `tls.system_ca_required` | boolean | false | Also trust the JVM default trust store in addition to `ca_cert` |
+| `credentials.client_tls.keystore.path` | path | - | JKS / PKCS#12 keystore path holding the client cert + key |
+| `credentials.client_tls.keystore.password` | string | - | Keystore password |
+| `credentials.client_tls.keystore.key_password` | string | (defaults to `password`) | Password for the private key entry |
+| `credentials.client_tls.keystore.type` | string | inferred from extension, else `PKCS12` | Keystore type (`JKS`, `PKCS12`) |
+| `tls.ca_cert` | path | - | PEM file path with trust roots used to verify the server cert |
+| `tls.system_ca_required` | boolean | false | Also trust the JVM default trust store in addition to `ca_cert` / `truststore` |
+| `tls.truststore.path` | path | - | JKS / PKCS#12 truststore path used to verify the server cert |
+| `tls.truststore.password` | string | - | Truststore password |
+| `tls.truststore.type` | string | inferred from extension, else `PKCS12` | Truststore type (`JKS`, `PKCS12`) |
 | `response_header_timeout_seconds` | int | 10 | HTTP response header timeout |
 | `allow_insecure_tls` | boolean | false | Allow insecure TLS (dev only) |
 
-See [opa-services/README.md](opa-services/README.md#tls-and-mtls) for a full mTLS walkthrough, including the programmatic `setSslContext` escape hatch for HSM-backed or rotated keys.
+Any string value may reference an environment variable with `${VAR}`; the SDK substitutes it during config load (matches Go-OPA). Use `\${VAR}` to keep a literal `${VAR}` in the file.
+
+See [opa-services/README.md](opa-services/README.md#tls-and-mtls) for a full mTLS walkthrough, including JKS / PKCS#12 keystores and the programmatic `setSslContext` escape hatch for HSM-backed or rotated keys.
 
 #### Bundles
 
