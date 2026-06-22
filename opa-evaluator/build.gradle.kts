@@ -14,7 +14,7 @@ dependencies {
     // for testing.
     testImplementation(project(":opa-jackson"))
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.1")
     testImplementation("org.json:json:20260522")
