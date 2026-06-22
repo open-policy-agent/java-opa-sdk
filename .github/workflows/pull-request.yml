@@ -15,7 +15,7 @@ jobs:
       opa-builtins: ${{ steps.changes.outputs.opa-builtins }}
       opa-slf4j: ${{ steps.changes.outputs.opa-slf4j }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download OPA
         uses: open-policy-agent/setup-opa@v2
@@ -74,7 +74,7 @@ jobs:
     name: Checkstyle & PMD
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -86,7 +86,7 @@ jobs:
     name: Validate Publish POMs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -115,7 +115,7 @@ jobs:
     if: needs.check-changes.outputs.opa-evaluator == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -128,7 +128,7 @@ jobs:
     if: needs.check-changes.outputs.opa-jackson == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -141,7 +141,7 @@ jobs:
     if: needs.check-changes.outputs.opa-services == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -154,7 +154,7 @@ jobs:
     if: needs.check-changes.outputs.opa-builtins == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -167,7 +167,7 @@ jobs:
     if: needs.check-changes.outputs.opa-slf4j == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -189,7 +189,7 @@ jobs:
       - test-opa-slf4j
     if: always()
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Download OPA
         uses: open-policy-agent/setup-opa@v2
