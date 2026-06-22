@@ -9,7 +9,7 @@ repositories {
 dependencies {
     api(project(":opa-evaluator"))
 
-    implementation("org.semver4j:semver4j:5.4.1")
+    implementation("org.semver4j:semver4j:6.0.0")
 }
 
 java {
