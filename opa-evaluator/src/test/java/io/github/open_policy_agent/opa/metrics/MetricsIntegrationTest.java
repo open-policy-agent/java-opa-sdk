@@ -147,4 +147,20 @@ class MetricsIntegrationTest {
     // duplicate keys.
     assertEquals(firstKeys, metrics.all().keySet());
   }
+
+  @Test
+  void simpleMetricsClearRemovesRecordedTimers() throws IOException {
+    Engine engine = buildEngine("{}");
+    SimpleMetrics metrics = new SimpleMetrics();
+    Engine.PreparedQuery pq =
+            engine.prepareForEvaluation().withMetrics(metrics).build();
+
+    pq.eval(input("alice"), Boolean.class);
+
+    assertFalse(metrics.all().isEmpty(), "expected metrics to be recorded before clear");
+
+    metrics.clear();
+
+    assertTrue(metrics.all().isEmpty(), "expected metrics to be empty after clear");
+  }
 }

@@ -40,7 +40,7 @@ public class NoOpMetrics implements Metrics {
   }
 
   @Override
-  public void Clear() {
+  public void clear() {
     // No-op
   }
 

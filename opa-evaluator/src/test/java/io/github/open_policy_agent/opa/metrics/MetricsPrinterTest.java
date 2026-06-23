@@ -152,7 +152,7 @@ class MetricsPrinterTest {
       }
 
       @Override
-      public void Clear() {}
+      public void clear() {}
     };
   }
 
