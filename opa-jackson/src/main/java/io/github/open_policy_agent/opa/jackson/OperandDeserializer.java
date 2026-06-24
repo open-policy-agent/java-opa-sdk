@@ -1,22 +1,20 @@
 package io.github.open_policy_agent.opa.jackson;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.open_policy_agent.opa.ir.Operand;
 import io.github.open_policy_agent.opa.ir.vals.BoolVal;
 import io.github.open_policy_agent.opa.ir.vals.LocalVal;
 import io.github.open_policy_agent.opa.ir.vals.StringIndexVal;
 import io.github.open_policy_agent.opa.ir.vals.Val;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-class OperandDeserializer extends JsonDeserializer<Operand> {
+class OperandDeserializer extends ValueDeserializer<Operand> {
   private static final Map<String, Class<? extends Val>> VAL_REGISTRY =
       new HashMap<String, Class<? extends Val>>() {
         {
@@ -27,10 +25,8 @@ class OperandDeserializer extends JsonDeserializer<Operand> {
       };
 
   @Override
-  public Operand deserialize(JsonParser jp, DeserializationContext ctx)
-      throws IOException, JsonProcessingException {
-    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-    JsonNode node = mapper.readTree(jp);
+  public Operand deserialize(JsonParser jp, DeserializationContext ctx) {
+    JsonNode node = ctx.readTree(jp);
     JsonNode opNode = node.get("type");
     if (opNode == null) {
       return null;
@@ -39,9 +35,9 @@ class OperandDeserializer extends JsonDeserializer<Operand> {
     String opValType = opNode.asText();
     Class<? extends Val> opClass = VAL_REGISTRY.get(opValType);
     if (opClass == null) {
-      throw new IOException("unknown val type: " + opValType);
+      throw DatabindException.from(jp, "unknown val type: " + opValType);
     }
 
-    return new Operand(mapper.treeToValue(node, opClass));
+    return new Operand(ctx.readTreeAsValue(node, opClass));
   }
 }

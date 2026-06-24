@@ -1,7 +1,5 @@
 package io.github.open_policy_agent.opa.cli;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinRegistry;
 import io.github.open_policy_agent.opa.bundle.FileSystemBundleLoader;
 import io.github.open_policy_agent.opa.bundle.TarballBundleLoader;
@@ -31,6 +29,10 @@ import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
+import tools.jackson.databind.json.JsonMapper;
 
 @Command(name = "eval", mixinStandardHelpOptions = true)
 public class Eval implements Callable<Integer> {
@@ -134,8 +136,8 @@ public class Eval implements Callable<Integer> {
 
     if (showCapabilities) {
       try {
-        System.out.println(new ObjectMapper().writeValueAsString(BuiltinRegistry.generateCapabilities()));
-      } catch (IOException e) {
+        System.out.println(JsonMapper.shared().writeValueAsString(BuiltinRegistry.generateCapabilities()));
+      } catch (JacksonException e) {
         System.err.println(e.getMessage());
         return 1;
       }
@@ -181,7 +183,7 @@ public class Eval implements Callable<Integer> {
       showMetrics = true;
     }
 
-    final ObjectMapper objectMapper = new ObjectMapper();
+    final ObjectMapper objectMapper = JsonMapper.shared();
 
     final List<Metrics> allMetrics = new ArrayList<>(count);
     final List<QueryTracer> allTracers = new ArrayList<>(count);
@@ -217,7 +219,7 @@ public class Eval implements Callable<Integer> {
       } else {
         inputDoc = objectMapper.readValue(this.input.toFile(), Object.class);
       }
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       System.err.println("Error reading input: " + e.getMessage());
       return 1;
     }
@@ -332,7 +334,7 @@ public class Eval implements Callable<Integer> {
                 ? objectMapper.writerWithDefaultPrettyPrinter()
                 : objectMapper.writer();
         System.out.println(writer.writeValueAsString(lastResults));
-      } catch (IOException e) {
+      } catch (JacksonException e) {
         System.err.println("Error serializing results: " + e.getMessage());
         return 1;
       }

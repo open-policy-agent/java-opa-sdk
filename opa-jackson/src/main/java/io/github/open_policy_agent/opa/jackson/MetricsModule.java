@@ -1,11 +1,10 @@
 package io.github.open_policy_agent.opa.jackson;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.open_policy_agent.opa.metrics.Metrics;
 import io.github.open_policy_agent.opa.metrics.SimpleMetrics;
 import java.time.Duration;
+import tools.jackson.databind.module.SimpleModule;
 
 /**
  * Jackson {@link SimpleModule} that adds {@code @JsonValue} behavior to {@link SimpleMetrics}'s inner {@code Timer}.
@@ -18,7 +17,7 @@ import java.time.Duration;
  * <p>Usage:
  *
  * <pre>{@code
- * ObjectMapper mapper = new ObjectMapper().registerModule(new MetricsModule());
+ * JsonMapper mapper = JsonMapper.builder().addModule(new MetricsModule()).build();
  * String json = mapper.writeValueAsString(simpleMetrics.timer("foo"));
  * }</pre>
  */

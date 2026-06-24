@@ -1,11 +1,17 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
+
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.jwk.*;
 import com.nimbusds.jwt.*;
+import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
+import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
+import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
+import io.github.open_policy_agent.opa.ast.builtin.OpaType;
+import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.io.IOException;
 import java.io.StringReader;
 import java.security.PrivateKey;
@@ -21,14 +27,10 @@ import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
-import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
-import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
-import io.github.open_policy_agent.opa.ast.builtin.OpaType;
-import io.github.open_policy_agent.opa.ast.types.*;
-import io.github.open_policy_agent.opa.rego.EvaluationContext;
-
-import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 public class TokenBuiltins implements BuiltinProvider {
 
@@ -43,12 +45,14 @@ public class TokenBuiltins implements BuiltinProvider {
   private static final RegoObject BLANK_OBJECT = new RegoObject();
   // Auto-register RegoValueModule (and any other Jackson modules on the classpath) via SPI so
   // RegoObject (de)serialization works without the AST types carrying Jackson annotations.
-  private static final ObjectMapper JSON_MAPPER = new ObjectMapper().findAndRegisterModules();
+  private static final ObjectMapper JSON_MAPPER =
+      JsonMapper.builder()
+          .findAndAddModules()
+          .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+          .build();
 
   static {
     Security.addProvider(new BouncyCastleProvider());
-    JSON_MAPPER.enable(
-        com.fasterxml.jackson.databind.DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
   }
 
   @Override
@@ -133,7 +137,7 @@ public class TokenBuiltins implements BuiltinProvider {
 
       try {
         JSON_MAPPER.readTree(payload);
-      } catch (IOException e) {
+      } catch (JacksonException e) {
         throw new BuiltinError("io.jwt.encode_sign_raw: type is JWT but payload is not JSON");
       }
     } else {
@@ -579,11 +583,11 @@ public class TokenBuiltins implements BuiltinProvider {
     }
 
     try {
-      com.fasterxml.jackson.databind.JsonNode root = JSON_MAPPER.readTree(payloadJson);
+      tools.jackson.databind.JsonNode root = JSON_MAPPER.readTree(payloadJson);
 
       // Check exp claim
       if (root.has("exp")) {
-        com.fasterxml.jackson.databind.JsonNode expNode = root.get("exp");
+        tools.jackson.databind.JsonNode expNode = root.get("exp");
         if (expNode.isNull()) {
           throw new BuiltinError("exp value must be a number");
         }
@@ -594,7 +598,7 @@ public class TokenBuiltins implements BuiltinProvider {
 
       // Check nbf claim
       if (root.has("nbf")) {
-        com.fasterxml.jackson.databind.JsonNode nbfNode = root.get("nbf");
+        tools.jackson.databind.JsonNode nbfNode = root.get("nbf");
         if (nbfNode.isNull()) {
           throw new BuiltinError("nbf value must be a number");
         }
@@ -602,7 +606,7 @@ public class TokenBuiltins implements BuiltinProvider {
           throw new BuiltinError("nbf value must be a number");
         }
       }
-    } catch (JsonProcessingException ignore) {
+    } catch (JacksonException ignore) {
       // If it's not valid JSON, we'll let it through - it will be treated as a string payload
     }
   }
@@ -638,7 +642,7 @@ public class TokenBuiltins implements BuiltinProvider {
 
   private JWSSigner createEdDSASigner(String keyJson) {
     try {
-      com.fasterxml.jackson.databind.JsonNode jwkNode = JSON_MAPPER.readTree(keyJson);
+      tools.jackson.databind.JsonNode jwkNode = JSON_MAPPER.readTree(keyJson);
       if (!jwkNode.has("d")) {
         throw new BuiltinError("EdDSA key must include private key (d parameter)");
       }

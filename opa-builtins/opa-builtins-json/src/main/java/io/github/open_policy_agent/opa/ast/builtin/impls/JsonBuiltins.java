@@ -1,29 +1,11 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.exc.InvalidTypeIdException;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import com.github.fge.jsonpatch.JsonPatch;
-import com.github.fge.jsonpatch.JsonPatchException;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
-import java.io.IOException;
-import java.util.*;
-import java.util.function.BiFunction;
+import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
+
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
@@ -31,8 +13,24 @@ import io.github.open_policy_agent.opa.ast.builtin.OpaType;
 import io.github.open_policy_agent.opa.ast.types.*;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.TypeError;
-
-import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
+import java.util.*;
+import java.util.function.BiFunction;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.util.DefaultIndenter;
+import tools.jackson.core.util.DefaultPrettyPrinter;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectWriter;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.ValueSerializer;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.module.SimpleModule;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.dataformat.yaml.YAMLMapper;
+import tools.jackson.dataformat.yaml.YAMLWriteFeature;
 
 public class JsonBuiltins implements BuiltinProvider {
 
@@ -40,59 +38,53 @@ public class JsonBuiltins implements BuiltinProvider {
   private static final ObjectMapper YAML_MAPPER;
 
   // Shared serializers for Rego numeric types
-  private static final JsonSerializer<RegoDecimal> REGO_DECIMAL_SERIALIZER =
-          new JsonSerializer<>() {
-            @Override
-            public void serialize(RegoDecimal value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-              Double d = value.getValue();
-              // If the double is a whole number that fits in a long, serialize as integer
-              if (d != null && TypeUtils.isWholeNumberInLongRange(d)) {
-                gen.writeNumber(d.longValue());
-              } else {
-                gen.writeNumber(d);
-              }
-            }
-          };
+  private static final ValueSerializer<RegoDecimal> REGO_DECIMAL_SERIALIZER =
+      new ValueSerializer<>() {
+        @Override
+        public void serialize(RegoDecimal value, JsonGenerator gen, SerializationContext ctx) {
+          Double d = value.getValue();
+          // If the double is a whole number that fits in a long, serialize as integer
+          if (d != null && TypeUtils.isWholeNumberInLongRange(d)) {
+            gen.writeNumber(d.longValue());
+          } else {
+            gen.writeNumber(d);
+          }
+        }
+      };
 
-  private static final JsonSerializer<RegoBigInt> REGO_BIG_INT_SERIALIZER =
-          new JsonSerializer<>() {
-            @Override
-            public void serialize(RegoBigInt value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-              gen.writeNumber(value.getValue());
-            }
-          };
+  private static final ValueSerializer<RegoBigInt> REGO_BIG_INT_SERIALIZER =
+      new ValueSerializer<>() {
+        @Override
+        public void serialize(RegoBigInt value, JsonGenerator gen, SerializationContext ctx) {
+          gen.writeNumber(value.getValue());
+        }
+      };
 
-  private static final JsonSerializer<RegoInt32> REGO_INT32_SERIALIZER =
-          new JsonSerializer<>() {
-            @Override
-            public void serialize(RegoInt32 value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-              gen.writeNumber(value.getValue());
-            }
-          };
+  private static final ValueSerializer<RegoInt32> REGO_INT32_SERIALIZER =
+      new ValueSerializer<>() {
+        @Override
+        public void serialize(RegoInt32 value, JsonGenerator gen, SerializationContext ctx) {
+          gen.writeNumber(value.getValue());
+        }
+      };
 
-  private static final JsonSerializer<RegoNull> REGO_NULL_SERIALIZER =
-          new JsonSerializer<>() {
-            @Override
-            public void serialize(RegoNull value, JsonGenerator gen, SerializerProvider serializers)
-                    throws IOException {
-              gen.writeNull();
-            }
-          };
+  private static final ValueSerializer<RegoNull> REGO_NULL_SERIALIZER =
+      new ValueSerializer<>() {
+        @Override
+        public void serialize(RegoNull value, JsonGenerator gen, SerializationContext ctx) {
+          gen.writeNull();
+        }
+      };
 
   static {
-    // findAndRegisterModules picks up RegoValueModule (from opa-jackson) via SPI so
-    // RegoString/RegoArray/RegoObject etc. (de)serialize without annotations on the AST types.
-    JSON_MAPPER = new ObjectMapper().findAndRegisterModules();
-
-    // Register custom serializers for Rego numeric types (overrides RegoValueModule defaults).
     SimpleModule module = new SimpleModule();
     module.addSerializer(RegoDecimal.class, REGO_DECIMAL_SERIALIZER);
     module.addSerializer(RegoBigInt.class, REGO_BIG_INT_SERIALIZER);
     module.addSerializer(RegoInt32.class, REGO_INT32_SERIALIZER);
-    JSON_MAPPER.registerModule(module);
+
+    // findAndAddModules picks up RegoValueModule (from opa-jackson) via SPI so
+    // RegoString/RegoArray/RegoObject etc. (de)serialize without annotations on the AST types.
+    JSON_MAPPER = JsonMapper.builder().findAndAddModules().addModule(module).build();
 
     // YAML mapper needs all serializers including null handling
     SimpleModule yamlModule = new SimpleModule();
@@ -102,10 +94,11 @@ public class JsonBuiltins implements BuiltinProvider {
     yamlModule.addSerializer(RegoNull.class, REGO_NULL_SERIALIZER);
 
     YAML_MAPPER =
-            new ObjectMapper(
-                    YAMLFactory.builder().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER).build())
-                .findAndRegisterModules();
-    YAML_MAPPER.registerModule(yamlModule);
+        YAMLMapper.builder()
+            .disable(YAMLWriteFeature.WRITE_DOC_START_MARKER)
+            .findAndAddModules()
+            .addModule(yamlModule)
+            .build();
   }
 
   @Override
@@ -145,7 +138,7 @@ public class JsonBuiltins implements BuiltinProvider {
     try {
       String json = JSON_MAPPER.writeValueAsString(input);
       return new RegoString(json);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new BuiltinError("json.marshal: " + e.getMessage());
     }
   }
@@ -164,7 +157,7 @@ public class JsonBuiltins implements BuiltinProvider {
     RegoObject options = getArg(args, 1, RegoObject.class);
 
     try {
-      ObjectMapper mapper = JSON_MAPPER.copy();
+      ObjectWriter writer = JSON_MAPPER.writer();
 
       // Check for indent option
       RegoValue indentValue = options.getProperty(new RegoString("indent"));
@@ -176,20 +169,19 @@ public class JsonBuiltins implements BuiltinProvider {
                 new DefaultIndenter(indent, DefaultIndenter.SYS_LF);
         printer.indentArraysWith(indenter);
         printer.indentObjectsWith(indenter);
-        mapper.setDefaultPrettyPrinter(printer);
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        writer = writer.with(printer).with(SerializationFeature.INDENT_OUTPUT);
       }
 
       // Check for prefix option (for pretty printing)
       RegoValue prefixValue = options.getProperty(new RegoString("prefix"));
       if (prefixValue instanceof RegoString) {
         // Prefix is typically used with indent for pretty printing
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
+        writer = writer.with(SerializationFeature.INDENT_OUTPUT);
       }
 
-      String json = mapper.writeValueAsString(input);
+      String json = writer.writeValueAsString(input);
       return new RegoString(json);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new BuiltinError("json.marshal_with_options: " + e.getMessage());
     }
   }
@@ -206,7 +198,7 @@ public class JsonBuiltins implements BuiltinProvider {
     try {
       Object parsed = JSON_MAPPER.readValue(jsonInput, Object.class);
       return convertToRegoValue(parsed);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new BuiltinError("json.unmarshal: " + e.getMessage());
     }
   }
@@ -224,7 +216,7 @@ public class JsonBuiltins implements BuiltinProvider {
     try {
       JSON_MAPPER.readTree(jsonInput);
       return RegoBoolean.TRUE;
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       return RegoBoolean.FALSE;
     }
   }
@@ -343,7 +335,7 @@ public class JsonBuiltins implements BuiltinProvider {
         ArrayNode normalizedPatches = JSON_MAPPER.createArrayNode();
         for (JsonNode patchOp : patchesNode) {
           if (patchOp.isObject()) {
-            ObjectNode normalizedOp = patchOp.deepCopy();
+            ObjectNode normalizedOp = (ObjectNode) patchOp.deepCopy();
 
             // Verify required fields exist - if not, return undefined (OPA behavior)
             if (!normalizedOp.has("op") || !normalizedOp.has("path")) {
@@ -356,7 +348,7 @@ public class JsonBuiltins implements BuiltinProvider {
             }
 
             // For add/replace/test operations, verify "value" field exists
-            String op = normalizedOp.get("op").asText();
+            String op = normalizedOp.get("op").asString();
             if (("add".equals(op) || "replace".equals(op) || "test".equals(op))
                     && !normalizedOp.has("value")) {
               return RegoUndefined.INSTANCE;
@@ -367,6 +359,11 @@ public class JsonBuiltins implements BuiltinProvider {
               if (!normalizedOp.has("from") || normalizedOp.get("from").isNull()) {
                 return RegoUndefined.INSTANCE;
               }
+            }
+
+            // Validate op type - return undefined for unknown ops (OPA behavior)
+            if (!isValidPatchOp(op)) {
+              return RegoUndefined.INSTANCE;
             }
 
             // Normalize "path" field
@@ -404,25 +401,13 @@ public class JsonBuiltins implements BuiltinProvider {
       }
 
       // Apply the patch
-      JsonPatch jsonPatch;
-      try {
-        jsonPatch = JsonPatch.fromJson(patchesNode);
-      } catch (InvalidTypeIdException e) {
-        // Invalid operation type (not one of: add, copy, move, remove, replace, test)
-        // Return undefined (OPA behavior)
-        return RegoUndefined.INSTANCE;
-      }
-
-      if (jsonPatch == null) {
-        throw new BuiltinError("json.patch: failed to create JsonPatch");
-      }
-
       JsonNode patched;
       try {
-        patched = jsonPatch.apply(objectNode);
-      } catch (JsonPatchException e) {
-        // Return undefined on patch failure (OPA behavior)
-        // This happens when the patch operation is invalid (e.g., removing non-existent path)
+        patched = applyJsonPatch((ArrayNode) patchesNode, objectNode);
+      } catch (RuntimeException e) {
+        // Return undefined on patch failure (OPA behavior).
+        // This happens when the patch operation is invalid (e.g., removing non-existent path,
+        // index out of range, or test mismatch).
         return RegoUndefined.INSTANCE;
       }
 
@@ -441,6 +426,194 @@ public class JsonBuiltins implements BuiltinProvider {
       }
       throw new BuiltinError("json.patch: " + message);
     }
+  }
+
+  private static boolean isValidPatchOp(String op) {
+    return "add".equals(op)
+        || "remove".equals(op)
+        || "replace".equals(op)
+        || "move".equals(op)
+        || "copy".equals(op)
+        || "test".equals(op);
+  }
+
+  // RFC 6902 JSON Patch application. Each op mutates a deep copy of the source; on any failure
+  // (missing path, index out of range, test mismatch, unknown op), throws a RuntimeException
+  // which json.patch translates to RegoUndefined per OPA's contract.
+  private static JsonNode applyJsonPatch(ArrayNode patches, JsonNode source) {
+    JsonNode result = source.deepCopy();
+    for (JsonNode op : patches) {
+      result = applyJsonPatchOp(result, op);
+    }
+    return result;
+  }
+
+  private static JsonNode applyJsonPatchOp(JsonNode root, JsonNode op) {
+    String operation = op.get("op").asString();
+    List<String> path = parseJsonPointer(op.get("path").asString());
+    switch (operation) {
+      case "add":
+        return performAdd(root, path, op.get("value").deepCopy());
+      case "remove":
+        return performRemove(root, path);
+      case "replace":
+        return performReplace(root, path, op.get("value").deepCopy());
+      case "test":
+        performTest(root, path, op.get("value"));
+        return root;
+      case "move": {
+        List<String> from = parseJsonPointer(op.get("from").asString());
+        if (isPrefix(from, path)) {
+          // RFC 6902 §4.4: from MUST NOT be a proper prefix of path.
+          throw new IllegalArgumentException("move: from is a prefix of path");
+        }
+        JsonNode value = readAt(root, from);
+        root = performRemove(root, from);
+        return performAdd(root, path, value);
+      }
+      case "copy": {
+        List<String> from = parseJsonPointer(op.get("from").asString());
+        JsonNode value = readAt(root, from).deepCopy();
+        return performAdd(root, path, value);
+      }
+      default:
+        throw new IllegalArgumentException("unknown op: " + operation);
+    }
+  }
+
+  // RFC 6901 JSON Pointer: "" -> root (empty list); "/foo/0" -> ["foo", "0"];
+  // "~1" decodes to "/", "~0" decodes to "~".
+  private static List<String> parseJsonPointer(String pointer) {
+    if (pointer.isEmpty()) {
+      return new ArrayList<>();
+    }
+    if (!pointer.startsWith("/")) {
+      throw new IllegalArgumentException("invalid JSON pointer: " + pointer);
+    }
+    String[] parts = pointer.substring(1).split("/", -1);
+    List<String> tokens = new ArrayList<>(parts.length);
+    for (String part : parts) {
+      tokens.add(part.replace("~1", "/").replace("~0", "~"));
+    }
+    return tokens;
+  }
+
+  private static JsonNode readAt(JsonNode root, List<String> tokens) {
+    JsonNode current = root;
+    for (String token : tokens) {
+      if (current.isArray()) {
+        current = current.get(parseArrayIndex(token, current.size(), false));
+      } else if (current.isObject()) {
+        if (!current.has(token)) {
+          throw new IllegalArgumentException("path does not exist: " + token);
+        }
+        current = current.get(token);
+      } else {
+        throw new IllegalArgumentException("cannot navigate into non-container at: " + token);
+      }
+    }
+    return current;
+  }
+
+  private static JsonNode performAdd(JsonNode root, List<String> tokens, JsonNode value) {
+    if (tokens.isEmpty()) {
+      // Replace the whole document.
+      return value;
+    }
+    JsonNode parent = readAt(root, tokens.subList(0, tokens.size() - 1));
+    String last = tokens.get(tokens.size() - 1);
+    if (parent.isArray()) {
+      ArrayNode arr = (ArrayNode) parent;
+      int idx = "-".equals(last) ? arr.size() : parseArrayIndex(last, arr.size(), true);
+      if (idx == arr.size()) {
+        arr.add(value);
+      } else {
+        arr.insert(idx, value);
+      }
+    } else if (parent.isObject()) {
+      // RFC 6902 §4.1: existing member is replaced; new member is added.
+      ((ObjectNode) parent).set(last, value);
+    } else {
+      throw new IllegalArgumentException("add: parent is not a container");
+    }
+    return root;
+  }
+
+  private static JsonNode performRemove(JsonNode root, List<String> tokens) {
+    if (tokens.isEmpty()) {
+      throw new IllegalArgumentException("remove: cannot remove root");
+    }
+    JsonNode parent = readAt(root, tokens.subList(0, tokens.size() - 1));
+    String last = tokens.get(tokens.size() - 1);
+    if (parent.isArray()) {
+      ArrayNode arr = (ArrayNode) parent;
+      arr.remove(parseArrayIndex(last, arr.size(), false));
+    } else if (parent.isObject()) {
+      ObjectNode obj = (ObjectNode) parent;
+      if (!obj.has(last)) {
+        throw new IllegalArgumentException("remove: path does not exist: " + last);
+      }
+      obj.remove(last);
+    } else {
+      throw new IllegalArgumentException("remove: parent is not a container");
+    }
+    return root;
+  }
+
+  private static JsonNode performReplace(JsonNode root, List<String> tokens, JsonNode value) {
+    if (tokens.isEmpty()) {
+      return value;
+    }
+    JsonNode parent = readAt(root, tokens.subList(0, tokens.size() - 1));
+    String last = tokens.get(tokens.size() - 1);
+    if (parent.isArray()) {
+      ArrayNode arr = (ArrayNode) parent;
+      arr.set(parseArrayIndex(last, arr.size(), false), value);
+    } else if (parent.isObject()) {
+      ObjectNode obj = (ObjectNode) parent;
+      if (!obj.has(last)) {
+        throw new IllegalArgumentException("replace: path does not exist: " + last);
+      }
+      obj.set(last, value);
+    } else {
+      throw new IllegalArgumentException("replace: parent is not a container");
+    }
+    return root;
+  }
+
+  private static void performTest(JsonNode root, List<String> tokens, JsonNode expected) {
+    JsonNode actual = readAt(root, tokens);
+    if (!actual.equals(expected)) {
+      throw new IllegalArgumentException("test: value mismatch");
+    }
+  }
+
+  // For "remove"/"replace"/"read", index must be in [0, size). For "add"/"insert", [0, size]
+  // (since size is "append at end").
+  private static int parseArrayIndex(String token, int size, boolean inclusiveUpper) {
+    int idx;
+    try {
+      idx = Integer.parseInt(token);
+    } catch (NumberFormatException e) {
+      throw new IllegalArgumentException("invalid array index: " + token);
+    }
+    int limit = inclusiveUpper ? size : size - 1;
+    if (idx < 0 || idx > limit) {
+      throw new IllegalArgumentException("array index out of bounds: " + idx);
+    }
+    return idx;
+  }
+
+  private static boolean isPrefix(List<String> prefix, List<String> path) {
+    if (prefix.size() > path.size()) {
+      return false;
+    }
+    for (int i = 0; i < prefix.size(); i++) {
+      if (!prefix.get(i).equals(path.get(i))) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -515,7 +688,7 @@ public class JsonBuiltins implements BuiltinProvider {
           boolean found = false;
           for (int i = 0; i < current.size(); i++) {
             JsonNode element = current.get(i);
-            if (element.isTextual() && element.asText().equals(unescaped)) {
+            if (element.isString() && element.asString().equals(unescaped)) {
               resolvedPath.append("/").append(i);
               current = element;
               found = true;
@@ -545,8 +718,8 @@ public class JsonBuiltins implements BuiltinProvider {
    * "/" and converts array paths to string format.
    */
   private String normalizeJsonPointerPath(JsonNode pathNode) {
-    if (pathNode.isTextual()) {
-      String path = pathNode.asText();
+    if (pathNode.isString()) {
+      String path = pathNode.asString();
       if (path.isEmpty() || path.equals("/")) {
         return path;
       }
@@ -556,20 +729,20 @@ public class JsonBuiltins implements BuiltinProvider {
       StringBuilder sb = new StringBuilder();
       for (JsonNode segment : pathNode) {
         sb.append("/");
-        if (segment.isTextual()) {
-          String segmentStr = segment.asText();
+        if (segment.isString()) {
+          String segmentStr = segment.asString();
           // Escape special characters per RFC 6901
           segmentStr = segmentStr.replace("~", "~0").replace("/", "~1");
           sb.append(segmentStr);
         } else {
           // For numeric indices, just append as-is
-          sb.append(segment.asText());
+          sb.append(segment.asString());
         }
       }
       return sb.toString();
     } else {
       // Fallback: convert to string
-      return "/" + pathNode.asText();
+      return "/" + pathNode.asString();
     }
   }
 
@@ -612,9 +785,9 @@ public class JsonBuiltins implements BuiltinProvider {
       }
 
       // Validate
-      JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-      JsonSchema schema = factory.getSchema(schemaNode);
-      Set<ValidationMessage> errors = schema.validate(documentNode);
+      SchemaRegistry registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
+      Schema schema = registry.getSchema(schemaNode);
+      List<Error> errors = schema.validate(documentNode);
 
       // Build result array
       RegoArray result = new RegoArray();
@@ -624,12 +797,12 @@ public class JsonBuiltins implements BuiltinProvider {
       } else {
         result.addValue(RegoBoolean.FALSE);
         RegoArray errorArray = new RegoArray();
-        for (ValidationMessage error : errors) {
+        for (Error error : errors) {
           RegoObject errorObj = new RegoObject();
           errorObj.setProp(new RegoString("message"), new RegoString(error.getMessage()));
           errorObj.setProp(
                   new RegoString("path"), new RegoString(error.getEvaluationPath().toString()));
-          errorObj.setProp(new RegoString("type"), new RegoString(error.getType()));
+          errorObj.setProp(new RegoString("type"), new RegoString(error.getKeyword()));
           errorArray.addValue(errorObj);
         }
         result.addValue(errorArray);
@@ -667,8 +840,8 @@ public class JsonBuiltins implements BuiltinProvider {
       }
 
       // Try to create a schema - if it succeeds, it's valid
-      JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-      factory.getSchema(schemaNode);
+      SchemaRegistry registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
+      registry.getSchema(schemaNode);
 
       // Build success result
       RegoArray result = new RegoArray();
@@ -701,7 +874,7 @@ public class JsonBuiltins implements BuiltinProvider {
     try {
       String yaml = YAML_MAPPER.writeValueAsString(input);
       return new RegoString(yaml);
-    } catch (JsonProcessingException e) {
+    } catch (JacksonException e) {
       throw new BuiltinError("yaml.marshal: " + e.getMessage());
     }
   }
@@ -718,7 +891,7 @@ public class JsonBuiltins implements BuiltinProvider {
     try {
       Object parsed = YAML_MAPPER.readValue(yamlInput, Object.class);
       return convertToRegoValueFromYaml(parsed);
-    } catch (IOException e) {
+    } catch (JacksonException e) {
       throw new BuiltinError("yaml.unmarshal: " + e.getMessage());
     }
   }
@@ -851,7 +1024,7 @@ public class JsonBuiltins implements BuiltinProvider {
   /** Filters a JsonNode to only include specified paths. */
   private JsonNode filterNode(JsonNode node, Set<String> paths) {
     if (node.isObject()) {
-      com.fasterxml.jackson.databind.node.ObjectNode result = JSON_MAPPER.createObjectNode();
+      ObjectNode result = JSON_MAPPER.createObjectNode();
 
       // Track array index mappings: key is the result array node, value is map of source->result
       // indices
@@ -938,8 +1111,7 @@ public class JsonBuiltins implements BuiltinProvider {
             boolean nextIsArray = (i + 1 < isArrayAtLevel.size()) && isArrayAtLevel.get(i + 1);
 
             if (resultNode.isObject()) {
-              com.fasterxml.jackson.databind.node.ObjectNode objNode =
-                      (com.fasterxml.jackson.databind.node.ObjectNode) resultNode;
+              ObjectNode objNode = (ObjectNode) resultNode;
               if (!objNode.has(part)) {
                 if (nextIsArray) {
                   objNode.set(part, JSON_MAPPER.createArrayNode());

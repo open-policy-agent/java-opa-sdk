@@ -2,8 +2,8 @@ package io.github.open_policy_agent.opa.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.dataformat.yaml.YAMLFactory;
 import java.io.StringReader;
 import org.junit.jupiter.api.Test;
 

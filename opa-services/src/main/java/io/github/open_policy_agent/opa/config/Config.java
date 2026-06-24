@@ -2,7 +2,7 @@ package io.github.open_policy_agent.opa.config;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
 import java.security.KeyStore;
 import java.util.HashMap;
 import java.util.Map;

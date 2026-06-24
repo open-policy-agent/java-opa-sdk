@@ -12,7 +12,8 @@ import io.github.open_policy_agent.opa.ir.policy.Static;
 import io.github.open_policy_agent.opa.ir.policy.StringConst;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.tracing.BufferedQueryTracer;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.BufferedReader;
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class EvaluatorTest {
   private static final PolicyReader policyReader =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
-  private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
+  private static final ObjectMapper objectMapper = JsonMapper.builder().addModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule()).build();
 
   @Test
   void evaluate_BreakStmt_IndexZero() throws IOException {

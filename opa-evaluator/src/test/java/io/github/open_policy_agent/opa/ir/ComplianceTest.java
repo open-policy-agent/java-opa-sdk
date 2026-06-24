@@ -20,11 +20,12 @@ import io.github.open_policy_agent.opa.ir.policy.Policy;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.tracing.BufferedQueryTracer;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.NullNode;
+import tools.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -118,18 +119,14 @@ public class ComplianceTest {
             .filter(path -> path.toString().endsWith(".json"))
                 .map(Path::toFile)
                 .flatMap(f -> {
-                    try {
-                      ObjectMapper mapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
-                      JsonNode root = mapper.readTree(f);
-                      List<JsonNode> cases = new ArrayList<>();
-                      root.get("cases").forEach(cases::add);
-                      return cases.stream()
-                              .map(c -> new Object[]{
-                                      c.get("note").asText("unknown"), c
-                              });
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
+                    ObjectMapper mapper = JsonMapper.builder().addModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule()).build();
+                    JsonNode root = mapper.readTree(f);
+                    List<JsonNode> cases = new ArrayList<>();
+                    root.get("cases").forEach(cases::add);
+                    return cases.stream()
+                            .map(c -> new Object[]{
+                                    c.get("note").asString("unknown"), c
+                            });
                 });
   }
 
@@ -318,18 +315,16 @@ public class ComplianceTest {
       // When treatArraysAsSets is true, recursively process object values
       if (treatArraysAsSets) {
         RegoObject obj = new RegoObject();
-        node.fields()
-            .forEachRemaining(
-                entry -> {
-                  try {
-                    RegoValue key = new RegoString(entry.getKey());
-                    RegoValue value =
-                        jsonNodeToRegoValue(entry.getValue(), mapper, treatArraysAsSets);
-                    obj.setProp(key, value);
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                });
+        for (Map.Entry<String, JsonNode> entry : node.properties()) {
+          try {
+            RegoValue key = new RegoString(entry.getKey());
+            RegoValue value =
+                jsonNodeToRegoValue(entry.getValue(), mapper, treatArraysAsSets);
+            obj.setProp(key, value);
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
         return obj;
       } else {
         return mapper.treeToValue(node, RegoObject.class);
@@ -344,7 +339,7 @@ public class ComplianceTest {
   @MethodSource("getComplianceTestData")
   public void testEvaluate(String caseName, JsonNode root) {
     try {
-      ObjectMapper mapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
+      ObjectMapper mapper = JsonMapper.builder().addModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule()).build();
 
       if (root.has("skip") && root.get("skip").asBoolean()) {
         System.out.println("skipping: " + caseName);
@@ -513,9 +508,7 @@ public class ComplianceTest {
     } else if (node.isObject()) {
       ObjectNode obj = (ObjectNode) node;
       ObjectNode result = obj.objectNode();
-      Iterator<Map.Entry<String, JsonNode>> fields = obj.fields();
-      while (fields.hasNext()) {
-        Map.Entry<String, JsonNode> field = fields.next();
+      for (Map.Entry<String, JsonNode> field : obj.properties()) {
         result.set(field.getKey(), deepSortArrays(field.getValue()));
       }
       return result;

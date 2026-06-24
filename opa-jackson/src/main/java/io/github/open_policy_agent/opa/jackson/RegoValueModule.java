@@ -1,14 +1,5 @@
 package io.github.open_policy_agent.opa.jackson;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
@@ -20,19 +11,26 @@ import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoSet;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueDeserializer;
+import tools.jackson.databind.ValueSerializer;
+import tools.jackson.databind.module.SimpleModule;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * Jackson {@link SimpleModule} that teaches an {@link ObjectMapper} how to (de)serialize the OPA
- * Rego AST value types. Replaces the in-source {@code @JsonValue}/{@code @JsonAnySetter}
- * annotations the AST types previously carried, so the evaluator module has no Jackson
- * dependency.
+ * Jackson {@link SimpleModule} that teaches an {@link tools.jackson.databind.ObjectMapper}
+ * how to (de)serialize the OPA Rego AST value types. Replaces the in-source {@code @JsonValue}/
+ * {@code @JsonAnySetter} annotations the AST types previously carried, so the evaluator module
+ * has no Jackson dependency.
  *
  * <p>Only a {@link RegoObject} deserializer is registered. Reading JSON directly into a typed
  * Rego value (i.e. {@code mapper.readValue(json, T.class)}) is only used with {@link RegoObject}
@@ -42,7 +40,7 @@ import java.util.TreeMap;
  * <p>Usage:
  *
  * <pre>{@code
- * ObjectMapper mapper = new ObjectMapper().registerModule(new RegoValueModule());
+ * JsonMapper mapper = JsonMapper.builder().addModule(new RegoValueModule()).build();
  * String json = mapper.writeValueAsString(regoValue);
  * RegoObject obj = mapper.readValue(json, RegoObject.class);
  * }</pre>
@@ -63,73 +61,73 @@ public class RegoValueModule extends SimpleModule {
     addDeserializer(RegoObject.class, new RegoObjectDeserializer());
   }
 
-  private static final class RegoStringSerializer extends JsonSerializer<RegoString> {
+  private static final class RegoStringSerializer extends ValueSerializer<RegoString> {
     @Override
-    public void serialize(RegoString v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoString v, JsonGenerator g, SerializationContext p) {
       g.writeString(v.getValue());
     }
   }
 
-  private static final class RegoInt32Serializer extends JsonSerializer<RegoInt32> {
+  private static final class RegoInt32Serializer extends ValueSerializer<RegoInt32> {
     @Override
-    public void serialize(RegoInt32 v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoInt32 v, JsonGenerator g, SerializationContext p) {
       g.writeNumber(v.getValue());
     }
   }
 
-  private static final class RegoBigIntSerializer extends JsonSerializer<RegoBigInt> {
+  private static final class RegoBigIntSerializer extends ValueSerializer<RegoBigInt> {
     @Override
-    public void serialize(RegoBigInt v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoBigInt v, JsonGenerator g, SerializationContext p) {
       g.writeNumber(v.getValue());
     }
   }
 
-  private static final class RegoDecimalSerializer extends JsonSerializer<RegoDecimal> {
+  private static final class RegoDecimalSerializer extends ValueSerializer<RegoDecimal> {
     @Override
-    public void serialize(RegoDecimal v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoDecimal v, JsonGenerator g, SerializationContext p) {
       g.writeNumber(v.getValue());
     }
   }
 
-  private static final class RegoBooleanSerializer extends JsonSerializer<RegoBoolean> {
+  private static final class RegoBooleanSerializer extends ValueSerializer<RegoBoolean> {
     @Override
-    public void serialize(RegoBoolean v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoBoolean v, JsonGenerator g, SerializationContext p) {
       g.writeBoolean(v.getValue());
     }
   }
 
-  private static final class RegoNullSerializer extends JsonSerializer<RegoNull> {
+  private static final class RegoNullSerializer extends ValueSerializer<RegoNull> {
     @Override
-    public void serialize(RegoNull v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoNull v, JsonGenerator g, SerializationContext p) {
       g.writeNull();
     }
   }
 
-  private static final class RegoArraySerializer extends JsonSerializer<RegoArray> {
+  private static final class RegoArraySerializer extends ValueSerializer<RegoArray> {
     @Override
-    public void serialize(RegoArray v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoArray v, JsonGenerator g, SerializationContext p) {
       g.writeStartArray();
       for (RegoValue item : v.getValues()) {
-        p.defaultSerializeValue(item, g);
+        p.writeValue(g, item);
       }
       g.writeEndArray();
     }
   }
 
-  private static final class RegoSetSerializer extends JsonSerializer<RegoSet> {
+  private static final class RegoSetSerializer extends ValueSerializer<RegoSet> {
     @Override
-    public void serialize(RegoSet v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoSet v, JsonGenerator g, SerializationContext p) {
       g.writeStartArray();
       for (RegoValue item : v.getValue()) {
-        p.defaultSerializeValue(item, g);
+        p.writeValue(g, item);
       }
       g.writeEndArray();
     }
   }
 
-  private static final class RegoObjectSerializer extends JsonSerializer<RegoObject> {
+  private static final class RegoObjectSerializer extends ValueSerializer<RegoObject> {
     @Override
-    public void serialize(RegoObject v, JsonGenerator g, SerializerProvider p) throws IOException {
+    public void serialize(RegoObject v, JsonGenerator g, SerializationContext p) {
       // OPA (Go) emits sorted keys; preserve that for round-trip fidelity.
       Map<String, RegoValue> sorted = new TreeMap<>();
       for (Map.Entry<RegoValue, RegoValue> entry : v.getProperties().entrySet()) {
@@ -137,8 +135,8 @@ public class RegoValueModule extends SimpleModule {
       }
       g.writeStartObject();
       for (Map.Entry<String, RegoValue> entry : sorted.entrySet()) {
-        g.writeFieldName(entry.getKey());
-        p.defaultSerializeValue(entry.getValue(), g);
+        g.writeName(entry.getKey());
+        p.writeValue(g, entry.getValue());
       }
       g.writeEndObject();
     }
@@ -154,23 +152,21 @@ public class RegoValueModule extends SimpleModule {
     }
   }
 
-  private static final class RegoObjectDeserializer extends JsonDeserializer<RegoObject> {
+  private static final class RegoObjectDeserializer extends ValueDeserializer<RegoObject> {
     @Override
-    public RegoObject deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-      JsonNode root = jp.getCodec().readTree(jp);
+    public RegoObject deserialize(JsonParser jp, DeserializationContext ctx) {
+      JsonNode root = ctx.readTree(jp);
       if (!root.isObject()) {
-        throw new IOException("expected JSON object for RegoObject, got " + root.getNodeType());
+        throw DatabindException.from(jp, "expected JSON object for RegoObject, got " + root.getNodeType());
       }
       RegoObject obj = new RegoObject();
-      Iterator<Map.Entry<String, JsonNode>> fields = root.fields();
-      while (fields.hasNext()) {
-        Map.Entry<String, JsonNode> field = fields.next();
-        obj.setProp(new RegoString(field.getKey()), convertNode(field.getValue()));
+      for (Map.Entry<String, JsonNode> field : root.properties()) {
+        obj.setProp(new RegoString(field.getKey()), convertNode(jp, field.getValue()));
       }
       return obj;
     }
 
-    private static RegoValue convertNode(JsonNode node) throws IOException {
+    private static RegoValue convertNode(JsonParser jp, JsonNode node) {
       if (node == null || node.isNull()) {
         return RegoNull.INSTANCE;
       }
@@ -198,20 +194,18 @@ public class RegoValueModule extends SimpleModule {
       if (node.isArray()) {
         RegoArray arr = new RegoArray();
         for (JsonNode element : node) {
-          arr.addValue(convertNode(element));
+          arr.addValue(convertNode(jp, element));
         }
         return arr;
       }
       if (node.isObject()) {
         RegoObject obj = new RegoObject();
-        Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
-        while (fields.hasNext()) {
-          Map.Entry<String, JsonNode> field = fields.next();
-          obj.setProp(new RegoString(field.getKey()), convertNode(field.getValue()));
+        for (Map.Entry<String, JsonNode> field : node.properties()) {
+          obj.setProp(new RegoString(field.getKey()), convertNode(jp, field.getValue()));
         }
         return obj;
       }
-      throw new IOException("unsupported JSON node type: " + node.getNodeType());
+      throw DatabindException.from(jp, "unsupported JSON node type: " + node.getNodeType());
     }
   }
 }

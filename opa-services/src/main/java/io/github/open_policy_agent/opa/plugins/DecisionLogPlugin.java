@@ -1,10 +1,9 @@
 package io.github.open_policy_agent.opa.plugins;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.github.open_policy_agent.opa.bundle.Bundle;
+import io.github.open_policy_agent.opa.config.Config;
+import io.github.open_policy_agent.opa.logging.Logger;
+import io.github.open_policy_agent.opa.metrics.Metrics;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -14,10 +13,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import io.github.open_policy_agent.opa.bundle.Bundle;
-import io.github.open_policy_agent.opa.config.Config;
-import io.github.open_policy_agent.opa.logging.Logger;
-import io.github.open_policy_agent.opa.metrics.Metrics;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Plugin that logs policy decision events.
@@ -193,11 +193,8 @@ public final class DecisionLogPlugin implements Plugin {
 
   /** Decision logger that buffers and uploads decision events. */
   public static class DecisionLogs {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
-
-    static {
-      MAPPER.registerModule(new JavaTimeModule());
-    }
+    // Jackson 3 has java.time support built-in; no need to register JavaTimeModule.
+    private static final ObjectMapper MAPPER = JsonMapper.shared();
 
     private final Logger logger;
     private final PluginManager manager;

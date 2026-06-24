@@ -3,7 +3,8 @@ package io.github.open_policy_agent.opa.jackson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
@@ -22,7 +23,7 @@ import org.junit.jupiter.api.Test;
 
 class RegoValueModuleTest {
 
-  private final ObjectMapper mapper = new ObjectMapper().registerModule(new RegoValueModule());
+  private final ObjectMapper mapper = JsonMapper.builder().addModule(new RegoValueModule()).build();
 
   // --- Serialization (one test per RegoValue subtype) ---
 
@@ -148,7 +149,7 @@ class RegoValueModuleTest {
   @Test
   void deserialize_regoObject_rejectsNonObjectInput() {
     assertThatThrownBy(() -> mapper.readValue("[1,2,3]", RegoObject.class))
-        .isInstanceOf(IOException.class)
+        .isInstanceOf(tools.jackson.databind.DatabindException.class)
         .hasMessageContaining("expected JSON object");
   }
 

@@ -13,7 +13,8 @@ dependencies {
     // modules through SPIs (see Engine javadoc); opa-jackson is one such implementation, used here
     // for testing.
     testImplementation(project(":opa-jackson"))
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
+    testImplementation(platform("tools.jackson:jackson-bom:3.2.0"))
+    testImplementation("tools.jackson.core:jackson-databind")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.2")
     testImplementation("org.json:json:20260522")

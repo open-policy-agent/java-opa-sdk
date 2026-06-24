@@ -12,8 +12,9 @@ import io.github.open_policy_agent.opa.ir.policy.Policy;
 import io.github.open_policy_agent.opa.metrics.NoOpMetrics;
 import io.github.open_policy_agent.opa.storage.InMem;
 import io.github.open_policy_agent.opa.storage.Store;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.github.open_policy_agent.opa.tracing.DurationProfiler;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class EngineTest {
   private static final PolicyReader policyReader =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
-  private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
+  private static final ObjectMapper objectMapper = JsonMapper.builder().addModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule()).build();
 
   @Test
   void engine_builder_requiresStore() {

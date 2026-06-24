@@ -1,9 +1,9 @@
 package io.github.open_policy_agent.opa.jackson;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.open_policy_agent.opa.rego.Capabilities;
-import java.io.IOException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Jackson-backed JSON IO for {@link Capabilities}.
@@ -14,17 +14,20 @@ import java.io.IOException;
 public final class JacksonCapabilities {
 
   private static final ObjectMapper MAPPER =
-      new ObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
+      JsonMapper.builder()
+          .changeDefaultPropertyInclusion(
+              incl -> incl.withValueInclusion(JsonInclude.Include.NON_NULL))
+          .build();
 
   private JacksonCapabilities() {}
 
   /** Parse a {@link Capabilities} from a JSON string. */
-  public static Capabilities fromJson(String json) throws IOException {
+  public static Capabilities fromJson(String json) {
     return MAPPER.readValue(json, Capabilities.class);
   }
 
   /** Serialize a {@link Capabilities} to a pretty-printed JSON string. */
-  public static String toJson(Capabilities capabilities) throws IOException {
+  public static String toJson(Capabilities capabilities) {
     return MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(capabilities);
   }
 }

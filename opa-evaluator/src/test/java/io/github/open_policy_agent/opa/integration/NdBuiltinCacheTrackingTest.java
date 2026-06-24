@@ -2,8 +2,9 @@ package io.github.open_policy_agent.opa.integration;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -124,7 +125,7 @@ public class NdBuiltinCacheTrackingTest {
     Map<String, List<EvaluationContext.CacheCall>> ndCache = ctx.getNdCacheValues();
 
     // Serialize to JSON (simulating what DecisionLogPlugin does)
-    ObjectMapper mapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
+    ObjectMapper mapper = JsonMapper.builder().addModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule()).build();
     JsonNode cacheNode = mapper.valueToTree(ndCache);
 
     // This test verifies that the cache values can be serialized

@@ -1,7 +1,6 @@
 package io.github.open_policy_agent.opa.plugins;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.open_policy_agent.opa.config.Config;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashSet;
@@ -12,7 +11,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import io.github.open_policy_agent.opa.config.Config;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Plugin that implements OPA's discovery protocol for dynamic configuration updates.
@@ -153,7 +154,7 @@ public final class DiscoveryPlugin implements Plugin {
    * <p>Handles downloading, validation, and activation of discovery configuration.
    */
   private static class DiscoveryBundle extends BundleDownloader {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = JsonMapper.shared();
 
     private Config discoveredConfig; // Store the last successfully loaded config
 

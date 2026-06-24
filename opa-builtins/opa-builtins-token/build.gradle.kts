@@ -11,7 +11,8 @@ dependencies {
 
     implementation("com.nimbusds:nimbus-jose-jwt:10.9.1")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.82")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
+    implementation(platform("tools.jackson:jackson-bom:3.2.0"))
+    implementation("tools.jackson.core:jackson-databind")
     // RegoValueModule provides Jackson (de)serialization for RegoObject/RegoArray/etc.
     // Discovered automatically via Jackson's findAndRegisterModules() SPI.
     runtimeOnly(project(":opa-jackson"))

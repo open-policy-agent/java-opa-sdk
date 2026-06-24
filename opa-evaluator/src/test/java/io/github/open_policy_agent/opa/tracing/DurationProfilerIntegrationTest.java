@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,7 +35,7 @@ import io.github.open_policy_agent.opa.tracing.DurationProfiler.Loc;
 class DurationProfilerIntegrationTest {
 
   private static final ObjectMapper MAPPER =
-      new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
+      JsonMapper.builder().addModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule()).build();
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
   private static final String ENTRYPOINT = "authz/allow";
