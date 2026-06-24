@@ -24,7 +24,7 @@ import io.github.open_policy_agent.opa.rego.EvaluationContext;
  */
 class CoverageProfilerIntegrationTest {
 
-  private static final PolicyReader policyReader =
+  private static PolicyReader policyReader =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
 
   private Policy loadPolicy(String resourcePath) throws IOException {
