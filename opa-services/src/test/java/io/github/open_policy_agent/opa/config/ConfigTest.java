@@ -281,7 +281,7 @@ class ConfigTest {
 
     assertFalse(decisionLogs.getConsole());
     assertEquals("system/log/mask", decisionLogs.getMaskDecision());
-    assertEquals("system/log/drop", decisionLogs.getDropDedcision());
+    assertEquals("system/log/drop", decisionLogs.getDropDecision());
     assertEquals(300, decisionLogs.getMinDelaySeconds());
     assertEquals(600, decisionLogs.getMaxDelaySeconds());
     assertEquals("/logs", decisionLogs.getResource());

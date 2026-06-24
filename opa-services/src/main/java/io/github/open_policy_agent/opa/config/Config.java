@@ -165,7 +165,7 @@ public class Config {
     private String maskDecision = "system/log/mask";
 
     @JsonProperty("drop_decision")
-    private String dropDedcision = "system/log/drop";
+    private String dropDecision = "system/log/drop";
 
     @JsonProperty("min_delay_seconds")
     private Integer minDelaySeconds = 300;
@@ -214,12 +214,12 @@ public class Config {
       return this;
     }
 
-    public String getDropDedcision() {
-      return dropDedcision;
+    public String getDropDecision() {
+      return dropDecision;
     }
 
-    public DecisionLogsConfig setDropDedcision(String dropDedcision) {
-      this.dropDedcision = dropDedcision;
+    public DecisionLogsConfig setDropDecision(String dropDecision) {
+      this.dropDecision = dropDecision;
       return this;
     }
 
