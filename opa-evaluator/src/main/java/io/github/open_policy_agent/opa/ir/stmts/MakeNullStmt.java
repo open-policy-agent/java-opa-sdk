@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * MakeNullStmt constructs a local variable that refers to a null value.
  */
 public class MakeNullStmt extends BaseStmt {
-    public static final String StmtType = "MakeNullStmt";
 
     private int target;
 
@@ -25,8 +24,8 @@ public class MakeNullStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.MAKE_NULL;
+  public StmtType getType() {
+    return StmtType.MAKE_NULL;
     }
 
   @Override

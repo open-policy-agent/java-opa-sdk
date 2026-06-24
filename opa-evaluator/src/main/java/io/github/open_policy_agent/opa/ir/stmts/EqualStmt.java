@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * EqualStmt represents a value-equality check of two local variables.
  */
 public class EqualStmt extends BaseStmt {
-    public static final String StmtType = "EqualStmt";
 
     private Operand a;
 
@@ -39,8 +38,8 @@ public class EqualStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.EQUAL;
+  public StmtType getType() {
+    return StmtType.EQUAL;
     }
 
   @Override

@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * SetAddStmt represents a dynamic add operation of an element into a set.
  */
 public class SetAddStmt extends BaseStmt {
-    public static final String StmtType = "SetAddStmt";
 
     private Operand value;
 
@@ -38,8 +37,8 @@ public class SetAddStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.SET_ADD;
+  public StmtType getType() {
+    return StmtType.SET_ADD;
     }
 
   @Override

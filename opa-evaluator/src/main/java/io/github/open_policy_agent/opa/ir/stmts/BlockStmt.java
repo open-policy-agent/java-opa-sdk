@@ -9,7 +9,6 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * short-circuit execution.
  */
 public class BlockStmt extends BaseStmt {
-    public static final String StmtType = "BlockStmt";
 
     private List<Block> blocks;
 
@@ -34,8 +33,8 @@ public class BlockStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.BLOCK;
+  public StmtType getType() {
+    return StmtType.BLOCK;
     }
 
   @Override

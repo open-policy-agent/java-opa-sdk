@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * IsObjectStmt represents a dynamic type check on a local variable.
  */
 public class IsObjectStmt extends BaseStmt {
-    public static final String StmtType = "IsObjectStmt";
 
     private Operand source;
 
@@ -27,8 +26,8 @@ public class IsObjectStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.IS_OBJECT;
+  public StmtType getType() {
+    return StmtType.IS_OBJECT;
     }
 
   @Override

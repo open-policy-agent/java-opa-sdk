@@ -6,7 +6,6 @@ import java.util.Objects;
  * AssignIntStmt represents a dynamic append operation of a value onto an array.
  */
 public class AssignIntStmt extends BaseStmt {
-    public static final String StmtType = "AssignIntStmt";
 
     private Long value;
 
@@ -37,8 +36,8 @@ public class AssignIntStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.ASSIGN_INT;
+  public StmtType getType() {
+    return StmtType.ASSIGN_INT;
   }
 
   @Override

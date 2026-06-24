@@ -42,6 +42,7 @@ import io.github.open_policy_agent.opa.ir.stmts.ReturnLocalStmt;
 import io.github.open_policy_agent.opa.ir.stmts.ScanStmt;
 import io.github.open_policy_agent.opa.ir.stmts.SetAddStmt;
 import io.github.open_policy_agent.opa.ir.stmts.Stmt;
+import io.github.open_policy_agent.opa.ir.stmts.Stmt.StmtType;
 import io.github.open_policy_agent.opa.ir.stmts.WithStmt;
 
 import java.io.IOException;
@@ -51,44 +52,44 @@ import java.util.concurrent.ConcurrentHashMap;
 
 class StmtDeserializer extends JsonDeserializer<Stmt> {
   // Maps JSON type strings to statement classes.
-  // String values match the OPA IR spec and the STMT_TYPE enum's typeName values.
+  // String values match the OPA IR spec and the StmtType enum's typeName values.
   private static final Map<String, Class<? extends Stmt>> STMT_REGISTRY =
       new HashMap<>() {
         {
-          put(ArrayAppendStmt.StmtType,       ArrayAppendStmt.class);
-          put(AssignVarOnceStmt.StmtType,     AssignVarOnceStmt.class);
-          put(AssignIntStmt.StmtType,         AssignIntStmt.class);
-          put(AssignVarStmt.StmtType,         AssignVarStmt.class);
-          put(BlockStmt.StmtType,             BlockStmt.class);
-          put(BreakStmt.StmtType,             BreakStmt.class);
-          put(CallDynamicStmt.StmtType,       CallDynamicStmt.class);
-          put(CallStmt.StmtType,              CallStmt.class);
-          put(DotStmt.StmtType,               DotStmt.class);
-          put(EqualStmt.StmtType,             EqualStmt.class);
-          put(IsArrayStmt.StmtType,           IsArrayStmt.class);
-          put(IsDefinedStmt.StmtType,         IsDefinedStmt.class);
-          put(IsObjectStmt.StmtType,          IsObjectStmt.class);
-          put(IsUndefinedStmt.StmtType,       IsUndefinedStmt.class);
-          put(IsSetStmt.StmtType,             IsSetStmt.class);
-          put(LenStmt.StmtType,               LenStmt.class);
-          put(MakeArrayStmt.StmtType,         MakeArrayStmt.class);
-          put(MakeNullStmt.StmtType,          MakeNullStmt.class);
-          put(MakeNumberIntStmt.StmtType,     MakeNumberIntStmt.class);
-          put(MakeNumberRefStmt.StmtType,     MakeNumberRefStmt.class);
-          put(MakeObjectStmt.StmtType,        MakeObjectStmt.class);
-          put(MakeSetStmt.StmtType,           MakeSetStmt.class);
-          put(NotEqualStmt.StmtType,          NotEqualStmt.class);
-          put(NotStmt.StmtType,               NotStmt.class);
-          put(ObjectInsertOnceStmt.StmtType,  ObjectInsertOnceStmt.class);
-          put(ObjectInsertStmt.StmtType,      ObjectInsertStmt.class);
-          put(ObjectMergeStmt.StmtType,       ObjectMergeStmt.class);
-          put(ResetLocalStmt.StmtType,        ResetLocalStmt.class);
-          put(ResultSetAddStmt.StmtType,      ResultSetAddStmt.class);
-          put(ReturnLocalStmt.StmtType,       ReturnLocalStmt.class);
-          put(ScanStmt.StmtType,              ScanStmt.class);
-          put(SetAddStmt.StmtType,            SetAddStmt.class);
-          put(WithStmt.StmtType,              WithStmt.class);
-          put(NopStmt.StmtType,               NopStmt.class);
+          put(StmtType.ARRAY_APPEND.getTypeName(),       ArrayAppendStmt.class);
+          put(StmtType.ASSIGN_VAR_ONCE.getTypeName(),     AssignVarOnceStmt.class);
+          put(StmtType.ASSIGN_INT.getTypeName(),         AssignIntStmt.class);
+          put(StmtType.ASSIGN_VAR.getTypeName(),         AssignVarStmt.class);
+          put(StmtType.BLOCK.getTypeName(),             BlockStmt.class);
+          put(StmtType.BREAK.getTypeName(),             BreakStmt.class);
+          put(StmtType.CALL_DYNAMIC.getTypeName(),       CallDynamicStmt.class);
+          put(StmtType.CALL.getTypeName(),              CallStmt.class);
+          put(StmtType.DOT.getTypeName(),               DotStmt.class);
+          put(StmtType.EQUAL.getTypeName(),             EqualStmt.class);
+          put(StmtType.IS_ARRAY.getTypeName(),           IsArrayStmt.class);
+          put(StmtType.IS_DEFINED.getTypeName(),         IsDefinedStmt.class);
+          put(StmtType.IS_OBJECT.getTypeName(),          IsObjectStmt.class);
+          put(StmtType.IS_UNDEFINED.getTypeName(),       IsUndefinedStmt.class);
+          put(StmtType.IS_SET.getTypeName(),             IsSetStmt.class);
+          put(StmtType.LEN.getTypeName(),               LenStmt.class);
+          put(StmtType.MAKE_ARRAY.getTypeName(),         MakeArrayStmt.class);
+          put(StmtType.MAKE_NULL.getTypeName(),          MakeNullStmt.class);
+          put(StmtType.MAKE_NUMBER_INT.getTypeName(),     MakeNumberIntStmt.class);
+          put(StmtType.MAKE_NUMBER_REF.getTypeName(),     MakeNumberRefStmt.class);
+          put(StmtType.MAKE_OBJECT.getTypeName(),        MakeObjectStmt.class);
+          put(StmtType.MAKE_SET.getTypeName(),           MakeSetStmt.class);
+          put(StmtType.NOT_EQUAL.getTypeName(),          NotEqualStmt.class);
+          put(StmtType.NOT.getTypeName(),               NotStmt.class);
+          put(StmtType.OBJECT_INSERT_ONCE.getTypeName(),  ObjectInsertOnceStmt.class);
+          put(StmtType.OBJECT_INSERT.getTypeName(),      ObjectInsertStmt.class);
+          put(StmtType.OBJECT_MERGE.getTypeName(),       ObjectMergeStmt.class);
+          put(StmtType.RESET_LOCAL.getTypeName(),        ResetLocalStmt.class);
+          put(StmtType.RESULT_SET_ADD.getTypeName(),      ResultSetAddStmt.class);
+          put(StmtType.RETURN_LOCAL.getTypeName(),       ReturnLocalStmt.class);
+          put(StmtType.SCAN.getTypeName(),              ScanStmt.class);
+          put(StmtType.SET_ADD.getTypeName(),            SetAddStmt.class);
+          put(StmtType.WITH.getTypeName(),              WithStmt.class);
+          put(StmtType.NOP.getTypeName(),               NopStmt.class);
         }
       };
 

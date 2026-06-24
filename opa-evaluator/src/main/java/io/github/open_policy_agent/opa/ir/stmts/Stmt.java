@@ -5,9 +5,9 @@ package io.github.open_policy_agent.opa.ir.stmts;
  */
 public interface Stmt extends LocationStmt {
 
-  STMT_TYPE getType();
+  StmtType getType();
 
-  enum STMT_TYPE {
+  enum StmtType {
     ARRAY_APPEND("ArrayAppendStmt"),
     ASSIGN_INT("AssignIntStmt"),
     ASSIGN_VAR_ONCE("AssignVarOnceStmt"),
@@ -45,12 +45,12 @@ public interface Stmt extends LocationStmt {
 
     private final String typeName;
 
-    STMT_TYPE(String typeName) {
+    StmtType(String typeName) {
       this.typeName = typeName;
     }
 
-    public static STMT_TYPE fromTypeName(String typeName) {
-      for (STMT_TYPE type : STMT_TYPE.values()) {
+    public static StmtType fromTypeName(String typeName) {
+      for (StmtType type : StmtType.values()) {
         if (type.typeName.equals(typeName)) {
           return type;
         }

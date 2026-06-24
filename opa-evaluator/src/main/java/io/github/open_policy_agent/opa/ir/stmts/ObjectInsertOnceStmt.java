@@ -8,7 +8,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * the key already exists and the value differs, execution aborts with a conflict error.
  */
 public class ObjectInsertOnceStmt extends BaseStmt {
-    public static final String StmtType = "ObjectInsertOnceStmt";
 
     private Operand key;
 
@@ -50,8 +49,8 @@ public class ObjectInsertOnceStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.OBJECT_INSERT_ONCE;
+  public StmtType getType() {
+    return StmtType.OBJECT_INSERT_ONCE;
     }
 
   @Override

@@ -7,7 +7,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * merged recursively.
  */
 public class ObjectMergeStmt extends BaseStmt {
-    public static final String StmtType = "ObjectMergeStmt";
 
     private int a;
 
@@ -25,8 +24,8 @@ public class ObjectMergeStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.OBJECT_MERGE;
+  public StmtType getType() {
+    return StmtType.OBJECT_MERGE;
     }
 
   @Override

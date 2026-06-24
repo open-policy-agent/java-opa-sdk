@@ -8,7 +8,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * DotStmt may be a scalar value, in which case the statement will be undefined.
  */
 public class DotStmt extends BaseStmt {
-    public static final String StmtType = "DotStmt";
 
     private Operand source;
 
@@ -26,8 +25,8 @@ public class DotStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.DOT;
+  public StmtType getType() {
+    return StmtType.DOT;
     }
 
   @Override

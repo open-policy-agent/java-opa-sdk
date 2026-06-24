@@ -12,7 +12,6 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * created. When the WithStmt finishes, the Local is reset to its original value.
  */
 public class WithStmt extends BaseStmt {
-    public static final String StmtType = "WithStmt";
 
     private int local;
 
@@ -65,8 +64,8 @@ public class WithStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.WITH;
+  public StmtType getType() {
+    return StmtType.WITH;
     }
 
   @Override

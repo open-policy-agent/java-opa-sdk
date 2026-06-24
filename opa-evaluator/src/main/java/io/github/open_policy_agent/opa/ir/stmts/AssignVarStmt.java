@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * AssignVarStmt represents an assignment of one local variable to another.
  */
 public class AssignVarStmt extends BaseStmt {
-    public static final String StmtType = "AssignVarStmt";
 
     private Operand source;
 
@@ -38,8 +37,8 @@ public class AssignVarStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.ASSIGN_VAR;
+  public StmtType getType() {
+    return StmtType.ASSIGN_VAR;
     }
 
   @Override

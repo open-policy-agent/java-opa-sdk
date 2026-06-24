@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * ResultSetAddStmt adds a value into the result set returned by the query plan.
  */
 public class ResultSetAddStmt extends BaseStmt {
-    public static final String StmtType = "ResultSetAddStmt";
 
     private int value;
 
@@ -25,8 +24,8 @@ public class ResultSetAddStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.RESULT_SET_ADD;
+  public StmtType getType() {
+    return StmtType.RESULT_SET_ADD;
     }
 
   @Override

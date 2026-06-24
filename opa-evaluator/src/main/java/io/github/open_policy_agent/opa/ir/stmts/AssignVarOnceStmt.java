@@ -8,7 +8,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * defined, execution aborts with a conflict error.
  */
 public class AssignVarOnceStmt extends BaseStmt {
-    public static final String StmtType = "AssignVarOnceStmt";
 
     private Operand source;
 
@@ -39,8 +38,8 @@ public class AssignVarOnceStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.ASSIGN_VAR_ONCE;
+  public StmtType getType() {
+    return StmtType.ASSIGN_VAR_ONCE;
     }
 
   @Override

@@ -9,7 +9,6 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * case the block will never execute.
  */
 public class ScanStmt extends BaseStmt {
-    public static final String StmtType = "ScanStmt";
 
     private int source;
 
@@ -30,8 +29,8 @@ public class ScanStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.SCAN;
+  public StmtType getType() {
+    return StmtType.SCAN;
     }
 
   @Override

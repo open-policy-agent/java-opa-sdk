@@ -6,7 +6,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
 
 /** CallStmt represents a named function call. The result should be stored in the result local. */
 public class CallStmt extends BaseStmt {
-  public static final String StmtType = "CallStmt";
 
   private final int maxLocal = Integer.MIN_VALUE;
 
@@ -53,8 +52,8 @@ public class CallStmt extends BaseStmt {
   }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.CALL;
+  public StmtType getType() {
+    return StmtType.CALL;
   }
 
   @Override

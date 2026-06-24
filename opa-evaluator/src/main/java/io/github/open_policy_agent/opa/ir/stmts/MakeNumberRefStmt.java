@@ -4,7 +4,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * MakeNumberRefStmt constructs a local variable that refers to a number stored as a string.
  */
 public class MakeNumberRefStmt extends BaseStmt {
-    public static final String StmtType = "MakeNumberRefStmt";
 
     private int index;
 
@@ -35,8 +34,8 @@ public class MakeNumberRefStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.MAKE_NUMBER_REF;
+  public StmtType getType() {
+    return StmtType.MAKE_NUMBER_REF;
     }
 
   @Override
