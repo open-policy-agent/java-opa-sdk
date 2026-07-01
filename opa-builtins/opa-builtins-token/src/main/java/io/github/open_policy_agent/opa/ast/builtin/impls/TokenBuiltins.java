@@ -694,7 +694,9 @@ public class TokenBuiltins implements BuiltinProvider {
   @OpaBuiltin(
       name = "io.jwt.decode_verify",
       description =
-          "Verifies a JWT signature under parameterized constraints and decodes the claims if it is valid.\nSupports the following algorithms: HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512, and EdDSA.",
+          "Verifies a JWT signature under parameterized constraints and decodes the claims if "
+              + "it is valid.\nSupports the following algorithms: HS256, HS384, HS512, RS256, "
+              + "RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512, and EdDSA.",
       args = {
         @OpaType(
             type = "string",
@@ -711,7 +713,10 @@ public class TokenBuiltins implements BuiltinProvider {
               type = "array",
               name = "output",
               description =
-                  "`[valid, header, payload]`:  if the input token is verified and meets the requirements of `constraints` then `valid` is `true`; `header` and `payload` are objects containing the JOSE header and the JWT claim set; otherwise, `valid` is `false`, `header` and `payload` are `{}`"),
+                  "`[valid, header, payload]`:  if the input token is verified and meets the "
+                      + "requirements of `constraints` then `valid` is `true`; `header` and "
+                      + "`payload` are objects containing the JOSE header and the JWT claim set; "
+                      + "otherwise, `valid` is `false`, `header` and `payload` are `{}`"),
       nondeterministic = true)
   public RegoArray decodeVerify(EvaluationContext ctx, RegoValue[] args) {
     // Check cache first

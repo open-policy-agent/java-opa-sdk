@@ -18,8 +18,14 @@ public class RegoNull implements RegoValue {
 
     public String getTypeName() { return "null";}
 
+  @Override
   public boolean equals(Object o) {
     return o instanceof RegoNull;
+  }
+
+  @Override
+  public int hashCode() {
+    return RegoNull.class.hashCode();
   }
 
   @Override

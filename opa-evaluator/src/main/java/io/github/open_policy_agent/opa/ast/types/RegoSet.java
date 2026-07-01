@@ -137,6 +137,11 @@ public class RegoSet implements RegoValue, RegoCollection {
     }
 
     @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+
+    @Override
     public String toString() {
         return value.toString();
     }

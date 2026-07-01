@@ -304,7 +304,7 @@ class EngineEvaluateTest {
   public static class AuthzInput {
     private User user;
 
-    public AuthzInput() {}
+    AuthzInput() {}
 
     public User getUser() {
       return user;
@@ -318,9 +318,9 @@ class EngineEvaluateTest {
       private String id;
       private List<String> groups;
 
-      public User() {}
+      User() {}
 
-      public User(String id, List<String> groups) {
+      User(String id, List<String> groups) {
         this.id = id;
         this.groups = groups;
       }
@@ -428,7 +428,7 @@ class EngineEvaluateTest {
 
     private String reason;
 
-    public Decision() {}
+    Decision() {}
 
     public boolean isAllowed() {
       return allowed;

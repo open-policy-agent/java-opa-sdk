@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import io.github.open_policy_agent.opa.mapper.AnnotationIntrospector;
-import io.github.open_policy_agent.opa.mapper.AnnotationIntrospector.Visibility;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -121,7 +120,7 @@ class GsonAnnotationIntrospectorTest {
   // --- findCreatorParamName ---
 
   static class WithCreator {
-    public WithCreator(String foo, String bar) {}
+    WithCreator(String foo, String bar) {}
   }
 
   @Test
@@ -130,7 +129,7 @@ class GsonAnnotationIntrospectorTest {
     // @Target is FIELD, METHOD only), and Gson's annotation set has no @JsonCreator analogue.
     // Constructor injection is configured via InstanceCreator on the GsonBuilder, not via
     // annotations, so this method has no annotation to read.
-    Constructor<?> ctor = WithCreator.class.getConstructor(String.class, String.class);
+    Constructor<?> ctor = WithCreator.class.getDeclaredConstructor(String.class, String.class);
     Parameter[] params = ctor.getParameters();
     assertThat(introspector.findCreatorParamName(params[0])).isNull();
     assertThat(introspector.findCreatorParamName(params[1])).isNull();

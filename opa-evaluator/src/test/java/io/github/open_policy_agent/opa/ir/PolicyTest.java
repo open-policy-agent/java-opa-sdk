@@ -2,7 +2,6 @@ package io.github.open_policy_agent.opa.ir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.github.open_policy_agent.opa.ir.PolicyReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;

@@ -32,7 +32,11 @@ public class ObjectBuiltins {
   @OpaBuiltin(
       name = "object.union_n",
       description =
-          "Returns a new object containing all key/value pairs from the supplied objects. If the supplied `objects` is an `array`, then `object.union_n` will search through a nested object or array using each key in turn. For example: `object.union_n([{\"a\": 1}, {\"b\": 2}, {\"c\": 3}])` results in `{\"a\": 1, \"b\": 2, \"c\": 3}`.",
+          "Returns a new object containing all key/value pairs from the supplied objects. "
+              + "If the supplied `objects` is an `array`, then `object.union_n` will search "
+              + "through a nested object or array using each key in turn. For example: "
+              + "`object.union_n([{\"a\": 1}, {\"b\": 2}, {\"c\": 3}])` results in "
+              + "`{\"a\": 1, \"b\": 2, \"c\": 3}`.",
       args = {
         @OpaType(
             type = "array",
@@ -91,7 +95,20 @@ public class ObjectBuiltins {
   @OpaBuiltin(
       name = "object.subset",
       description =
-          "Determines if an object `sub` is a subset of another object `super`.Object `sub` is a subset of object `super` if and only if every key in `sub` is also in `super`, **and** for all keys which `sub` and `super` share, they have the same value. This function works with objects, sets, arrays and a set of array and set.If both arguments are objects, then the operation is recursive, e.g. `{\"c\": {\"x\": {10, 15, 20}}` is a subset of `{\"a\": \"b\", \"c\": {\"x\": {10, 15, 20, 25}, \"y\": \"z\"}}`. If both arguments are sets, then this function checks if every element of `sub` is a member of `super`, but does not attempt to recurse. If both arguments are arrays, then this function checks if `sub` appears contiguously in order within `super`, and also does not attempt to recurse. If `super` is array and `sub` is set, then this function checks if `super` contains every element of `sub` with no consideration of ordering, and also does not attempt to recurse.",
+          "Determines if an object `sub` is a subset of another object `super`."
+              + "Object `sub` is a subset of object `super` if and only if every key in `sub` "
+              + "is also in `super`, **and** for all keys which `sub` and `super` share, they "
+              + "have the same value. This function works with objects, sets, arrays and a set "
+              + "of array and set.If both arguments are objects, then the operation is "
+              + "recursive, e.g. `{\"c\": {\"x\": {10, 15, 20}}` is a subset of "
+              + "`{\"a\": \"b\", \"c\": {\"x\": {10, 15, 20, 25}, \"y\": \"z\"}}`. "
+              + "If both arguments are sets, then this function checks if every element of "
+              + "`sub` is a member of `super`, but does not attempt to recurse. If both "
+              + "arguments are arrays, then this function checks if `sub` appears contiguously "
+              + "in order within `super`, and also does not attempt to recurse. If `super` is "
+              + "array and `sub` is set, then this function checks if `super` contains every "
+              + "element of `sub` with no consideration of ordering, and also does not attempt "
+              + "to recurse.",
       args = {
         @OpaType(
             type = "object|set|array",
@@ -200,7 +217,11 @@ public class ObjectBuiltins {
   @OpaBuiltin(
       name = "object.remove",
       description =
-          "Returns a new object containing all key/value pairs except for those for which the key is present in the supplied set. If the supplied `keys` is an `array`, then `object.remove` will search through a nested object or array using each key in turn. For example: `object.remove({\"a\": [{ \"b\": true }]}, [\"a\", 0, \"b\"])` results in `{\"a\": []}`.",
+          "Returns a new object containing all key/value pairs except for those for which the "
+              + "key is present in the supplied set. If the supplied `keys` is an `array`, then "
+              + "`object.remove` will search through a nested object or array using each key in "
+              + "turn. For example: `object.remove({\"a\": [{ \"b\": true }]}, "
+              + "[\"a\", 0, \"b\"])` results in `{\"a\": []}`.",
       args = {
         @OpaType(
             type = "object",
@@ -227,7 +248,9 @@ public class ObjectBuiltins {
     RegoObject object = (RegoObject) args[0];
 
     if (!(args[1] instanceof RegoObject) && !(args[1] instanceof RegoSet) && !(args[1] instanceof RegoArray)) {
-      throw new TypeError("object.remove: operand 2 must be one of {object, set, array} but got " + args[1].getTypeName());
+      throw new TypeError(
+          "object.remove: operand 2 must be one of {object, set, array} but got "
+              + args[1].getTypeName());
     }
     RegoValue keys = args[1];
 
@@ -252,7 +275,11 @@ public class ObjectBuiltins {
   @OpaBuiltin(
       name = "object.filter",
       description =
-          "Returns a new object containing only the key/value pairs for which the key is present in the supplied set. If the supplied `keys` is an `array`, then `object.filter` will search through a nested object or array using each key in turn. For example: `object.filter({\"a\": [{ \"b\": true }]}, [\"a\", 0, \"b\"])` results in `{\"a\": [{ \"b\": true }]}`.",
+          "Returns a new object containing only the key/value pairs for which the key is present "
+              + "in the supplied set. If the supplied `keys` is an `array`, then "
+              + "`object.filter` will search through a nested object or array using each key in "
+              + "turn. For example: `object.filter({\"a\": [{ \"b\": true }]}, "
+              + "[\"a\", 0, \"b\"])` results in `{\"a\": [{ \"b\": true }]}`.",
       args = {
         @OpaType(
             type = "object",
@@ -304,7 +331,11 @@ public class ObjectBuiltins {
   @OpaBuiltin(
       name = "object.get",
       description =
-          "Returns value of an object's key if present, otherwise a default. If the supplied `key` is an `array`, then `object.get` will search through a nested object or array using each key in turn. For example: `object.get({\"a\": [{ \"b\": true }]}, [\"a\", 0, \"b\"], false)` results in `true`.",
+          "Returns value of an object's key if present, otherwise a default. If the supplied "
+              + "`key` is an `array`, then `object.get` will search through a nested object or "
+              + "array using each key in turn. For example: "
+              + "`object.get({\"a\": [{ \"b\": true }]}, [\"a\", 0, \"b\"], false)` results "
+              + "in `true`.",
       args = {
         @OpaType(
             type = "object",

@@ -1,7 +1,6 @@
 package io.github.open_policy_agent.opa.jackson;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.github.open_policy_agent.opa.metrics.Metrics;
 import io.github.open_policy_agent.opa.metrics.SimpleMetrics;

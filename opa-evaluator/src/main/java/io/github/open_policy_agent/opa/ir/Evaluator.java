@@ -397,9 +397,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
               RegoValue a = resolveOperand(es.getA(), ctx, frame);
               RegoValue b = resolveOperand(es.getB(), ctx, frame);
               // null doesn't equal null except in Rego :)
-              if (a == null && b == null) {
-                // continue with next statement
-              } else if (a == null || !a.equals(b)) {
+              if ((a != null || b != null) && (a == null || !a.equals(b))) {
                 return false;
               }
               break;

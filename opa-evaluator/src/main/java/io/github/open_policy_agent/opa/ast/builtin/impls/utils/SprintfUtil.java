@@ -998,9 +998,6 @@ public class SprintfUtil {
     // Go's default %g precision is 6 significant digits, but removes trailing zeros
     if (precision >= 0) {
             formatBuilder.append(".").append(precision);
-    } else if (verb == 'g' || verb == 'G') {
-      // For %g without explicit precision, use -1 which means "shortest"
-      // But Java's %g defaults to 6, so we'll post-process to remove trailing zeros
     }
 
         // Add the verb

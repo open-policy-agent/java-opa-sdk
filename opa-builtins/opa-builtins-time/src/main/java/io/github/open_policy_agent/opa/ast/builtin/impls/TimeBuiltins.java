@@ -49,7 +49,10 @@ public class TimeBuiltins implements BuiltinProvider {
             type = "any",
             name = "x",
             description =
-                "a number representing the nanoseconds since the epoch (UTC); or a two-element array of the nanoseconds, and a timezone string; or a three-element array of ns, timezone string and a layout string or golang defined formatting constant (see golang supported time formats)")
+                "a number representing the nanoseconds since the epoch (UTC); or a "
+                    + "two-element array of the nanoseconds, and a timezone string; or a "
+                    + "three-element array of ns, timezone string and a layout string or "
+                    + "golang defined formatting constant (see golang supported time formats)")
       },
       result =
           @OpaType(
@@ -264,7 +267,11 @@ public class TimeBuiltins implements BuiltinProvider {
   @OpaBuiltin(
       name = "time.add_date",
       description =
-          "Returns the nanoseconds since epoch after adding years, months and days to nanoseconds. Month & day values outside their usual ranges after the operation and will be normalized - for example, October 32 would become November 1. `undefined` if the result would be outside the valid time range that can fit within an `int64`.",
+          "Returns the nanoseconds since epoch after adding years, months and days to "
+              + "nanoseconds. Month & day values outside their usual ranges after the operation "
+              + "and will be normalized - for example, October 32 would become November 1. "
+              + "`undefined` if the result would be outside the valid time range that can fit "
+              + "within an `int64`.",
       args = {
         @OpaType(type = "number", name = "ns", description = "nanoseconds since the epoch"),
         @OpaType(type = "number", name = "years", description = "number of years to add"),
