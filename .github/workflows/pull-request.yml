@@ -139,6 +139,25 @@ jobs:
           done
           exit $failed
 
+  build:
+    name: Build All Modules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      # Compiles every module's main and test sources unconditionally. The
+      # per-module test jobs are gated by a change filter, so a change in one
+      # module that breaks compilation of an untouched module would otherwise
+      # slip through. Test execution and lint are covered by their own jobs, so
+      # this deliberately compiles only (no test/check tasks).
+      - run: ./gradlew assemble testClasses
+
   test-opa-evaluator:
     needs: check-changes
     if: needs.check-changes.outputs.opa-evaluator == 'true'
@@ -222,6 +241,7 @@ jobs:
       - gh-actions-lint
       - lint
       - validate-pom
+      - build
       - test-opa-evaluator
       - test-opa-jackson
       - test-opa-services
