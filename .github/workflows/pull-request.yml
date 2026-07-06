@@ -143,6 +143,9 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-evaluator == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -150,7 +153,7 @@ jobs:
       - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-evaluator:test
 
@@ -158,6 +161,9 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-jackson == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -165,7 +171,7 @@ jobs:
       - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-jackson:test
 
@@ -173,6 +179,9 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-services == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -180,7 +189,7 @@ jobs:
       - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-services:test
 
@@ -188,6 +197,9 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-builtins == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -195,7 +207,7 @@ jobs:
       - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-builtins:test
 
@@ -203,6 +215,9 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-slf4j == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
@@ -210,7 +225,7 @@ jobs:
       - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-slf4j:test
 
