@@ -1,0 +1,51 @@
+name: CodeQL
+
+# Static security analysis for the Java sources. Runs on PRs, pushes to main,
+# and a weekly schedule so newly disclosed query packs re-scan existing code.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "27 4 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  analyze:
+    name: Analyze (Java)
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write # CodeQL uploads its SARIF results to the Security tab
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@411c4c9a36b3fca4d674f06b6396b2c6d23522c6 # v3.36.3
+        with:
+          languages: java-kotlin
+          # security-and-quality adds maintainability/reliability queries on top
+          # of the default security suite.
+          queries: security-and-quality
+
+      # Manual build so CodeQL traces every module's compilation. `-x test` keeps
+      # the scan fast; correctness is already covered by the per-module test jobs.
+      - name: Build
+        run: ./gradlew compileJava compileTestJava -x test
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@411c4c9a36b3fca4d674f06b6396b2c6d23522c6 # v3.36.3
+        with:
+          category: "/language:java-kotlin"
