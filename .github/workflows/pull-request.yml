@@ -95,6 +95,25 @@ jobs:
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7
 
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # Diffs the dependency graph between the PR base and head, failing on newly
+      # introduced vulnerabilities or disallowed licenses. Relies on the baseline
+      # graph submitted by dependency-submission.yml on pushes to main.
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
   lint:
     name: Checkstyle & PMD
     runs-on: ubuntu-latest
@@ -220,6 +239,7 @@ jobs:
     needs:
       - check-changes
       - gh-actions-lint
+      - dependency-review
       - lint
       - validate-pom
       - test-opa-evaluator
