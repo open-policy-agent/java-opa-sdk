@@ -9,7 +9,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * result local.
  */
 public class CallDynamicStmt extends BaseStmt {
-    public static final String StmtType = "CallDynamicStmt";
 
     private List<Operand> path;
 
@@ -51,8 +50,8 @@ public class CallDynamicStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.CALL_DYNAMIC;
+  public StmtType getType() {
+    return StmtType.CALL_DYNAMIC;
     }
 
   @Override

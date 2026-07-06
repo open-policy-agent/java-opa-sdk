@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * MakeObjectStmt constructs a local variable that refers to an object value.
  */
 public class MakeObjectStmt extends BaseStmt {
-    public static final String StmtType = "MakeObjectStmt";
 
     private int target;
 
@@ -24,13 +23,9 @@ public class MakeObjectStmt extends BaseStmt {
         this.target = target;
     }
 
-    public String getStmtType() {
-        return StmtType;
-    }
-
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.MAKE_OBJECT;
+  public StmtType getType() {
+    return StmtType.MAKE_OBJECT;
     }
 
   @Override

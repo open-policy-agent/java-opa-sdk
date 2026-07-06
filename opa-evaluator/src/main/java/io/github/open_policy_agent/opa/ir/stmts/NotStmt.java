@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * NotStmt represents a negated statement.
  */
 public class NotStmt extends BaseStmt {
-    public static final String StmtType = "NotStmt";
 
     private Block block;
 
@@ -28,8 +27,8 @@ public class NotStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.NOT;
+  public StmtType getType() {
+    return StmtType.NOT;
     }
 
   @Override

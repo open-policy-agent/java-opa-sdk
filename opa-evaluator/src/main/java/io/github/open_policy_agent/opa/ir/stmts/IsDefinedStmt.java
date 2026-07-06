@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * IsDefinedStmt represents a check of whether a local variable is defined.
  */
 public class IsDefinedStmt extends BaseStmt {
-    public static final String StmtType = "IsDefinedStmt";
 
     private int source;
 
@@ -25,8 +24,8 @@ public class IsDefinedStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.IS_DEFINED;
+  public StmtType getType() {
+    return StmtType.IS_DEFINED;
     }
 
   @Override

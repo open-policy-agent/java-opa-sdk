@@ -7,7 +7,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * jumped to.
  */
 public class BreakStmt extends BaseStmt {
-    public static final String StmtType = "BreakStmt";
 
     private int index;
 
@@ -31,8 +30,8 @@ public class BreakStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.BREAK;
+  public StmtType getType() {
+    return StmtType.BREAK;
     }
 
   @Override

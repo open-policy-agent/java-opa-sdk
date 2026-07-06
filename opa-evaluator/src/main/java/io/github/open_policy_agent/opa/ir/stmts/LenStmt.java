@@ -8,7 +8,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * local variable.
  */
 public class LenStmt extends BaseStmt {
-    public static final String StmtType = "LenStmt";
 
     private Operand source;
 
@@ -39,8 +38,8 @@ public class LenStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.LEN;
+  public StmtType getType() {
+    return StmtType.LEN;
     }
 
   @Override

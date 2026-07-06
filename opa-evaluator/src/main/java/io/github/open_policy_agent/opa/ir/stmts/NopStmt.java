@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.IREvaluationContext;
  * NopStmt adds a nop instruction. Useful during development and debugging only.
  */
 public class NopStmt extends BaseStmt {
-    public static final String StmtType = "NopStmt";
 
     public NopStmt() {
     }
@@ -20,8 +19,8 @@ public class NopStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.NOP;
+  public StmtType getType() {
+    return StmtType.NOP;
     }
 
   @Override

@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * ArrayAppendStmt represents a dynamic append operation of a value onto an array.
  */
 public class ArrayAppendStmt extends BaseStmt {
-    public static final String StmtType = "ArrayAppendStmt";
 
     private Operand value;
 
@@ -38,8 +37,8 @@ public class ArrayAppendStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.ARRAY_APPEND;
+  public StmtType getType() {
+    return StmtType.ARRAY_APPEND;
     }
 
   @Override

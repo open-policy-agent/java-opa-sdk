@@ -217,7 +217,7 @@ class DecisionLogPluginTest {
 
     assertFalse(decisionLogs.getConsole());
     assertEquals("system/log/mask", decisionLogs.getMaskDecision());
-    assertEquals("system/log/drop", decisionLogs.getDropDedcision());
+    assertEquals("system/log/drop", decisionLogs.getDropDecision());
     assertEquals(300, decisionLogs.getMinDelaySeconds());
     assertEquals(600, decisionLogs.getMaxDelaySeconds());
     assertEquals("/logs", decisionLogs.getResource());
@@ -231,7 +231,7 @@ class DecisionLogPluginTest {
             .setConsole(true)
             .setResource("/custom/logs")
             .setMaskDecision("custom/mask")
-            .setDropDedcision("custom/drop")
+            .setDropDecision("custom/drop")
             .setMinDelaySeconds(60)
             .setMaxDelaySeconds(120);
 
@@ -239,7 +239,7 @@ class DecisionLogPluginTest {
     assertTrue(decisionLogs.getConsole());
     assertEquals("/custom/logs", decisionLogs.getResource());
     assertEquals("custom/mask", decisionLogs.getMaskDecision());
-    assertEquals("custom/drop", decisionLogs.getDropDedcision());
+    assertEquals("custom/drop", decisionLogs.getDropDecision());
     assertEquals(60, decisionLogs.getMinDelaySeconds());
     assertEquals(120, decisionLogs.getMaxDelaySeconds());
   }

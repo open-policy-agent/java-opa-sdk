@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * NotEqualStmt represents a != check of two local variables.
  */
 public class NotEqualStmt extends BaseStmt {
-    public static final String StmtType = "NotEqualStmt";
 
     private Operand a;
 
@@ -40,8 +39,8 @@ public class NotEqualStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.NOT_EQUAL;
+  public StmtType getType() {
+    return StmtType.NOT_EQUAL;
     }
 
   @Override

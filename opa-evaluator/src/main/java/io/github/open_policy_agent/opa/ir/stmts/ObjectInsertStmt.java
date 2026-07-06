@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * ObjectInsertStmt represents a dynamic insert operation of a key/value pair into an object.
  */
 public class ObjectInsertStmt extends BaseStmt {
-    public static final String StmtType = "ObjectInsertStmt";
 
     private Operand key;
 
@@ -51,8 +50,8 @@ public class ObjectInsertStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.OBJECT_INSERT;
+  public StmtType getType() {
+    return StmtType.OBJECT_INSERT;
     }
 
   @Override
