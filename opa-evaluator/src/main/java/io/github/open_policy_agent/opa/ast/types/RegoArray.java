@@ -71,7 +71,9 @@ public class RegoArray implements RegoValue, RegoCollection {
 
   @Override
   public final boolean equals(Object o) {
-    if (!(o instanceof RegoArray)) return false;
+      if (!(o instanceof RegoArray)) {
+          return false;
+      }
 
     return Objects.equals(values, ((RegoArray) o).values);
   }

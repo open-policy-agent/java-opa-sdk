@@ -33,12 +33,18 @@ public class ObjectTypeDynamicProperty {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     ObjectTypeDynamicProperty that = (ObjectTypeDynamicProperty) o;
 
-    if (!Objects.equals(key, that.key)) return false;
+      if (!Objects.equals(key, that.key)) {
+          return false;
+      }
     return Objects.equals(value, that.value);
   }
 

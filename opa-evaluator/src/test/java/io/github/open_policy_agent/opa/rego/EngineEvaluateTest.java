@@ -77,7 +77,9 @@ class EngineEvaluateTest {
     StringBuilder sb = new StringBuilder();
     sb.append("{\"user\":{\"id\":\"").append(id).append("\",\"groups\":[");
     for (int i = 0; i < groups.length; i++) {
-      if (i > 0) sb.append(",");
+        if (i > 0) {
+            sb.append(",");
+        }
       sb.append("\"").append(groups[i]).append("\"");
     }
     sb.append("]}}");

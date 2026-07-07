@@ -379,7 +379,9 @@ public class TokenBuiltins implements BuiltinProvider {
       JWSVerifier verifier = new RSASSAVerifier((RSAPublicKey) publicKey);
       return RegoBoolean.of(signedJWT.verify(verifier));
     } catch (BuiltinError be) {
-      if (strict) throw be;
+        if (strict) {
+            throw be;
+        }
       return RegoBoolean.FALSE;
     } catch (ParseException | JOSEException | IOException e) {
       if (strict) {
@@ -1142,7 +1144,9 @@ public class TokenBuiltins implements BuiltinProvider {
 
   private static String padBase64(String base64url) {
     int pad = 4 - (base64url.length() % 4);
-    if (pad == 4) return base64url;
+      if (pad == 4) {
+          return base64url;
+      }
     return base64url + "=".repeat(pad);
   }
 

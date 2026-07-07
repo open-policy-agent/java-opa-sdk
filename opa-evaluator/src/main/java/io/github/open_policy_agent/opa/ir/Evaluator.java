@@ -262,7 +262,9 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
                 RegoSet rs = (RegoSet) source;
                 if (rs.contains(key)) {
                   frame.setLocal(ds.getTarget(), key);
-                  if (srcDataDerived) frame.markDataDerived(ds.getTarget());
+                    if (srcDataDerived) {
+                        frame.markDataDerived(ds.getTarget());
+                    }
                 } else {
                   return false; // Key not in set - fail the statement
                 }
@@ -281,9 +283,13 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
                   return false;
                 }
                 RegoValue value = ro.getProperty(effectiveKey);
-                if (value == null) value = RegoNull.INSTANCE;
+                  if (value == null) {
+                      value = RegoNull.INSTANCE;
+                  }
                 frame.setLocal(ds.getTarget(), value);
-                if (srcDataDerived) frame.markDataDerived(ds.getTarget());
+                  if (srcDataDerived) {
+                      frame.markDataDerived(ds.getTarget());
+                  }
               } else if (source instanceof RegoArray) {
                 RegoArray ra = (RegoArray) source;
                 RegoValue value;
@@ -331,7 +337,9 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
                   value = RegoNull.INSTANCE;
                 }
                 frame.setLocal(ds.getTarget(), value);
-                if (srcDataDerived) frame.markDataDerived(ds.getTarget());
+                  if (srcDataDerived) {
+                      frame.markDataDerived(ds.getTarget());
+                  }
               } else if (source instanceof RegoNumber) {
                 return false;
               } else if (source instanceof RegoBoolean) {
@@ -559,9 +567,13 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
               NotEqualStmt nes = (NotEqualStmt) stmt;
               RegoValue a = resolveOperand(nes.getA(), ctx, frame);
               RegoValue b = resolveOperand(nes.getB(), ctx, frame);
-              // Treat undefined as falsy - if either operand is undefined, fail
-              if (a instanceof RegoUndefined || b instanceof RegoUndefined) return false;
-              if (a == null || b == null || a.equals(b)) return false;
+                // Treat undefined as falsy - if either operand is undefined, fail
+                if (a instanceof RegoUndefined || b instanceof RegoUndefined) {
+                    return false;
+                }
+                if (a == null || b == null || a.equals(b)) {
+                    return false;
+                }
               break;
             }
             case NOT: {

@@ -86,7 +86,9 @@ public class SprintfUtil {
             // Parse flags
             while (fmtIdx < format.length()) {
                 c = next();
-                if (c == null) break;
+                if (c == null) {
+                    break;
+                }
 
                 switch (c) {
                     case '#': flags.sharp = true; continue;
@@ -299,7 +301,9 @@ public class SprintfUtil {
         int n = 0;
         while (fmtIdx < format.length()) {
             Character c = currentChar();
-            if (c == null) return null;
+            if (c == null) {
+                return null;
+            }
 
             if (c == ']') {
                 next();
@@ -326,7 +330,9 @@ public class SprintfUtil {
 
         while (fmtIdx < format.length()) {
             Character c = currentChar();
-            if (c == null) return null;
+            if (c == null) {
+                return null;
+            }
 
             if (c < '0' || c > '9') {
                 break;
@@ -1271,7 +1277,9 @@ public class SprintfUtil {
     }
 
     private void printPadding(int count) {
-        if (count <= 0) return;
+        if (count <= 0) {
+            return;
+        }
 
         char padChar = (flags.zero && !flags.minus) ? '0' : ' ';
     result.append(String.valueOf(padChar).repeat(count));

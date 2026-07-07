@@ -51,14 +51,24 @@ public class BlockStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         BlockStmt blockStmt = (BlockStmt) o;
 
-        if (getFile() != blockStmt.getFile()) return false;
-        if (getCol() != blockStmt.getCol()) return false;
-        if (getRow() != blockStmt.getRow()) return false;
+        if (getFile() != blockStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != blockStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != blockStmt.getRow()) {
+            return false;
+        }
         return Objects.equals(blocks, blockStmt.blocks);
     }
 

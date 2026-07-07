@@ -48,12 +48,18 @@ public class BoolVal implements Val {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     BoolVal boolVal = (BoolVal) o;
 
-    if (value != boolVal.value) return false;
+      if (value != boolVal.value) {
+          return false;
+      }
     return Objects.equals(type, boolVal.type);
   }
 

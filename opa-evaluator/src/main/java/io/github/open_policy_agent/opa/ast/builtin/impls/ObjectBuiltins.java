@@ -236,10 +236,11 @@ public class ObjectBuiltins {
       filterSet = ((RegoCollection) keys).valueStream().collect(Collectors.toSet());
     } else if (keys instanceof RegoObject) {
       filterSet = ((RegoObject) keys).getProperties().keySet();
-    } else
-      throw new TypeError(
-          "operand 2 must be one of {object, set, array} but got"
-              + keys.getTypeName());
+    } else {
+        throw new TypeError(
+                "operand 2 must be one of {object, set, array} but got"
+                        + keys.getTypeName());
+    }
 
     Map<RegoValue, RegoValue> filteredMap =
         object.stream()
@@ -288,10 +289,11 @@ public class ObjectBuiltins {
       filterSet = ((RegoCollection) keys).valueStream().collect(Collectors.toSet());
     } else if (keys instanceof RegoObject) {
       filterSet = ((RegoObject) keys).getProperties().keySet();
-    } else
-      throw new TypeError(
-          "operand 2 must be one of {object, set, array} but got"
-              + keys.getTypeName());
+    } else {
+        throw new TypeError(
+                "operand 2 must be one of {object, set, array} but got"
+                        + keys.getTypeName());
+    }
 
     Map<RegoValue, RegoValue> filteredMap =
         object.stream()

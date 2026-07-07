@@ -558,14 +558,30 @@ public class RegoMapper {
   }
 
   private static Object defaultForType(Class<?> type) {
-    if (type == boolean.class) return false;
-    if (type == int.class) return 0;
-    if (type == long.class) return 0L;
-    if (type == double.class) return 0.0;
-    if (type == float.class) return 0.0f;
-    if (type == byte.class) return (byte) 0;
-    if (type == short.class) return (short) 0;
-    if (type == char.class) return '\0';
+      if (type == boolean.class) {
+          return false;
+      }
+      if (type == int.class) {
+          return 0;
+      }
+      if (type == long.class) {
+          return 0L;
+      }
+      if (type == double.class) {
+          return 0.0;
+      }
+      if (type == float.class) {
+          return 0.0f;
+      }
+      if (type == byte.class) {
+          return (byte) 0;
+      }
+      if (type == short.class) {
+          return (short) 0;
+      }
+      if (type == char.class) {
+          return '\0';
+      }
     return null;
   }
 

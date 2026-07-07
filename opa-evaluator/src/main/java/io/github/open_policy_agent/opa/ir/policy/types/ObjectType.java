@@ -29,12 +29,18 @@ public class ObjectType implements Type {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     ObjectType that = (ObjectType) o;
 
-    if (!Objects.equals(statics, that.statics)) return false;
+      if (!Objects.equals(statics, that.statics)) {
+          return false;
+      }
     return Objects.equals(dynamics, that.dynamics);
   }
 

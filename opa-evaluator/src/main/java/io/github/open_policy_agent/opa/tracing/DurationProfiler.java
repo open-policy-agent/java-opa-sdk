@@ -66,7 +66,9 @@ public class DurationProfiler implements Profiler {
 
     @Override
     public boolean equals(Object o) {
-      if (!(o instanceof Loc)) return false;
+        if (!(o instanceof Loc)) {
+            return false;
+        }
 
       Loc loc = (Loc) o;
       return file == loc.file && row == loc.row;

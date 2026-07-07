@@ -54,15 +54,27 @@ public class AssignVarOnceStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         AssignVarOnceStmt that = (AssignVarOnceStmt) o;
 
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
+        if (target != that.target) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
         return Objects.equals(source, that.source);
     }
 

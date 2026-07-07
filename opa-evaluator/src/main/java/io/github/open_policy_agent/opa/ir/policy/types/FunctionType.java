@@ -57,13 +57,21 @@ public class FunctionType implements Type {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     FunctionType that = (FunctionType) o;
 
-    if (!Objects.equals(args, that.args)) return false;
-    if (!Objects.equals(result, that.result)) return false;
+      if (!Objects.equals(args, that.args)) {
+          return false;
+      }
+      if (!Objects.equals(result, that.result)) {
+          return false;
+      }
     return Objects.equals(variadic, that.variadic);
   }
 

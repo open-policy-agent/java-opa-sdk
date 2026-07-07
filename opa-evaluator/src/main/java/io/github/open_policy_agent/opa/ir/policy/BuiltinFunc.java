@@ -35,12 +35,18 @@ public class BuiltinFunc {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     BuiltinFunc that = (BuiltinFunc) o;
 
-    if (!Objects.equals(name, that.name)) return false;
+      if (!Objects.equals(name, that.name)) {
+          return false;
+      }
     return Objects.equals(decl, that.decl);
   }
 

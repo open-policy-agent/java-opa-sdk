@@ -308,16 +308,36 @@ final class ClassInfo {
   }
 
   private static Class<?> boxingAlternative(Class<?> type) {
-    if (type == boolean.class) return Boolean.class;
-    if (type == Boolean.class) return boolean.class;
-    if (type == int.class) return Integer.class;
-    if (type == Integer.class) return int.class;
-    if (type == long.class) return Long.class;
-    if (type == Long.class) return long.class;
-    if (type == double.class) return Double.class;
-    if (type == Double.class) return double.class;
-    if (type == float.class) return Float.class;
-    if (type == Float.class) return float.class;
+      if (type == boolean.class) {
+          return Boolean.class;
+      }
+      if (type == Boolean.class) {
+          return boolean.class;
+      }
+      if (type == int.class) {
+          return Integer.class;
+      }
+      if (type == Integer.class) {
+          return int.class;
+      }
+      if (type == long.class) {
+          return Long.class;
+      }
+      if (type == Long.class) {
+          return long.class;
+      }
+      if (type == double.class) {
+          return Double.class;
+      }
+      if (type == Double.class) {
+          return double.class;
+      }
+      if (type == float.class) {
+          return Float.class;
+      }
+      if (type == Float.class) {
+          return float.class;
+      }
     return null;
   }
 

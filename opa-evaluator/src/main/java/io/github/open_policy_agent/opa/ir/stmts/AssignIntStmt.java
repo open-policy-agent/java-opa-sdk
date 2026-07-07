@@ -47,15 +47,27 @@ public class AssignIntStmt extends BaseStmt {
 
   @Override
   public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
         AssignIntStmt that = (AssignIntStmt) o;
 
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
+      if (target != that.target) {
+          return false;
+      }
+      if (getFile() != that.getFile()) {
+          return false;
+      }
+      if (getCol() != that.getCol()) {
+          return false;
+      }
+      if (getRow() != that.getRow()) {
+          return false;
+      }
         return Objects.equals(value, that.value);
     }
 

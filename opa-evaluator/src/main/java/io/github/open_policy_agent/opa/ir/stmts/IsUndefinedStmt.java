@@ -35,14 +35,24 @@ public class IsUndefinedStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         IsUndefinedStmt that = (IsUndefinedStmt) o;
 
-        if (source != that.source) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (source != that.source) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

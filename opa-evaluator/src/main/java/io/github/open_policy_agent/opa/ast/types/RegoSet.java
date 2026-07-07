@@ -53,9 +53,15 @@ public class RegoSet implements RegoValue, RegoCollection {
 
     sortedList.sort(
         (a, b) -> {
-          if (a == b) return 0;
-          if (a == null) return b == null ? 0 : -1;
-          if (b == null) return 1;
+            if (a == b) {
+                return 0;
+            }
+            if (a == null) {
+                return b == null ? 0 : -1;
+            }
+            if (b == null) {
+                return 1;
+            }
 
           // Get type precedence
           int typeA = getTypePrecedence(a);
@@ -130,7 +136,9 @@ public class RegoSet implements RegoValue, RegoCollection {
 
     @Override
     public final boolean equals(Object o) {
-        if (!(o instanceof RegoSet)) return false;
+        if (!(o instanceof RegoSet)) {
+            return false;
+        }
         RegoSet regoSet = (RegoSet) o;
 
         return value.equals(regoSet.value);

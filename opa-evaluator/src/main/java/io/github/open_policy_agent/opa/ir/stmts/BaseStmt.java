@@ -76,13 +76,21 @@ public abstract class BaseStmt implements Stmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         BaseStmt baseStmt = (BaseStmt) o;
 
-        if (file != baseStmt.file) return false;
-        if (col != baseStmt.col) return false;
+        if (file != baseStmt.file) {
+            return false;
+        }
+        if (col != baseStmt.col) {
+            return false;
+        }
         return row == baseStmt.row;
     }
 
