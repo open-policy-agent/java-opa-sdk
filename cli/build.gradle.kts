@@ -15,6 +15,9 @@ dependencies {
 
     runtimeOnly(project(":opa-builtins"))
     runtimeOnly(project(":opa-jackson"))
+    // Enables the CLI to read proto-format bundles (opa build --format=proto). opa-jackson still
+    // handles data.json and JSON-format plans/manifests; opa-proto decodes plan.pb/.manifest.pb.
+    runtimeOnly(project(":opa-proto"))
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.2")

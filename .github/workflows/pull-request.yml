@@ -286,6 +286,34 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-slf4j:test
 
+  verify-proto-vendor:
+    name: Verify vendored proto schemas match go.mod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: tools/generate-compliance-tests/go.mod
+      # The vendored .proto files in opa-proto must always match the OPA version
+      # pinned in tools/generate-compliance-tests/go.mod (the source of truth).
+      # Re-vendor via the Gradle task and fail if it produces any change — i.e. the
+      # OPA version was bumped, or a .proto was hand-edited, without re-vendoring.
+      - name: Re-vendor and check for drift
+        run: |
+          set -e
+          ./gradlew --rerun-tasks :opa-proto:vendorProtoSchemas
+          if ! git diff --quiet -- opa-proto/src/main/proto; then
+            echo "::error::Vendored proto schemas are out of sync with the OPA version in tools/generate-compliance-tests/go.mod. Run ./gradlew :opa-proto:vendorProtoSchemas and commit the result."
+            git --no-pager diff -- opa-proto/src/main/proto
+            exit 1
+          fi
+          echo "Vendored proto schemas are in sync with the pinned OPA version."
+
   pr-check-summary:
     name: PR Check Summary
     runs-on: ubuntu-latest
@@ -297,6 +325,7 @@ jobs:
       - lint
       - validate-pom
       - build
+      - verify-proto-vendor
       - test-opa-evaluator
       - test-opa-jackson
       - test-opa-services

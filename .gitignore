@@ -13,6 +13,9 @@
 *.tar.gz
 *.rar
 
+# …but keep bundle fixtures checked in as test resources
+!**/src/test/resources/**/*.tar.gz
+
 # Build directories
 build/
 target/
@@ -59,4 +62,7 @@ nb-configuration.xml
 # OS files
 .DS_Store
 Thumbs.db
+
+# Go — compiled helper tool binary (built by `go build` in the compliance-test tool)
+/tools/generate-compliance-tests/generate-compliance-tests
 

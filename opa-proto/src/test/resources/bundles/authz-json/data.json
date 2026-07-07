@@ -1,0 +1,1 @@
+{"roles":{"alice":["reader"],"bob":["admin"]},"rules":[{"method":"GET","user":"alice"},{"method":"POST","user":"bob"}]}
