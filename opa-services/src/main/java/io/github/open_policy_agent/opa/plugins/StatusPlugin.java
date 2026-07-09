@@ -185,10 +185,9 @@ public final class StatusPlugin implements Plugin {
 
       // Add plugin statuses (only for registered plugins)
       ObjectNode plugins = MAPPER.createObjectNode();
-      addPluginStatusIfRegistered(plugins, "bundles");
-      addPluginStatusIfRegistered(plugins, "decision_logs");
-      addPluginStatusIfRegistered(plugins, "status");
-      addPluginStatusIfRegistered(plugins, "discovery");
+      for (String pluginName : manager.getPluginNames()) {
+        addPluginStatusIfRegistered(plugins, pluginName);
+      }
       report.set("plugins", plugins);
 
       return report;
