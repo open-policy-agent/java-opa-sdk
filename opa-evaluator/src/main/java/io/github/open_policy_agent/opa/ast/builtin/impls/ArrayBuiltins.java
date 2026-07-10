@@ -23,7 +23,8 @@ public class ArrayBuiltins {
     return Map.of(
         "array.concat", new ArrayConcat()::eval,
         "array.slice", new ArraySlice()::eval,
-        "array.reverse", new ArrayReverse()::eval);
+        "array.reverse", new ArrayReverse()::eval,
+        "array.flatten", new ArrayFlatten()::eval);
     }
 
     private static final class ArrayConcat {
@@ -136,6 +137,41 @@ public class ArrayBuiltins {
             RegoArray rev = new RegoArray(arr);
             Collections.reverse(rev.getValue());
             return rev;
+        }
+    }
+
+    private static final class ArrayFlatten {
+    @OpaBuiltin(
+        name = "array.flatten",
+        description = "Flattens one level of a given array.",
+        args = {
+          @OpaType(
+              type = "array",
+              name = "arr",
+              description = "the array to be flattened",
+              dynamic = @OpaDynamic(type = "any"))
+        },
+        result =
+            @OpaType(
+                type = "array",
+                name = "flattened",
+                description = "array flattened one level",
+                dynamic = @OpaDynamic(type = "any")))
+    public RegoValue eval(EvaluationContext ctx, RegoValue[] args) {
+            if (!(args[0] instanceof RegoArray)) {
+              throw new TypeError("array.flatten: operand 1 must be array but got " + args[0].getTypeName());
+            }
+            List<RegoValue> arr = ((RegoArray) args[0]).getValue();
+
+            RegoArray flattened = new RegoArray();
+            for (RegoValue element : arr) {
+              if (element instanceof RegoArray) {
+                flattened.getValue().addAll(((RegoArray) element).getValue());
+              } else {
+                flattened.getValue().add(element);
+              }
+            }
+            return flattened;
         }
     }
 }
