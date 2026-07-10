@@ -672,21 +672,23 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 8,
-												"target": 4,
 												"file": 2,
 												"col": 2,
-												"row": 10
+												"row": 10,
+												"index": 8,
+												"Index": 8,
+												"target": 4
 											}
 										},
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 9,
-												"target": 5,
 												"file": 2,
 												"col": 2,
-												"row": 10
+												"row": 10,
+												"index": 9,
+												"Index": 9,
+												"target": 5
 											}
 										},
 										{

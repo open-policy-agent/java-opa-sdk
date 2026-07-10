@@ -266,11 +266,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 7,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"index": 3,
+												"Index": 3,
+												"target": 7
 											}
 										},
 										{
@@ -293,11 +294,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 5,
-												"target": 8,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"index": 5,
+												"Index": 5,
+												"target": 8
 											}
 										},
 										{
@@ -342,11 +344,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 7,
-												"target": 10,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"index": 7,
+												"Index": 7,
+												"target": 10
 											}
 										},
 										{

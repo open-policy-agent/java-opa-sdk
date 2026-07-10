@@ -170,21 +170,23 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 3
+												"row": 3,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 5,
 												"file": 0,
 												"col": 6,
-												"row": 3
+												"row": 3,
+												"index": 2,
+												"Index": 2,
+												"target": 5
 											}
 										},
 										{

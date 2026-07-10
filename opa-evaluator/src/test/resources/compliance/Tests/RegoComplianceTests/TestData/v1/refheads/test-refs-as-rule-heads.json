@@ -373,11 +373,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 3,
+												"Index": 3,
+												"target": 4
 											}
 										},
 										{
@@ -465,11 +466,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 5,
-												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"index": 5,
+												"Index": 5,
+												"target": 4
 											}
 										},
 										{
@@ -859,11 +861,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 2,
+												"Index": 2,
+												"target": 4
 											}
 										},
 										{
@@ -912,11 +915,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 5,
-												"target": 5,
 												"file": 1,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"index": 5,
+												"Index": 5,
+												"target": 5
 											}
 										},
 										{
@@ -1128,11 +1132,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
@@ -1181,11 +1186,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 5,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"index": 3,
+												"Index": 3,
+												"target": 5
 											}
 										},
 										{
@@ -1578,11 +1584,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
@@ -2233,11 +2240,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
@@ -2323,11 +2331,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 4,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 2,
+												"Index": 2,
+												"target": 4
 											}
 										},
 										{
@@ -2416,11 +2425,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 4,
 												"file": 0,
 												"col": 1,
-												"row": 7
+												"row": 7,
+												"index": 3,
+												"Index": 3,
+												"target": 4
 											}
 										},
 										{
@@ -2528,11 +2538,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 5,
 												"file": 0,
 												"col": 2,
-												"row": 10
+												"row": 10,
+												"index": 1,
+												"Index": 1,
+												"target": 5
 											}
 										},
 										{
@@ -2574,11 +2585,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 7,
 												"file": 0,
 												"col": 2,
-												"row": 11
+												"row": 11,
+												"index": 2,
+												"Index": 2,
+												"target": 7
 											}
 										},
 										{
@@ -2620,11 +2632,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 9,
 												"file": 0,
 												"col": 2,
-												"row": 12
+												"row": 12,
+												"index": 3,
+												"Index": 3,
+												"target": 9
 											}
 										},
 										{
@@ -3410,11 +3423,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 5,
 												"file": 1,
 												"col": 29,
-												"row": 3
+												"row": 3,
+												"index": 2,
+												"Index": 2,
+												"target": 5
 											}
 										},
 										{
@@ -3433,11 +3447,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 6,
 												"file": 1,
 												"col": 29,
-												"row": 3
+												"row": 3,
+												"index": 3,
+												"Index": 3,
+												"target": 6
 											}
 										},
 										{
@@ -3456,11 +3471,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 4,
-												"target": 7,
 												"file": 1,
 												"col": 29,
-												"row": 3
+												"row": 3,
+												"index": 4,
+												"Index": 4,
+												"target": 7
 											}
 										},
 										{
@@ -3753,11 +3769,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 5,
 												"file": 0,
 												"col": 29,
-												"row": 3
+												"row": 3,
+												"index": 1,
+												"Index": 1,
+												"target": 5
 											}
 										},
 										{
@@ -3776,11 +3793,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 6,
 												"file": 0,
 												"col": 29,
-												"row": 3
+												"row": 3,
+												"index": 2,
+												"Index": 2,
+												"target": 6
 											}
 										},
 										{
@@ -3799,11 +3817,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 7,
 												"file": 0,
 												"col": 29,
-												"row": 3
+												"row": 3,
+												"index": 3,
+												"Index": 3,
+												"target": 7
 											}
 										},
 										{
@@ -4296,11 +4315,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 4,
-												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 4,
+												"Index": 4,
+												"target": 4
 											}
 										},
 										{
@@ -4332,11 +4352,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 5,
-												"target": 4,
 												"file": 2,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 5,
+												"Index": 5,
+												"target": 4
 											}
 										},
 										{
@@ -4915,21 +4936,23 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 5,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 2,
+												"Index": 2,
+												"target": 5
 											}
 										},
 										{
@@ -5281,21 +5304,23 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 5,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 2,
+												"Index": 2,
+												"target": 5
 											}
 										},
 										{
@@ -6174,21 +6199,23 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 6,
-												"target": 4,
 												"file": 1,
 												"col": 31,
-												"row": 7
+												"row": 7,
+												"index": 6,
+												"Index": 6,
+												"target": 4
 											}
 										},
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 7,
-												"target": 5,
 												"file": 1,
 												"col": 31,
-												"row": 7
+												"row": 7,
+												"index": 7,
+												"Index": 7,
+												"target": 5
 											}
 										},
 										{
@@ -6350,11 +6377,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 6,
-												"target": 5,
 												"file": 1,
 												"col": 1,
-												"row": 9
+												"row": 9,
+												"index": 6,
+												"Index": 6,
+												"target": 5
 											}
 										},
 										{
@@ -8798,21 +8826,23 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 12,
-												"row": 4
+												"row": 4,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 5,
 												"file": 0,
 												"col": 12,
-												"row": 4
+												"row": 4,
+												"index": 2,
+												"Index": 2,
+												"target": 5
 											}
 										},
 										{
@@ -8885,21 +8915,23 @@
 														{
 															"type": "MakeNumberRefStmt",
 															"stmt": {
-																"Index": 1,
-																"target": 12,
 																"file": 0,
 																"col": 12,
-																"row": 5
+																"row": 5,
+																"index": 1,
+																"Index": 1,
+																"target": 12
 															}
 														},
 														{
 															"type": "MakeNumberRefStmt",
 															"stmt": {
-																"Index": 2,
-																"target": 13,
 																"file": 0,
 																"col": 12,
-																"row": 5
+																"row": 5,
+																"index": 2,
+																"Index": 2,
+																"target": 13
 															}
 														},
 														{
@@ -8972,21 +9004,23 @@
 																		{
 																			"type": "MakeNumberRefStmt",
 																			"stmt": {
-																				"Index": 1,
-																				"target": 20,
 																				"file": 0,
 																				"col": 12,
-																				"row": 6
+																				"row": 6,
+																				"index": 1,
+																				"Index": 1,
+																				"target": 20
 																			}
 																		},
 																		{
 																			"type": "MakeNumberRefStmt",
 																			"stmt": {
-																				"Index": 2,
-																				"target": 21,
 																				"file": 0,
 																				"col": 12,
-																				"row": 6
+																				"row": 6,
+																				"index": 2,
+																				"Index": 2,
+																				"target": 21
 																			}
 																		},
 																		{
@@ -9059,21 +9093,23 @@
 																						{
 																							"type": "MakeNumberRefStmt",
 																							"stmt": {
-																								"Index": 1,
-																								"target": 28,
 																								"file": 0,
 																								"col": 12,
-																								"row": 7
+																								"row": 7,
+																								"index": 1,
+																								"Index": 1,
+																								"target": 28
 																							}
 																						},
 																						{
 																							"type": "MakeNumberRefStmt",
 																							"stmt": {
-																								"Index": 2,
-																								"target": 29,
 																								"file": 0,
 																								"col": 12,
-																								"row": 7
+																								"row": 7,
+																								"index": 2,
+																								"Index": 2,
+																								"target": 29
 																							}
 																						},
 																						{
@@ -9146,21 +9182,23 @@
 																										{
 																											"type": "MakeNumberRefStmt",
 																											"stmt": {
-																												"Index": 1,
-																												"target": 36,
 																												"file": 0,
 																												"col": 12,
-																												"row": 8
+																												"row": 8,
+																												"index": 1,
+																												"Index": 1,
+																												"target": 36
 																											}
 																										},
 																										{
 																											"type": "MakeNumberRefStmt",
 																											"stmt": {
-																												"Index": 2,
-																												"target": 37,
 																												"file": 0,
 																												"col": 12,
-																												"row": 8
+																												"row": 8,
+																												"index": 2,
+																												"Index": 2,
+																												"target": 37
 																											}
 																										},
 																										{
@@ -9365,11 +9403,12 @@
 																														{
 																															"type": "MakeNumberRefStmt",
 																															"stmt": {
-																																"Index": 3,
-																																"target": 52,
 																																"file": 0,
 																																"col": 2,
-																																"row": 9
+																																"row": 9,
+																																"index": 3,
+																																"Index": 3,
+																																"target": 52
 																															}
 																														},
 																														{
