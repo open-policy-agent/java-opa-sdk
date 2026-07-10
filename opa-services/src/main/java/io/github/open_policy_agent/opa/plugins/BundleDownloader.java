@@ -1,20 +1,25 @@
 package io.github.open_policy_agent.opa.plugins;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.Flow;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -355,7 +360,15 @@ public abstract class BundleDownloader {
                   return;
                 }
                 response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
-                activateBundle(response.body());
+                try {
+                  activateBundle(response.body());
+                } catch (Exception e) {
+                  manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
+                  if (!initialActivation.isDone()) {
+                    initialActivation.completeExceptionally(e);
+                  }
+                  return;
+                }
                 if (!initialActivation.isDone()) {
                   initialActivation.complete(null);
                 }
@@ -382,34 +395,101 @@ public abstract class BundleDownloader {
   }
 
   /**
-   * Returns a BodyHandler that rejects oversized responses.
+   * Returns a BodyHandler that rejects over-sized responses.
+   *
+   * <p>If Content-Length is present and already exceeds the limit, the body is rejected upfront
+   * without reading it. Otherwise, a {@link SizeLimitedByteArraySubscriber} streams the body and
+   * aborts the moment the cumulative byte count exceeds the limit — so a server that omits
+   * Content-Length (or uses chunked encoding) cannot force the client to buffer an unbounded body.
+   *
    */
   private static HttpResponse.BodyHandler<byte[]> sizeLimitedBodyHandler(long maxBytes) {
     long cappedMax = Math.min(maxBytes, Integer.MAX_VALUE);
     return responseInfo -> {
       OptionalLong contentLength = responseInfo.headers().firstValueAsLong("Content-Length");
       if (contentLength.isPresent() && contentLength.getAsLong() > cappedMax) {
-        return HttpResponse.BodySubscribers.mapping(
-            HttpResponse.BodySubscribers.discarding(),
-            ignored -> {
-              throw new BundleSizeLimitException(
-                  "Content-Length "
-                      + contentLength.getAsLong()
-                      + " exceeds limit of "
-                      + cappedMax
-                      + " bytes");
-            });
+        return new SizeLimitedByteArraySubscriber(
+            cappedMax,
+            "Content-Length "
+                + contentLength.getAsLong()
+                + " exceeds limit of "
+                + cappedMax
+                + " bytes");
       }
-      return HttpResponse.BodySubscribers.mapping(
-          HttpResponse.BodySubscribers.ofByteArray(),
-          bytes -> {
-            if (bytes.length > cappedMax) {
-              throw new BundleSizeLimitException(
-                  "Response body exceeds limit of " + cappedMax + " bytes");
-            }
-            return bytes;
-          });
+      return new SizeLimitedByteArraySubscriber(cappedMax);
     };
+  }
+
+  /**
+   * Accumulates the response body while enforcing a size limit as bytes arrive. The instant the cumulative byte
+   * count exceeds {@code limit}, it cancels the subscription.
+   */
+  private static final class SizeLimitedByteArraySubscriber
+      implements HttpResponse.BodySubscriber<byte[]> {
+    private final long limit;
+    private final String rejectImmediatelyMessage;
+    private final CompletableFuture<byte[]> result = new CompletableFuture<>();
+    private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    private long total = 0;
+    private Flow.Subscription subscription;
+
+    SizeLimitedByteArraySubscriber(long limit) {
+      this(limit, null);
+    }
+
+    SizeLimitedByteArraySubscriber(long limit, String rejectImmediatelyMessage) {
+      this.limit = limit;
+      this.rejectImmediatelyMessage = rejectImmediatelyMessage;
+    }
+
+    @Override
+    public CompletionStage<byte[]> getBody() {
+      return result;
+    }
+
+    @Override
+    public void onSubscribe(Flow.Subscription subscription) {
+      this.subscription = subscription;
+      if (rejectImmediatelyMessage != null) {
+        subscription.cancel();
+        result.completeExceptionally(new BundleSizeLimitException(rejectImmediatelyMessage));
+        return;
+      }
+      subscription.request(Long.MAX_VALUE);
+    }
+
+    @Override
+    public void onNext(List<ByteBuffer> items) {
+      if (result.isDone()) {
+        return;
+      }
+      for (ByteBuffer item : items) {
+        total += item.remaining();
+      }
+      if (total > limit) {
+        subscription.cancel();
+        result.completeExceptionally(
+            new BundleSizeLimitException("Response body exceeds limit of " + limit + " bytes"));
+        return;
+      }
+      for (ByteBuffer item : items) {
+        byte[] chunk = new byte[item.remaining()];
+        item.get(chunk);
+        buffer.write(chunk, 0, chunk.length);
+      }
+    }
+
+    @Override
+    public void onError(Throwable throwable) {
+      result.completeExceptionally(throwable);
+    }
+
+    @Override
+    public void onComplete() {
+      if (!result.isDone()) {
+        result.complete(buffer.toByteArray());
+      }
+    }
   }
 
   static class BundleSizeLimitException extends RuntimeException {
