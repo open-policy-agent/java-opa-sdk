@@ -1,0 +1,40 @@
+name: Compliance Fixtures
+
+on:
+  pull_request:
+    paths:
+      - "tools/generate-compliance-tests/**"
+      - "opa-evaluator/src/test/resources/compliance/Tests/RegoComplianceTests/TestData/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-fixtures:
+    name: Verify compliance fixtures are up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with:
+          go-version-file: tools/generate-compliance-tests/go.mod
+          cache-dependency-path: tools/generate-compliance-tests/go.sum
+
+      - name: Regenerate compliance fixtures
+        run: ./tools/generate-compliance-tests/regenerate.sh
+
+      - name: Fail if fixtures are stale
+        run: |
+          fixtures=opa-evaluator/src/test/resources/compliance/Tests/RegoComplianceTests/TestData
+          git add -A "$fixtures"
+          if ! git diff --cached --quiet -- "$fixtures"; then
+            echo "::error::Compliance fixtures are out of date with the OPA version pinned in tools/generate-compliance-tests/go.mod."
+            echo "Run tools/generate-compliance-tests/regenerate.sh locally and commit the result."
+            git --no-pager diff --cached --stat -- "$fixtures"
+            exit 1
+          fi
+          echo "Compliance fixtures are up to date."
