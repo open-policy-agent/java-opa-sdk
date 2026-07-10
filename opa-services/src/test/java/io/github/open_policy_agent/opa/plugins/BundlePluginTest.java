@@ -46,6 +46,62 @@ class BundlePluginTest {
   }
 
   @Test
+  void validate_manualTriggerWithPolling_returnsError() {
+    Config.BundleConfig bundle =
+            new Config.BundleConfig()
+                    .setService("test-service")
+                    .setResource("/bundles/test.tar.gz")
+                    .setTrigger(Config.Trigger.MANUAL)
+                    .setPolling(
+                            new Config.PollingConfig()
+                                    .setMinDelaySeconds(60)
+                                    .setMaxDelaySeconds(120));
+
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    manager =
+            new PluginManager.Builder()
+                    .withId("test-opa")
+                    .withStore(store)
+                    .withConfig(config)
+                    .withLogger(mockLogger)
+                    .build();
+
+    Set<String> errors = new BundlePlugin().validate(manager);
+
+    assertTrue(
+            errors.stream()
+                    .anyMatch(e -> e.contains("cannot specify polling when trigger is manual")));
+  }
+
+  @Test
+  void initialize_manualTrigger_setsTrigger() {
+    Config.BundleConfig bundle =
+            new Config.BundleConfig()
+                    .setService("test-service")
+                    .setResource("/bundles/test.tar.gz")
+                    .setTrigger(Config.Trigger.MANUAL);
+
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    manager =
+            new PluginManager.Builder()
+                    .withId("test-opa")
+                    .withStore(store)
+                    .withConfig(config)
+                    .withLogger(mockLogger)
+                    .build();
+
+    BundlePlugin plugin = (BundlePlugin) new BundlePlugin().initialize(manager);
+
+    assertNotNull(plugin.getBundle("test-bundle"));
+    assertEquals(
+            Config.Trigger.MANUAL,
+            plugin.getBundle("test-bundle").getTrigger());
+  }
+
+
+  @Test
   void validate_noBundlesConfigured_returnsNoErrors() {
     manager =
         new PluginManager.Builder()
