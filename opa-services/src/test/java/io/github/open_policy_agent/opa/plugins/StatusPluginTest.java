@@ -273,6 +273,35 @@ class StatusPluginTest {
   }
 
   @Test
+  void statusReport_excludesServicesPlugin() throws Exception {
+    Config.StatusConfig status = new Config.StatusConfig().setConsole(true);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    // The "services" plugin reports an OK status but must not surface in the report.
+    manager.registerPlugin("services", new NoopPlugin());
+    manager.updatePluginStatus("services", PluginManager.Status.OK);
+    manager.registerPlugin("custom_plugin", new NoopPlugin());
+    manager.updatePluginStatus("custom_plugin", PluginManager.Status.OK);
+
+    StatusPlugin plugin = new StatusPlugin();
+    plugin = (StatusPlugin) plugin.initialize(manager);
+
+    ObjectNode report = buildStatusReport(plugin);
+    ObjectNode plugins = (ObjectNode) report.get("plugins");
+
+    assertFalse(plugins.has("services"));
+    assertTrue(plugins.has("custom_plugin"));
+  }
+
+  @Test
   void statusReport_sendsToService() throws Exception {
     Config.StatusConfig status =
         new Config.StatusConfig().setService("test-service").setConsole(false);
