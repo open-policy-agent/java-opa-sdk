@@ -53,6 +53,7 @@ public abstract class BundleDownloader {
   protected String service;
   protected String resource;
   protected Config.PollingConfig polling;
+  protected Config.Trigger trigger = Config.Trigger.PERIODIC;
   protected String etag;
   protected long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
@@ -65,6 +66,11 @@ public abstract class BundleDownloader {
           "application/octet-stream",
           "binary/octet-stream",
           "application/x-tar");
+
+  public BundleDownloader setTrigger(Config.Trigger trigger) {
+    this.trigger = trigger;
+    return this;
+  }
 
   /**
    * Construct a BundleDownloader.
@@ -180,6 +186,13 @@ public abstract class BundleDownloader {
    * @return a future that completes when the initial bundle is downloaded and activated
    */
   public CompletableFuture<Void> startPolling(ScheduledExecutorService scheduler) {
+
+    if (trigger == Config.Trigger.MANUAL) {
+      manager.getLogger().info(
+              "Bundle '%s': Manual trigger mode enabled; waiting for refresh()", name);
+      return initialActivation;
+    }
+
     int minDelay =
         (polling != null && polling.getMinDelaySeconds() != null)
             ? polling.getMinDelaySeconds()
@@ -189,9 +202,16 @@ public abstract class BundleDownloader {
             ? polling.getMaxDelaySeconds()
             : 120;
 
+
+
     scheduler.schedule(this::downloadBundle, 0, TimeUnit.SECONDS);
     scheduleNextPoll(scheduler, minDelay, maxDelay);
 
+    return initialActivation;
+  }
+
+  public CompletableFuture<Void> refresh() {
+    downloadBundle();
     return initialActivation;
   }
 

@@ -73,13 +73,12 @@ public final class BundlePlugin implements Plugin {
         ServicePlugin.Service svc =
             servicePlugin == null ? null : servicePlugin.getService(bundleConfig.getService());
 
-        Bundle bundle =
+        plugin.bundles.put(
+            name,
             new Bundle(name, manager, svc)
                 .setService(bundleConfig.getService())
                 .setResource(bundleConfig.getResource())
-                .setPolling(bundleConfig.getPolling());
-        bundle.setMaxSizeBytes(bundleConfig.getMaxSizeBytes());
-        plugin.bundles.put(name, bundle);
+                .setPolling(bundleConfig.getPolling()));
       }
     }
 
@@ -184,7 +183,7 @@ public final class BundlePlugin implements Plugin {
     protected void activateBundle(byte[] bundleData) {
       try {
         // Load bundle using TarballBundleLoader
-        TarballBundleLoader loader = new TarballBundleLoader(name, bundleData, maxSizeBytes);
+        TarballBundleLoader loader = new TarballBundleLoader(name, bundleData);
         loader.load(manager.getStore());
 
         manager.getLogger().info("Bundle '%s': Activated", name);
