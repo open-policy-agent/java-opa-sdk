@@ -25,6 +25,7 @@ public class BuiltinRegistry {
     AggregateBuiltins.class,
     ArithmeticBuiltins.class,
     ArrayBuiltins.class,
+    BitsBuiltins.class,
     EncodingBuiltins.class,
     HexBuiltins.class,
     StringBuiltins.class,
