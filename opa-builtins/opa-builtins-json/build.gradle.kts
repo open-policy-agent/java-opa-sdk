@@ -18,10 +18,17 @@ dependencies {
     // RegoValueModule (auto-registered via Jackson SPI) provides (de)serializers for the AST
     // types so they don't need to carry annotations.
     runtimeOnly(project(":opa-jackson"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.1")
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
