@@ -29,6 +29,7 @@ public class BuiltinRegistry {
     HexBuiltins.class,
     StringBuiltins.class,
     PrintBuiltins.class,
+    UnitsBuiltins.class,
   };
 
   public static final Map<String, BiFunction<EvaluationContext, RegoValue[], RegoValue>>
