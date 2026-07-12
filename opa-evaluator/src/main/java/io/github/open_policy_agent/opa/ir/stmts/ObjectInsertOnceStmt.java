@@ -8,7 +8,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * the key already exists and the value differs, execution aborts with a conflict error.
  */
 public class ObjectInsertOnceStmt extends BaseStmt {
-    public static final String StmtType = "ObjectInsertOnceStmt";
 
     private Operand key;
 
@@ -50,8 +49,8 @@ public class ObjectInsertOnceStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.OBJECT_INSERT_ONCE;
+  public StmtType getType() {
+    return StmtType.OBJECT_INSERT_ONCE;
     }
 
   @Override
@@ -70,16 +69,30 @@ public class ObjectInsertOnceStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ObjectInsertOnceStmt that = (ObjectInsertOnceStmt) o;
 
-        if (object != that.object) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
-        if (!Objects.equals(key, that.key)) return false;
+        if (object != that.object) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(key, that.key)) {
+            return false;
+        }
         return Objects.equals(value, that.value);
     }
 

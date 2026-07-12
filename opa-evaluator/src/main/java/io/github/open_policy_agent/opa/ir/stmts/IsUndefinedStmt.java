@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * IsUndefinedStmt represents a check of whether a local variable is undefined.
  */
 public class IsUndefinedStmt extends BaseStmt {
-    public static final String StmtType = "IsUndefinedStmt";
 
     private int source;
 
@@ -25,8 +24,8 @@ public class IsUndefinedStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.IS_UNDEFINED;
+  public StmtType getType() {
+    return StmtType.IS_UNDEFINED;
     }
 
   @Override
@@ -36,14 +35,24 @@ public class IsUndefinedStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         IsUndefinedStmt that = (IsUndefinedStmt) o;
 
-        if (source != that.source) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (source != that.source) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

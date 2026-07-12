@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * MakeArrayStmt constructs a local variable that refers to an array value.
  */
 public class MakeArrayStmt extends BaseStmt {
-    public static final String StmtType = "MakeArrayStmt";
 
     private int capacity;
 
@@ -36,8 +35,8 @@ public class MakeArrayStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.MAKE_ARRAY;
+  public StmtType getType() {
+    return StmtType.MAKE_ARRAY;
     }
 
   @Override
@@ -47,15 +46,27 @@ public class MakeArrayStmt extends BaseStmt {
 
   @Override
   public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
         MakeArrayStmt that = (MakeArrayStmt) o;
 
-        if (capacity != that.capacity) return false;
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+      if (capacity != that.capacity) {
+          return false;
+      }
+      if (target != that.target) {
+          return false;
+      }
+      if (getFile() != that.getFile()) {
+          return false;
+      }
+      if (getCol() != that.getCol()) {
+          return false;
+      }
         return getRow() == that.getRow();
     }
 

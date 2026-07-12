@@ -28,9 +28,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class EngineTest {
-  private static final PolicyReader policyReader =
+  private static PolicyReader policyReader =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
-  private static final ObjectMapper objectMapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
+  private static ObjectMapper objectMapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
 
   @Test
   void engine_builder_requiresStore() {

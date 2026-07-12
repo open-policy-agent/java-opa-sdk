@@ -7,7 +7,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * jumped to.
  */
 public class BreakStmt extends BaseStmt {
-    public static final String StmtType = "BreakStmt";
 
     private int index;
 
@@ -31,8 +30,8 @@ public class BreakStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.BREAK;
+  public StmtType getType() {
+    return StmtType.BREAK;
     }
 
   @Override
@@ -56,14 +55,24 @@ public class BreakStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         BreakStmt breakStmt = (BreakStmt) o;
 
-        if (index != breakStmt.index) return false;
-        if (getFile() != breakStmt.getFile()) return false;
-        if (getCol() != breakStmt.getCol()) return false;
+        if (index != breakStmt.index) {
+            return false;
+        }
+        if (getFile() != breakStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != breakStmt.getCol()) {
+            return false;
+        }
         return getRow() == breakStmt.getRow();
     }
 

@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.File;
 import java.io.IOException;
@@ -146,5 +145,21 @@ class MetricsIntegrationTest {
     // SimpleMetrics keeps one Timer per key across evaluations — repeated evals must not register
     // duplicate keys.
     assertEquals(firstKeys, metrics.all().keySet());
+  }
+
+  @Test
+  void simpleMetricsClearRemovesRecordedTimers() throws IOException {
+    Engine engine = buildEngine("{}");
+    SimpleMetrics metrics = new SimpleMetrics();
+    Engine.PreparedQuery pq =
+            engine.prepareForEvaluation().withMetrics(metrics).build();
+
+    pq.eval(input("alice"), Boolean.class);
+
+    assertFalse(metrics.all().isEmpty(), "expected metrics to be recorded before clear");
+
+    metrics.clear();
+
+    assertTrue(metrics.all().isEmpty(), "expected metrics to be empty after clear");
   }
 }

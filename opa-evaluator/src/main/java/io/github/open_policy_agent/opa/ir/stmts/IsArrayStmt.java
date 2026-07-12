@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * IsArrayStmt represents a dynamic type check on a local variable.
  */
 public class IsArrayStmt extends BaseStmt {
-    public static final String StmtType = "IsArrayStmt";
 
     private Operand source;
 
@@ -27,8 +26,8 @@ public class IsArrayStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.IS_ARRAY;
+  public StmtType getType() {
+    return StmtType.IS_ARRAY;
     }
 
   @Override
@@ -38,14 +37,24 @@ public class IsArrayStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         IsArrayStmt that = (IsArrayStmt) o;
 
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
         return Objects.equals(source, that.source);
     }
 

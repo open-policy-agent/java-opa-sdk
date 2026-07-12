@@ -9,7 +9,6 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * case the block will never execute.
  */
 public class ScanStmt extends BaseStmt {
-    public static final String StmtType = "ScanStmt";
 
     private int source;
 
@@ -30,8 +29,8 @@ public class ScanStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.SCAN;
+  public StmtType getType() {
+    return StmtType.SCAN;
     }
 
   @Override
@@ -43,17 +42,33 @@ public class ScanStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ScanStmt scanStmt = (ScanStmt) o;
 
-        if (source != scanStmt.source) return false;
-        if (key != scanStmt.key) return false;
-        if (value != scanStmt.value) return false;
-        if (getFile() != scanStmt.getFile()) return false;
-        if (getCol() != scanStmt.getCol()) return false;
-        if (getRow() != scanStmt.getRow()) return false;
+        if (source != scanStmt.source) {
+            return false;
+        }
+        if (key != scanStmt.key) {
+            return false;
+        }
+        if (value != scanStmt.value) {
+            return false;
+        }
+        if (getFile() != scanStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != scanStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != scanStmt.getRow()) {
+            return false;
+        }
         return Objects.equals(block, scanStmt.block);
     }
 

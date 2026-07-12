@@ -2,7 +2,6 @@ package io.github.open_policy_agent.opa.ir;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.github.open_policy_agent.opa.ir.PolicyReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,7 +18,7 @@ import io.github.open_policy_agent.opa.ir.vals.LocalVal;
 import io.github.open_policy_agent.opa.ir.vals.StringIndexVal;
 
 class PolicyTest {
-  private static final PolicyReader policyReader =
+  private static PolicyReader policyReader =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
 
   @Test

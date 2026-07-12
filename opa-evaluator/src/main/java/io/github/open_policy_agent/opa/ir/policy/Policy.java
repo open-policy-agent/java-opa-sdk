@@ -51,13 +51,21 @@ public class Policy {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     Policy policy = (Policy) o;
 
-    if (!Objects.equals(staticField, policy.staticField)) return false;
-    if (!Objects.equals(plans, policy.plans)) return false;
+      if (!Objects.equals(staticField, policy.staticField)) {
+          return false;
+      }
+      if (!Objects.equals(plans, policy.plans)) {
+          return false;
+      }
     return Objects.equals(funcs, policy.funcs);
   }
 

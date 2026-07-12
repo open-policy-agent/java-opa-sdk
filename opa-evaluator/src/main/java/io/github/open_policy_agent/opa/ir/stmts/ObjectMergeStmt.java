@@ -7,7 +7,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * merged recursively.
  */
 public class ObjectMergeStmt extends BaseStmt {
-    public static final String StmtType = "ObjectMergeStmt";
 
     private int a;
 
@@ -25,8 +24,8 @@ public class ObjectMergeStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.OBJECT_MERGE;
+  public StmtType getType() {
+    return StmtType.OBJECT_MERGE;
     }
 
   @Override
@@ -43,16 +42,30 @@ public class ObjectMergeStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ObjectMergeStmt that = (ObjectMergeStmt) o;
 
-        if (a != that.a) return false;
-        if (b != that.b) return false;
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (a != that.a) {
+            return false;
+        }
+        if (b != that.b) {
+            return false;
+        }
+        if (target != that.target) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

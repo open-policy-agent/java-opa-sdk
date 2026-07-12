@@ -55,5 +55,7 @@ public class SimpleMetrics implements Metrics {
   }
 
   @Override
-  public void Clear() {}
+  public void clear() {
+    timers.clear();
+  }
 }

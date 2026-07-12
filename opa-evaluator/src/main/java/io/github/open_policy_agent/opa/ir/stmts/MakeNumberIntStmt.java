@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * MakeNumberIntStmt constructs a local variable that refers to an integer value.
  */
 public class MakeNumberIntStmt extends BaseStmt {
-    public static final String StmtType = "MakeNumberIntStmt";
 
     private long value;
 
@@ -36,8 +35,8 @@ public class MakeNumberIntStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.MAKE_NUMBER_INT;
+  public StmtType getType() {
+    return StmtType.MAKE_NUMBER_INT;
     }
 
   @Override
@@ -47,15 +46,27 @@ public class MakeNumberIntStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         MakeNumberIntStmt that = (MakeNumberIntStmt) o;
 
-        if (value != that.value) return false;
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (value != that.value) {
+            return false;
+        }
+        if (target != that.target) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

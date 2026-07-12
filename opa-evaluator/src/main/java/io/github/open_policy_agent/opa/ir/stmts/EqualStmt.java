@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * EqualStmt represents a value-equality check of two local variables.
  */
 public class EqualStmt extends BaseStmt {
-    public static final String StmtType = "EqualStmt";
 
     private Operand a;
 
@@ -39,8 +38,8 @@ public class EqualStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.EQUAL;
+  public StmtType getType() {
+    return StmtType.EQUAL;
     }
 
   @Override
@@ -59,15 +58,27 @@ public class EqualStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         EqualStmt equalStmt = (EqualStmt) o;
 
-        if (getFile() != equalStmt.getFile()) return false;
-        if (getCol() != equalStmt.getCol()) return false;
-        if (getRow() != equalStmt.getRow()) return false;
-        if (!Objects.equals(a, equalStmt.a)) return false;
+        if (getFile() != equalStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != equalStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != equalStmt.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(a, equalStmt.a)) {
+            return false;
+        }
         return Objects.equals(b, equalStmt.b);
     }
 

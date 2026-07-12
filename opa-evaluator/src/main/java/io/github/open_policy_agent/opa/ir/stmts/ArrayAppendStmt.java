@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * ArrayAppendStmt represents a dynamic append operation of a value onto an array.
  */
 public class ArrayAppendStmt extends BaseStmt {
-    public static final String StmtType = "ArrayAppendStmt";
 
     private Operand value;
 
@@ -38,8 +37,8 @@ public class ArrayAppendStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.ARRAY_APPEND;
+  public StmtType getType() {
+    return StmtType.ARRAY_APPEND;
     }
 
   @Override
@@ -54,15 +53,27 @@ public class ArrayAppendStmt extends BaseStmt {
 
   @Override
   public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
         ArrayAppendStmt that = (ArrayAppendStmt) o;
 
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
-        if (!Objects.equals(value, that.value)) return false;
+      if (getFile() != that.getFile()) {
+          return false;
+      }
+      if (getCol() != that.getCol()) {
+          return false;
+      }
+      if (getRow() != that.getRow()) {
+          return false;
+      }
+      if (!Objects.equals(value, that.value)) {
+          return false;
+      }
         return Objects.equals(array, that.array);
     }
 

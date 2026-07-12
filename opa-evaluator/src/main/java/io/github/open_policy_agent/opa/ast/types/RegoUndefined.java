@@ -20,8 +20,14 @@ public class RegoUndefined implements RegoValue {
     return "undefined";
   }
 
+  @Override
   public boolean equals(Object o) {
     return false;
+  }
+
+  @Override
+  public int hashCode() {
+    return System.identityHashCode(this);
   }
 
   @Override

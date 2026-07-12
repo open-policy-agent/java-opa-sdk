@@ -160,11 +160,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 4,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"index": 1,
+												"Index": 1,
+												"target": 4
 											}
 										},
 										{
@@ -198,11 +199,12 @@
 															{
 																"type": "MakeNumberRefStmt",
 																"stmt": {
-																	"Index": 1,
-																	"target": 7,
 																	"file": 0,
 																	"col": 18,
-																	"row": 5
+																	"row": 5,
+																	"index": 1,
+																	"Index": 1,
+																	"target": 7
 																}
 															},
 															{

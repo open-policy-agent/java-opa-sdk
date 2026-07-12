@@ -16,7 +16,6 @@ import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaDynamic;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
-import io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper;
 import io.github.open_policy_agent.opa.ast.types.*;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 

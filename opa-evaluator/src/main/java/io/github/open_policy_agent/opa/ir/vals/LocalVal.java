@@ -48,12 +48,18 @@ public class LocalVal implements Val {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     LocalVal localVal = (LocalVal) o;
 
-    if (value != localVal.value) return false;
+      if (value != localVal.value) {
+          return false;
+      }
     return Objects.equals(type, localVal.type);
   }
 

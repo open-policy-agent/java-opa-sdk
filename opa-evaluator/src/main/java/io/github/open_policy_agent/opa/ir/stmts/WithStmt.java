@@ -12,7 +12,6 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * created. When the WithStmt finishes, the Local is reset to its original value.
  */
 public class WithStmt extends BaseStmt {
-    public static final String StmtType = "WithStmt";
 
     private int local;
 
@@ -65,8 +64,8 @@ public class WithStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.WITH;
+  public StmtType getType() {
+    return StmtType.WITH;
     }
 
   @Override
@@ -87,17 +86,33 @@ public class WithStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         WithStmt withStmt = (WithStmt) o;
 
-        if (local != withStmt.local) return false;
-        if (getFile() != withStmt.getFile()) return false;
-        if (getCol() != withStmt.getCol()) return false;
-        if (getRow() != withStmt.getRow()) return false;
-        if (!Objects.equals(path, withStmt.path)) return false;
-        if (!Objects.equals(value, withStmt.value)) return false;
+        if (local != withStmt.local) {
+            return false;
+        }
+        if (getFile() != withStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != withStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != withStmt.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(path, withStmt.path)) {
+            return false;
+        }
+        if (!Objects.equals(value, withStmt.value)) {
+            return false;
+        }
         return Objects.equals(block, withStmt.block);
     }
 

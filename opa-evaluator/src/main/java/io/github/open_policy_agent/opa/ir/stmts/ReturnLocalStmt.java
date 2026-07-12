@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * ReturnLocalStmt represents a return statement that yields a local value.
  */
 public class ReturnLocalStmt extends BaseStmt {
-    public static final String StmtType = "ReturnLocalStmt";
 
     private int source;
 
@@ -25,8 +24,8 @@ public class ReturnLocalStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.RETURN_LOCAL;
+  public StmtType getType() {
+    return StmtType.RETURN_LOCAL;
     }
 
   @Override
@@ -36,14 +35,24 @@ public class ReturnLocalStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ReturnLocalStmt that = (ReturnLocalStmt) o;
 
-        if (source != that.source) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (source != that.source) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

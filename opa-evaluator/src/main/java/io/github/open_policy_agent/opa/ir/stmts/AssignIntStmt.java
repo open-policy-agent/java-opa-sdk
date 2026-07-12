@@ -6,7 +6,6 @@ import java.util.Objects;
  * AssignIntStmt represents a dynamic append operation of a value onto an array.
  */
 public class AssignIntStmt extends BaseStmt {
-    public static final String StmtType = "AssignIntStmt";
 
     private Long value;
 
@@ -37,8 +36,8 @@ public class AssignIntStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.ASSIGN_INT;
+  public StmtType getType() {
+    return StmtType.ASSIGN_INT;
   }
 
   @Override
@@ -48,15 +47,27 @@ public class AssignIntStmt extends BaseStmt {
 
   @Override
   public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
         AssignIntStmt that = (AssignIntStmt) o;
 
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
+      if (target != that.target) {
+          return false;
+      }
+      if (getFile() != that.getFile()) {
+          return false;
+      }
+      if (getCol() != that.getCol()) {
+          return false;
+      }
+      if (getRow() != that.getRow()) {
+          return false;
+      }
         return Objects.equals(value, that.value);
     }
 

@@ -18,7 +18,7 @@ public interface Metrics {
 
   Map<String, Metric> all();
 
-  void Clear();
+  void clear();
 
   interface Metric {
     // TODO: Lift out some common things here?

@@ -9,7 +9,6 @@ import io.github.open_policy_agent.opa.ir.policy.Block;
  * short-circuit execution.
  */
 public class BlockStmt extends BaseStmt {
-    public static final String StmtType = "BlockStmt";
 
     private List<Block> blocks;
 
@@ -34,8 +33,8 @@ public class BlockStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.BLOCK;
+  public StmtType getType() {
+    return StmtType.BLOCK;
     }
 
   @Override
@@ -52,14 +51,24 @@ public class BlockStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         BlockStmt blockStmt = (BlockStmt) o;
 
-        if (getFile() != blockStmt.getFile()) return false;
-        if (getCol() != blockStmt.getCol()) return false;
-        if (getRow() != blockStmt.getRow()) return false;
+        if (getFile() != blockStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != blockStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != blockStmt.getRow()) {
+            return false;
+        }
         return Objects.equals(blocks, blockStmt.blocks);
     }
 

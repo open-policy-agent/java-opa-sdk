@@ -44,15 +44,27 @@ public class Func {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     Func func = (Func) o;
 
-    if (returnVal != func.returnVal) return false;
-    if (!Objects.equals(name, func.name)) return false;
-    if (!Objects.equals(params, func.params)) return false;
-    if (!Objects.equals(blocks, func.blocks)) return false;
+      if (returnVal != func.returnVal) {
+          return false;
+      }
+      if (!Objects.equals(name, func.name)) {
+          return false;
+      }
+      if (!Objects.equals(params, func.params)) {
+          return false;
+      }
+      if (!Objects.equals(blocks, func.blocks)) {
+          return false;
+      }
     return Objects.equals(path, func.path);
   }
 

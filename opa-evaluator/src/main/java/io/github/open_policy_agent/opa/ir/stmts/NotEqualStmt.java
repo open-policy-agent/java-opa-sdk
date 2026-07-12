@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * NotEqualStmt represents a != check of two local variables.
  */
 public class NotEqualStmt extends BaseStmt {
-    public static final String StmtType = "NotEqualStmt";
 
     private Operand a;
 
@@ -40,8 +39,8 @@ public class NotEqualStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.NOT_EQUAL;
+  public StmtType getType() {
+    return StmtType.NOT_EQUAL;
     }
 
   @Override
@@ -60,16 +59,30 @@ public class NotEqualStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         NotEqualStmt that = (NotEqualStmt) o;
 
-        if (source != that.source) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
-        if (!Objects.equals(a, that.a)) return false;
+        if (source != that.source) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(a, that.a)) {
+            return false;
+        }
         return Objects.equals(b, that.b);
     }
 

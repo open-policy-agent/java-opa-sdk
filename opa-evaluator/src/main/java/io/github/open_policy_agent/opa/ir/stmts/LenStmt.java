@@ -8,7 +8,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * local variable.
  */
 public class LenStmt extends BaseStmt {
-    public static final String StmtType = "LenStmt";
 
     private Operand source;
 
@@ -39,8 +38,8 @@ public class LenStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.LEN;
+  public StmtType getType() {
+    return StmtType.LEN;
     }
 
   @Override
@@ -55,15 +54,27 @@ public class LenStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         LenStmt lenStmt = (LenStmt) o;
 
-        if (target != lenStmt.target) return false;
-        if (getFile() != lenStmt.getFile()) return false;
-        if (getCol() != lenStmt.getCol()) return false;
-        if (getRow() != lenStmt.getRow()) return false;
+        if (target != lenStmt.target) {
+            return false;
+        }
+        if (getFile() != lenStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != lenStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != lenStmt.getRow()) {
+            return false;
+        }
         return Objects.equals(source, lenStmt.source);
     }
 

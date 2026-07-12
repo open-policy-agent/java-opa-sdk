@@ -431,11 +431,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 5,
 												"file": 1,
 												"col": 2,
-												"row": 8
+												"row": 8,
+												"index": 3,
+												"Index": 3,
+												"target": 5
 											}
 										},
 										{
@@ -467,11 +468,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 4,
-												"target": 7,
 												"file": 1,
 												"col": 1,
-												"row": 7
+												"row": 7,
+												"index": 4,
+												"Index": 4,
+												"target": 7
 											}
 										},
 										{
@@ -490,11 +492,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 5,
-												"target": 8,
 												"file": 1,
 												"col": 1,
-												"row": 7
+												"row": 7,
+												"index": 5,
+												"Index": 5,
+												"target": 8
 											}
 										},
 										{
@@ -513,11 +516,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 6,
-												"target": 9,
 												"file": 1,
 												"col": 1,
-												"row": 7
+												"row": 7,
+												"index": 6,
+												"Index": 6,
+												"target": 9
 											}
 										},
 										{
@@ -617,11 +621,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 8,
-												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"index": 8,
+												"Index": 8,
+												"target": 4
 											}
 										},
 										{
@@ -708,11 +713,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 4,
-												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"index": 4,
+												"Index": 4,
+												"target": 4
 											}
 										},
 										{

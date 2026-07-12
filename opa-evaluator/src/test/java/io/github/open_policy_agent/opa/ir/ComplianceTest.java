@@ -58,10 +58,10 @@ public class ComplianceTest {
       Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]*$");
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
-  private static final String complianceDir;
-  private static final Set<String> missingFunctions = ConcurrentHashMap.newKeySet();
+  private static String complianceDir;
+  private static  Set<String> missingFunctions = ConcurrentHashMap.newKeySet();
 
-  private static final boolean ignoreFunctionNotFoundTests = true;
+  private static  boolean ignoreFunctionNotFoundTests = true;
 
   /**
    * Alternate acceptable error message substrings for tests where the Java IR evaluator produces a

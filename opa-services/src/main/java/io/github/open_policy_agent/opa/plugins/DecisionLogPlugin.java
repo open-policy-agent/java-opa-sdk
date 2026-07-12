@@ -99,7 +99,7 @@ public final class DecisionLogPlugin implements Plugin {
               .setConsole(logsConfig.getConsole())
               .setService(logsConfig.getService())
               .setMaskDecision(logsConfig.getMaskDecision())
-              .setDropDecision(logsConfig.getDropDedcision())
+              .setDropDecision(logsConfig.getDropDecision())
               .setMinDelaySeconds(logsConfig.getMinDelaySeconds())
               .setResource(logsConfig.getResource())
               .setReporting(logsConfig.getReporting());

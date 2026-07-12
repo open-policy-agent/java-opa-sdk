@@ -47,12 +47,18 @@ public class Plans {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     Plans plans1 = (Plans) o;
 
-    if (!Objects.equals(plans, plans1.plans)) return false;
+      if (!Objects.equals(plans, plans1.plans)) {
+          return false;
+      }
     return Objects.equals(planMap, plans1.planMap);
   }
 

@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * ResetLocalStmt resets a local variable to 0.
  */
 public class ResetLocalStmt extends BaseStmt {
-    public static final String StmtType = "ResetLocalStmt";
 
     private int target;
 
@@ -25,8 +24,8 @@ public class ResetLocalStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.RESET_LOCAL;
+  public StmtType getType() {
+    return StmtType.RESET_LOCAL;
     }
 
   @Override
@@ -36,14 +35,24 @@ public class ResetLocalStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ResetLocalStmt that = (ResetLocalStmt) o;
 
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (target != that.target) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

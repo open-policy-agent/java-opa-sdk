@@ -9,7 +9,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * result local.
  */
 public class CallDynamicStmt extends BaseStmt {
-    public static final String StmtType = "CallDynamicStmt";
 
     private List<Operand> path;
 
@@ -51,8 +50,8 @@ public class CallDynamicStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.CALL_DYNAMIC;
+  public StmtType getType() {
+    return StmtType.CALL_DYNAMIC;
     }
 
   @Override
@@ -96,16 +95,30 @@ public class CallDynamicStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         CallDynamicStmt that = (CallDynamicStmt) o;
 
-        if (result != that.result) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
-        if (!Objects.equals(path, that.path)) return false;
+        if (result != that.result) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(path, that.path)) {
+            return false;
+        }
         return Objects.equals(args, that.args);
     }
 

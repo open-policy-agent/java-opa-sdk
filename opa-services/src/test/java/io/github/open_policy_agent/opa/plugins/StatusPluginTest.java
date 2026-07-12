@@ -3,6 +3,7 @@ package io.github.open_policy_agent.opa.plugins;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -246,6 +247,61 @@ class StatusPluginTest {
   }
 
   @Test
+  void statusReport_includesCustomRegisteredPlugin() throws Exception {
+    Config.StatusConfig status = new Config.StatusConfig().setConsole(true);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    manager.registerPlugin("custom_plugin", new NoopPlugin());
+    manager.updatePluginStatus("custom_plugin", PluginManager.Status.OK);
+
+    StatusPlugin plugin = new StatusPlugin();
+    plugin = (StatusPlugin) plugin.initialize(manager);
+
+    ObjectNode report = buildStatusReport(plugin);
+    ObjectNode plugins = (ObjectNode) report.get("plugins");
+
+    assertTrue(plugins.has("custom_plugin"));
+    assertEquals("OK", plugins.get("custom_plugin").asText());
+  }
+
+  @Test
+  void statusReport_excludesServicesPlugin() throws Exception {
+    Config.StatusConfig status = new Config.StatusConfig().setConsole(true);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    // The "services" plugin reports an OK status but must not surface in the report.
+    manager.registerPlugin("services", new NoopPlugin());
+    manager.updatePluginStatus("services", PluginManager.Status.OK);
+    manager.registerPlugin("custom_plugin", new NoopPlugin());
+    manager.updatePluginStatus("custom_plugin", PluginManager.Status.OK);
+
+    StatusPlugin plugin = new StatusPlugin();
+    plugin = (StatusPlugin) plugin.initialize(manager);
+
+    ObjectNode report = buildStatusReport(plugin);
+    ObjectNode plugins = (ObjectNode) report.get("plugins");
+
+    assertFalse(plugins.has("services"));
+    assertTrue(plugins.has("custom_plugin"));
+  }
+
+  @Test
   void statusReport_sendsToService() throws Exception {
     Config.StatusConfig status =
         new Config.StatusConfig().setService("test-service").setConsole(false);
@@ -323,5 +379,34 @@ class StatusPluginTest {
       assertTrue(report.has("id"));
       assertEquals("prod-us-west-1-opa-123", report.get("id").asText());
     }
+  }
+
+  private ObjectNode buildStatusReport(StatusPlugin plugin) throws Exception {
+    java.lang.reflect.Field statusField = StatusPlugin.class.getDeclaredField("status");
+    statusField.setAccessible(true);
+    StatusPlugin.Status statusReporter = (StatusPlugin.Status) statusField.get(plugin);
+
+    java.lang.reflect.Method buildStatusMethod =
+        StatusPlugin.Status.class.getDeclaredMethod("buildStatusReport");
+    buildStatusMethod.setAccessible(true);
+    return (ObjectNode) buildStatusMethod.invoke(statusReporter);
+  }
+
+  private static class NoopPlugin implements Plugin {
+    @Override
+    public Set<String> validate(PluginManager manager) {
+      return Collections.emptySet();
+    }
+
+    @Override
+    public Plugin initialize(PluginManager manager) {
+      return this;
+    }
+
+    @Override
+    public void start() {}
+
+    @Override
+    public void stop() {}
   }
 }

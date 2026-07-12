@@ -8,7 +8,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * DotStmt may be a scalar value, in which case the statement will be undefined.
  */
 public class DotStmt extends BaseStmt {
-    public static final String StmtType = "DotStmt";
 
     private Operand source;
 
@@ -26,8 +25,8 @@ public class DotStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.DOT;
+  public StmtType getType() {
+    return StmtType.DOT;
     }
 
   @Override
@@ -46,16 +45,30 @@ public class DotStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         DotStmt dotStmt = (DotStmt) o;
 
-        if (target != dotStmt.target) return false;
-        if (getFile() != dotStmt.getFile()) return false;
-        if (getCol() != dotStmt.getCol()) return false;
-        if (getRow() != dotStmt.getRow()) return false;
-        if (!Objects.equals(source, dotStmt.source)) return false;
+        if (target != dotStmt.target) {
+            return false;
+        }
+        if (getFile() != dotStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != dotStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != dotStmt.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(source, dotStmt.source)) {
+            return false;
+        }
         return Objects.equals(key, dotStmt.key);
     }
 

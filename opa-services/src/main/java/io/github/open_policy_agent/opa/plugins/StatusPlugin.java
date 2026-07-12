@@ -183,12 +183,16 @@ public final class StatusPlugin implements Plugin {
       }
       report.set("bundles", bundles);
 
-      // Add plugin statuses (only for registered plugins)
+      // Add plugin statuses (only for registered plugins). The "services" plugin holds REST
+      // service clients rather than a status-reporting plugin, so it is excluded to match the
+      // previous behavior and Go OPA, where it does not appear in the status report.
       ObjectNode plugins = MAPPER.createObjectNode();
-      addPluginStatusIfRegistered(plugins, "bundles");
-      addPluginStatusIfRegistered(plugins, "decision_logs");
-      addPluginStatusIfRegistered(plugins, "status");
-      addPluginStatusIfRegistered(plugins, "discovery");
+      for (String pluginName : manager.getPluginNames()) {
+        if ("services".equals(pluginName)) {
+          continue;
+        }
+        addPluginStatusIfRegistered(plugins, pluginName);
+      }
       report.set("plugins", plugins);
 
       return report;

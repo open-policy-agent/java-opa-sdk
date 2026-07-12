@@ -47,9 +47,15 @@ public class StatementEvent extends Event {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    if (!super.equals(o)) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
+      if (!super.equals(o)) {
+          return false;
+      }
     StatementEvent that = (StatementEvent) o;
     return blockIndex == that.blockIndex
         && stmtIndex == that.stmtIndex

@@ -436,11 +436,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 4,
 												"file": 1,
 												"col": 6,
-												"row": 7
+												"row": 7,
+												"index": 3,
+												"Index": 3,
+												"target": 4
 											}
 										},
 										{

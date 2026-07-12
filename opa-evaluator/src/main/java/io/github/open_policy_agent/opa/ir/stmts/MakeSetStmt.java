@@ -5,7 +5,6 @@ package io.github.open_policy_agent.opa.ir.stmts;
  * MakeSetStmt constructs a local variable that refers to a set value.
  */
 public class MakeSetStmt extends BaseStmt {
-    public static final String StmtType = "MakeSetStmt";
 
     private int target;
 
@@ -25,8 +24,8 @@ public class MakeSetStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.MAKE_SET;
+  public StmtType getType() {
+    return StmtType.MAKE_SET;
     }
 
   @Override
@@ -36,14 +35,24 @@ public class MakeSetStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         MakeSetStmt that = (MakeSetStmt) o;
 
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (target != that.target) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

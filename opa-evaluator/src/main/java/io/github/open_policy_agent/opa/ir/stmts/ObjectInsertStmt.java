@@ -7,7 +7,6 @@ import io.github.open_policy_agent.opa.ir.Operand;
  * ObjectInsertStmt represents a dynamic insert operation of a key/value pair into an object.
  */
 public class ObjectInsertStmt extends BaseStmt {
-    public static final String StmtType = "ObjectInsertStmt";
 
     private Operand key;
 
@@ -51,8 +50,8 @@ public class ObjectInsertStmt extends BaseStmt {
     }
 
   @Override
-  public STMT_TYPE getType() {
-    return STMT_TYPE.OBJECT_INSERT;
+  public StmtType getType() {
+    return StmtType.OBJECT_INSERT;
     }
 
   @Override
@@ -74,17 +73,33 @@ public class ObjectInsertStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ObjectInsertStmt that = (ObjectInsertStmt) o;
 
-        if (object != that.object) return false;
-        if (source != that.source) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
-        if (!Objects.equals(key, that.key)) return false;
+        if (object != that.object) {
+            return false;
+        }
+        if (source != that.source) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(key, that.key)) {
+            return false;
+        }
         return Objects.equals(value, that.value);
     }
 
