@@ -69,6 +69,7 @@ public class TokenBuiltins implements BuiltinProvider {
         Map.entry("io.jwt.verify_es256", instance::verifyES256),
         Map.entry("io.jwt.verify_es384", instance::verifyES384),
         Map.entry("io.jwt.verify_es512", instance::verifyES512),
+        Map.entry("io.jwt.verify_eddsa", instance::verifyEdDSA),
         Map.entry("io.jwt.encode_sign", instance::encodeSign),
         Map.entry("io.jwt.encode_sign_raw", instance::encodeSignRaw));
   }
@@ -847,6 +848,31 @@ public class TokenBuiltins implements BuiltinProvider {
     RegoString jwt = getArg(args, 0, RegoString.class);
     RegoString cert = getArg(args, 1, RegoString.class);
     return _verifyECDSA(jwt.getValue(), cert.getValue(), ctx.isStrictBuiltinErrors(), "ES512");
+  }
+
+  @OpaBuiltin(
+      name = "io.jwt.verify_eddsa",
+      description = "Verifies if a EdDSA JWT signature is valid.",
+      args = {
+        @OpaType(
+            type = "string",
+            name = "jwt",
+            description = "JWT token whose signature is to be verified"),
+        @OpaType(
+            type = "string",
+            name = "certificate",
+            description =
+                "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature")
+      },
+      result =
+          @OpaType(
+              type = "boolean",
+              name = "result",
+              description = "`true` if the signature is valid, `false` otherwise"))
+  public RegoBoolean verifyEdDSA(EvaluationContext ctx, RegoValue[] args) {
+    RegoString jwt = getArg(args, 0, RegoString.class);
+    RegoString cert = getArg(args, 1, RegoString.class);
+    return _verifyEdDSA(jwt.getValue(), cert.getValue(), ctx.isStrictBuiltinErrors());
   }
 
   @OpaBuiltin(
