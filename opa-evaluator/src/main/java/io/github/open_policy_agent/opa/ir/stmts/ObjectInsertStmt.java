@@ -73,17 +73,33 @@ public class ObjectInsertStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ObjectInsertStmt that = (ObjectInsertStmt) o;
 
-        if (object != that.object) return false;
-        if (source != that.source) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
-        if (!Objects.equals(key, that.key)) return false;
+        if (object != that.object) {
+            return false;
+        }
+        if (source != that.source) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(key, that.key)) {
+            return false;
+        }
         return Objects.equals(value, that.value);
     }
 

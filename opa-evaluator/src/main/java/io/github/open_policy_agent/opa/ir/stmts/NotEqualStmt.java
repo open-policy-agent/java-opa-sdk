@@ -59,16 +59,30 @@ public class NotEqualStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         NotEqualStmt that = (NotEqualStmt) o;
 
-        if (source != that.source) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
-        if (getRow() != that.getRow()) return false;
-        if (!Objects.equals(a, that.a)) return false;
+        if (source != that.source) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
+        if (getRow() != that.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(a, that.a)) {
+            return false;
+        }
         return Objects.equals(b, that.b);
     }
 

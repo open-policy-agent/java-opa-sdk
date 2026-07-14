@@ -30,13 +30,21 @@ public class NopStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         NopStmt nopStmt = (NopStmt) o;
 
-        if (getFile() != nopStmt.getFile()) return false;
-        if (getCol() != nopStmt.getCol()) return false;
+        if (getFile() != nopStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != nopStmt.getCol()) {
+            return false;
+        }
         return getRow() == nopStmt.getRow();
     }
 

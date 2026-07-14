@@ -114,6 +114,25 @@ jobs:
       - name: Test policy
         run: opa test tools/policy/ -v
 
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      # Diffs the dependency graph between the PR base and head, failing on newly
+      # introduced vulnerabilities or disallowed licenses. Relies on the baseline
+      # graph submitted by dependency-submission.yml on pushes to main.
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
   lint:
     name: Checkstyle & PMD
     runs-on: ubuntu-latest
@@ -121,7 +140,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version: 21
@@ -135,7 +154,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
           java-version: 21
@@ -158,9 +177,8 @@ jobs:
           done
           exit $failed
 
-  test-opa-evaluator:
-    needs: check-changes
-    if: needs.check-changes.outputs.opa-evaluator == 'true'
+  build:
+    name: Build All Modules
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -170,6 +188,29 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      # Compiles every module's main and test sources unconditionally. The
+      # per-module test jobs are gated by a change filter, so a change in one
+      # module that breaks compilation of an untouched module would otherwise
+      # slip through. Test execution and lint are covered by their own jobs, so
+      # this deliberately compiles only (no test/check tasks).
+      - run: ./gradlew assemble testClasses
+
+  test-opa-evaluator:
+    needs: check-changes
+    if: needs.check-changes.outputs.opa-evaluator == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-evaluator:test
 
@@ -177,14 +218,17 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-jackson == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-jackson:test
 
@@ -192,14 +236,17 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-services == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-services:test
 
@@ -207,14 +254,17 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-builtins == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-builtins:test
 
@@ -222,14 +272,17 @@ jobs:
     needs: check-changes
     if: needs.check-changes.outputs.opa-slf4j == 'true'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
         with:
           distribution: temurin
-          java-version: 21
+          java-version: ${{ matrix.java }}
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-slf4j:test
 
@@ -240,8 +293,10 @@ jobs:
       - check-changes
       - gh-actions-lint
       - rego-policy
+      - dependency-review
       - lint
       - validate-pom
+      - build
       - test-opa-evaluator
       - test-opa-jackson
       - test-opa-services

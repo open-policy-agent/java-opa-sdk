@@ -32,7 +32,9 @@ public class CoverageProfiler implements Profiler {
 
   @Override
   public void addEntry(Location location, long duration) {
-    if (location == null) return;
+      if (location == null) {
+          return;
+      }
     hitsByFile.computeIfAbsent(location.getFile(), k -> new HashSet<>()).add(location.getRow());
   }
 

@@ -14,8 +14,12 @@ public class BooleanType implements Type {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
     BooleanType that = (BooleanType) o;
     return Objects.equals(that.typeMarker(), TypeMarker);
   }

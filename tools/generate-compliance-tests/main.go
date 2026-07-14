@@ -36,6 +36,20 @@ func main() {
 	}
 
 	for _, extendedSet := range extendedSets {
+		// Cases excluded via exceptions.yaml are left in the set by the loader
+		// without a Filename or Plan. Keep only prepared cases so excluded ones
+		// are not written out (and so we don't index an empty Filename below).
+		var prepared []*cases.ExtendedTestCase
+		for _, tc := range extendedSet.Cases {
+			if tc.Filename != "" {
+				prepared = append(prepared, tc)
+			}
+		}
+		extendedSet.Cases = prepared
+		if len(extendedSet.Cases) == 0 {
+			continue
+		}
+
 		tcJson, err := json.MarshalIndent(extendedSet, "", "\t")
 		if err != nil {
 			panic(fmt.Errorf("Failed to marshal test case to json: %s\n", err.Error()))

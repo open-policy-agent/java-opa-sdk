@@ -41,14 +41,24 @@ public class NotStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         NotStmt notStmt = (NotStmt) o;
 
-        if (getFile() != notStmt.getFile()) return false;
-        if (getCol() != notStmt.getCol()) return false;
-        if (getRow() != notStmt.getRow()) return false;
+        if (getFile() != notStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != notStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != notStmt.getRow()) {
+            return false;
+        }
         return Objects.equals(block, notStmt.block);
     }
 

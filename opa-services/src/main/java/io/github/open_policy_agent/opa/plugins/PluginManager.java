@@ -5,8 +5,11 @@ import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.storage.Store;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -68,6 +71,10 @@ public class PluginManager {
 
   public Plugin getPlugin(String name) {
     return plugins.get(name);
+  }
+
+  public Set<String> getPluginNames() {
+    return Collections.unmodifiableSet(new HashSet<>(plugins.keySet()));
   }
 
   public String getId() {

@@ -48,12 +48,18 @@ public class Plan {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     Plan plan = (Plan) o;
 
-    if (!Objects.equals(name, plan.name)) return false;
+      if (!Objects.equals(name, plan.name)) {
+          return false;
+      }
     return Objects.equals(blocks, plan.blocks);
   }
 

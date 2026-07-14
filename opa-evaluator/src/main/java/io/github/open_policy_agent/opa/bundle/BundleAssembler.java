@@ -58,7 +58,9 @@ public class BundleAssembler {
     if (impls.size() > 1) {
       StringBuilder names = new StringBuilder();
       for (int i = 0; i < impls.size(); i++) {
-        if (i > 0) names.append(", ");
+          if (i > 0) {
+              names.append(", ");
+          }
         names.append(impls.get(i).getClass().getName());
       }
       throw new IllegalStateException(

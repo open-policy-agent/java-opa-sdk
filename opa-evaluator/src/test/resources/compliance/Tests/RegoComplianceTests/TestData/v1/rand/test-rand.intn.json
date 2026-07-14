@@ -256,21 +256,23 @@
 															{
 																"type": "MakeNumberRefStmt",
 																"stmt": {
-																	"Index": 1,
-																	"target": 5,
 																	"file": 0,
 																	"col": 36,
-																	"row": 4
+																	"row": 4,
+																	"index": 1,
+																	"Index": 1,
+																	"target": 5
 																}
 															},
 															{
 																"type": "MakeNumberRefStmt",
 																"stmt": {
-																	"Index": 2,
-																	"target": 6,
 																	"file": 0,
 																	"col": 36,
-																	"row": 4
+																	"row": 4,
+																	"index": 2,
+																	"Index": 2,
+																	"target": 6
 																}
 															},
 															{
@@ -346,11 +348,12 @@
 																			{
 																				"type": "MakeNumberRefStmt",
 																				"stmt": {
-																					"Index": 2,
-																					"target": 12,
 																					"file": 0,
 																					"col": 12,
-																					"row": 4
+																					"row": 4,
+																					"index": 2,
+																					"Index": 2,
+																					"target": 12
 																				}
 																			},
 																			{

@@ -27,7 +27,9 @@ public class RegoBoolean implements RegoValue {
 
   @Override
   public final boolean equals(Object o) {
-    if (!(o instanceof RegoBoolean)) return false;
+      if (!(o instanceof RegoBoolean)) {
+          return false;
+      }
 
     return value == ((RegoBoolean) o).value;
   }

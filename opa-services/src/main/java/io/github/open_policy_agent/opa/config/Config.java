@@ -327,9 +327,32 @@ public class Config {
   }
 
   public static class BundleConfig {
+    /** Default maximum bundle size (compressed download and decompressed contents): 512 MB. */
+    public static final long DEFAULT_MAX_SIZE_BYTES = 512L * 1024 * 1024;
+
     private PollingConfig polling;
     private String service;
     private String resource;
+
+    /**
+     * Maximum bundle size in bytes, applied both to the compressed HTTP download and to the
+     * decompressed tarball contents. Defaults to {@link #DEFAULT_MAX_SIZE_BYTES} (512 MB).
+     *
+     * <p><strong>Effective ceiling differs by path</strong>, because both paths buffer payloads
+     * into a Java {@code byte[]}, whose maximum length is {@link Integer#MAX_VALUE} (~2 GB):
+     *
+     * <ul>
+     *   <li><strong>HTTP download:</strong> The entire response is buffered in a single {@code
+     *       byte[]}, so the effective limit is capped at {@code Integer.MAX_VALUE} (~2 GB).
+     *       Configured values above that are silently clamped to {@code Integer.MAX_VALUE} on the
+     *       download path.
+     *   <li><strong>Decompressed tarball contents:</strong> The cumulative budget is tracked as a
+     *       {@code long} and may exceed 2 GB. Only each individual entry is bounded by the {@code
+     *       byte[]} ceiling (~2 GB per entry); the sum across all entries can be larger.
+     * </ul>
+     */
+    @JsonProperty("max_size_bytes")
+    private long maxSizeBytes = DEFAULT_MAX_SIZE_BYTES;
 
     public PollingConfig getPolling() {
       return polling;
@@ -358,6 +381,20 @@ public class Config {
       return this;
     }
 
+    public long getMaxSizeBytes() {
+      return maxSizeBytes;
+    }
+
+    /**
+     * Set the maximum bundle size in bytes. Note that the HTTP download enforcement is capped at
+     * {@link Integer#MAX_VALUE} (~2 GB); values above that are clamped on the download path. See
+     * {@link #maxSizeBytes} for details.
+     */
+    public BundleConfig setMaxSizeBytes(long maxSizeBytes) {
+      this.maxSizeBytes = maxSizeBytes;
+      return this;
+    }
+
     @Override
     public String toString() {
       return "BundleConfig{"
@@ -369,6 +406,8 @@ public class Config {
           + ", resource='"
           + resource
           + '\''
+          + ", maxSizeBytes="
+          + maxSizeBytes
           + '}';
     }
   }

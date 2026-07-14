@@ -72,16 +72,30 @@ public class CallStmt extends BaseStmt {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     CallStmt callStmt = (CallStmt) o;
 
-    if (result != callStmt.result) return false;
-    if (getFile() != callStmt.getFile()) return false;
-    if (getCol() != callStmt.getCol()) return false;
-    if (getRow() != callStmt.getRow()) return false;
-    if (!Objects.equals(func, callStmt.func)) return false;
+      if (result != callStmt.result) {
+          return false;
+      }
+      if (getFile() != callStmt.getFile()) {
+          return false;
+      }
+      if (getCol() != callStmt.getCol()) {
+          return false;
+      }
+      if (getRow() != callStmt.getRow()) {
+          return false;
+      }
+      if (!Objects.equals(func, callStmt.func)) {
+          return false;
+      }
     return Objects.equals(args, callStmt.args);
   }
 

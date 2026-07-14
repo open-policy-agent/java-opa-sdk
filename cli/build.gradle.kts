@@ -9,7 +9,7 @@ repositories {
 dependencies {
     implementation(project(":opa-evaluator"))
     implementation(project(":opa-services"))
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
     implementation("info.picocli:picocli:4.7.7")
     implementation("org.apache.commons:commons-compress:1.28.0")
 
@@ -17,7 +17,7 @@ dependencies {
     runtimeOnly(project(":opa-jackson"))
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.1")
     testImplementation("org.assertj:assertj-core:3.27.7")
 }
 

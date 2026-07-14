@@ -63,13 +63,21 @@ public class Location implements LocationStmt {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     Location location = (Location) o;
 
-    if (file != location.file) return false;
-    if (col != location.col) return false;
+      if (file != location.file) {
+          return false;
+      }
+      if (col != location.col) {
+          return false;
+      }
     return row == location.row;
   }
 
