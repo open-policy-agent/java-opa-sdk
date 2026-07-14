@@ -46,13 +46,21 @@ public class Static {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     Static aStatic = (Static) o;
 
-    if (!Objects.equals(strings, aStatic.strings)) return false;
-    if (!Objects.equals(builtinFuncs, aStatic.builtinFuncs)) return false;
+      if (!Objects.equals(strings, aStatic.strings)) {
+          return false;
+      }
+      if (!Objects.equals(builtinFuncs, aStatic.builtinFuncs)) {
+          return false;
+      }
     return Objects.equals(files, aStatic.files);
   }
 

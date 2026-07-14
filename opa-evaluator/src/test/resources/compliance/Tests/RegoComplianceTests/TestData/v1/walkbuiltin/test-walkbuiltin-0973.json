@@ -253,11 +253,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 1,
-												"target": 6,
 												"file": 0,
 												"col": 1,
-												"row": 8
+												"row": 8,
+												"index": 1,
+												"Index": 1,
+												"target": 6
 											}
 										},
 										{
@@ -276,11 +277,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 2,
-												"target": 7,
 												"file": 0,
 												"col": 1,
-												"row": 8
+												"row": 8,
+												"index": 2,
+												"Index": 2,
+												"target": 7
 											}
 										},
 										{
@@ -299,11 +301,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 3,
-												"target": 8,
 												"file": 0,
 												"col": 1,
-												"row": 8
+												"row": 8,
+												"index": 3,
+												"Index": 3,
+												"target": 8
 											}
 										},
 										{
@@ -831,11 +834,12 @@
 															{
 																"type": "MakeNumberRefStmt",
 																"stmt": {
-																	"Index": 1,
-																	"target": 7,
 																	"file": 0,
 																	"col": 11,
-																	"row": 3
+																	"row": 3,
+																	"index": 1,
+																	"Index": 1,
+																	"target": 7
 																}
 															},
 															{
@@ -854,11 +858,12 @@
 															{
 																"type": "MakeNumberRefStmt",
 																"stmt": {
-																	"Index": 2,
-																	"target": 8,
 																	"file": 0,
 																	"col": 11,
-																	"row": 3
+																	"row": 3,
+																	"index": 2,
+																	"Index": 2,
+																	"target": 8
 																}
 															},
 															{
@@ -877,11 +882,12 @@
 															{
 																"type": "MakeNumberRefStmt",
 																"stmt": {
-																	"Index": 3,
-																	"target": 9,
 																	"file": 0,
 																	"col": 11,
-																	"row": 3
+																	"row": 3,
+																	"index": 3,
+																	"Index": 3,
+																	"target": 9
 																}
 															},
 															{

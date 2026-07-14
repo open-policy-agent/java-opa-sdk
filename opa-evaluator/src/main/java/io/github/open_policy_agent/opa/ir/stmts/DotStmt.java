@@ -45,16 +45,30 @@ public class DotStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         DotStmt dotStmt = (DotStmt) o;
 
-        if (target != dotStmt.target) return false;
-        if (getFile() != dotStmt.getFile()) return false;
-        if (getCol() != dotStmt.getCol()) return false;
-        if (getRow() != dotStmt.getRow()) return false;
-        if (!Objects.equals(source, dotStmt.source)) return false;
+        if (target != dotStmt.target) {
+            return false;
+        }
+        if (getFile() != dotStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != dotStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != dotStmt.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(source, dotStmt.source)) {
+            return false;
+        }
         return Objects.equals(key, dotStmt.key);
     }
 

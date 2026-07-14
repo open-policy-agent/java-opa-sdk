@@ -1,0 +1,12 @@
+# Exception Format is <test name>: <reason>
+#
+# Compliance test cases to exclude from generation. The generator skips any
+# case whose note matches a key below.
+
+# The Java SDK represents Rego numbers as doubles, so values beyond 2^53 lose
+# precision. These cases assert the exact int64 extremes (min/max Int64)
+# returned by time.parse_ns, which the double-backed representation rounds
+# (e.g. 9223372036854775807 -> 9223372036854776000). Excluded until the number
+# type preserves full int64 precision. See follow-up issue.
+time/parse_nanos: Java numbers are double-backed and lose precision at the int64 min/max extremes
+time/parse_rfc3339_nanos: Java numbers are double-backed and lose precision at the int64 min/max extremes

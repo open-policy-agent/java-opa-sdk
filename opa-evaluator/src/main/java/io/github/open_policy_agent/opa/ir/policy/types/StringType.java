@@ -14,8 +14,12 @@ public class StringType implements Type {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
     StringType that = (StringType) o;
     return Objects.equals(that.typeMarker(), TypeMarker);
   }

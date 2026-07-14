@@ -50,12 +50,18 @@ public class StringIndexVal implements Val {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     StringIndexVal that = (StringIndexVal) o;
 
-    if (value != that.value) return false;
+      if (value != that.value) {
+          return false;
+      }
     return Objects.equals(type, that.type);
   }
 

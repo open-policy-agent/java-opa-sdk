@@ -237,11 +237,12 @@
 										{
 											"type": "MakeNumberRefStmt",
 											"stmt": {
-												"Index": 4,
-												"target": 5,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"index": 4,
+												"Index": 4,
+												"target": 5
 											}
 										},
 										{

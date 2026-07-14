@@ -55,14 +55,24 @@ public class BreakStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         BreakStmt breakStmt = (BreakStmt) o;
 
-        if (index != breakStmt.index) return false;
-        if (getFile() != breakStmt.getFile()) return false;
-        if (getCol() != breakStmt.getCol()) return false;
+        if (index != breakStmt.index) {
+            return false;
+        }
+        if (getFile() != breakStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != breakStmt.getCol()) {
+            return false;
+        }
         return getRow() == breakStmt.getRow();
     }
 

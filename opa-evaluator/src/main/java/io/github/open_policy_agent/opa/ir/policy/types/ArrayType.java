@@ -42,12 +42,18 @@ public class ArrayType implements Type {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
     ArrayType arrayType = (ArrayType) o;
 
-    if (!Objects.equals(staticItems, arrayType.staticItems)) return false;
+      if (!Objects.equals(staticItems, arrayType.staticItems)) {
+          return false;
+      }
     return Objects.equals(dynamic, arrayType.dynamic);
   }
 

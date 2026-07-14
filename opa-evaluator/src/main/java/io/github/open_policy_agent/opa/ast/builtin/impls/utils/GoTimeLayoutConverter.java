@@ -48,6 +48,8 @@ public class GoTimeLayoutConverter {
         return new String[] {"yyyy-MM-dd'T'HH:mm:ssXXX", "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX"};
       case "RFC3339Nano":
         return new String[] {"yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX", "yyyy-MM-dd'T'HH:mm:ssXXX"};
+      default:
+        break;
     }
 
     // Go's reference time: Mon Jan 2 15:04:05 MST 2006

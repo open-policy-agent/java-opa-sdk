@@ -86,17 +86,33 @@ public class WithStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         WithStmt withStmt = (WithStmt) o;
 
-        if (local != withStmt.local) return false;
-        if (getFile() != withStmt.getFile()) return false;
-        if (getCol() != withStmt.getCol()) return false;
-        if (getRow() != withStmt.getRow()) return false;
-        if (!Objects.equals(path, withStmt.path)) return false;
-        if (!Objects.equals(value, withStmt.value)) return false;
+        if (local != withStmt.local) {
+            return false;
+        }
+        if (getFile() != withStmt.getFile()) {
+            return false;
+        }
+        if (getCol() != withStmt.getCol()) {
+            return false;
+        }
+        if (getRow() != withStmt.getRow()) {
+            return false;
+        }
+        if (!Objects.equals(path, withStmt.path)) {
+            return false;
+        }
+        if (!Objects.equals(value, withStmt.value)) {
+            return false;
+        }
         return Objects.equals(block, withStmt.block);
     }
 

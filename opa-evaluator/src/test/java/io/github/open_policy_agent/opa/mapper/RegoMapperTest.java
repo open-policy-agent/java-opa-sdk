@@ -34,7 +34,7 @@ class RegoMapperTest {
     private int age;
     private boolean active;
 
-    public SimplePojo() {}
+    SimplePojo() {}
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
@@ -48,7 +48,7 @@ class RegoMapperTest {
     private String street;
     private String city;
 
-    public Address() {}
+    Address() {}
 
     public String getStreet() { return street; }
     public void setStreet(String street) { this.street = street; }
@@ -61,7 +61,7 @@ class RegoMapperTest {
     private Address address;
     private List<String> tags;
 
-    public NestedPojo() {}
+    NestedPojo() {}
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -81,7 +81,7 @@ class RegoMapperTest {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String optional;
 
-    public AnnotatedPojo() {}
+    AnnotatedPojo() {}
 
     public String getUserName() { return userName; }
     public void setUserName(String userName) { this.userName = userName; }
@@ -96,7 +96,7 @@ class RegoMapperTest {
     private Set<Integer> scores;
     private Map<String, String> metadata;
 
-    public CollectionPojo() {}
+    CollectionPojo() {}
 
     public List<Address> getAddresses() { return addresses; }
     public void setAddresses(List<Address> addresses) { this.addresses = addresses; }
@@ -113,7 +113,7 @@ class RegoMapperTest {
     private BigInteger huge;
     private BigDecimal precise;
 
-    public NumberPojo() {}
+    NumberPojo() {}
 
     public long getBigNumber() { return bigNumber; }
     public void setBigNumber(long bigNumber) { this.bigNumber = bigNumber; }
@@ -142,7 +142,7 @@ class RegoMapperTest {
     private Color color;
     private Status status;
 
-    public EnumPojo() {}
+    EnumPojo() {}
 
     public Color getColor() { return color; }
     public void setColor(Color color) { this.color = color; }
@@ -153,7 +153,7 @@ class RegoMapperTest {
   public static class ParentPojo {
     private String parentField;
 
-    public ParentPojo() {}
+    ParentPojo() {}
 
     public String getParentField() { return parentField; }
     public void setParentField(String parentField) { this.parentField = parentField; }
@@ -162,7 +162,7 @@ class RegoMapperTest {
   public static class ChildPojo extends ParentPojo {
     private String childField;
 
-    public ChildPojo() {}
+    ChildPojo() {}
 
     public String getChildField() { return childField; }
     public void setChildField(String childField) { this.childField = childField; }
@@ -1070,7 +1070,7 @@ class RegoMapperTest {
   // Helper class for error tests
   public static class NoDefaultCtorPojo {
     private final String value;
-    public NoDefaultCtorPojo(String value) { this.value = value; }
+    NoDefaultCtorPojo(String value) { this.value = value; }
     public String getValue() { return value; }
   }
 
@@ -1081,7 +1081,7 @@ class RegoMapperTest {
     private final int count;
 
     @JsonCreator
-    public ImmutablePojo(@JsonProperty("name") String name, @JsonProperty("count") int count) {
+    ImmutablePojo(@JsonProperty("name") String name, @JsonProperty("count") int count) {
       this.name = name;
       this.count = count;
     }
@@ -1100,7 +1100,7 @@ class RegoMapperTest {
     private String label;
 
     @JsonCreator
-    public HybridPojo(@JsonProperty("id") String id) {
+    HybridPojo(@JsonProperty("id") String id) {
       this.id = id;
     }
 
@@ -1122,7 +1122,7 @@ class RegoMapperTest {
     private final List<String> roles;
 
     @JsonCreator
-    public CreatorWithCollections(
+    CreatorWithCollections(
         @JsonProperty("name") String name, @JsonProperty("roles") List<String> roles) {
       this.name = name;
       this.roles = roles;
@@ -1142,7 +1142,7 @@ class RegoMapperTest {
     private final Address address;
 
     @JsonCreator
-    public CreatorWithNestedPojo(
+    CreatorWithNestedPojo(
         @JsonProperty("id") String id, @JsonProperty("address") Address address) {
       this.id = id;
       this.address = address;
@@ -1224,7 +1224,7 @@ class RegoMapperTest {
     private final int age;
 
     @JsonCreator
-    public AnnotatedFieldPojo(
+    AnnotatedFieldPojo(
         @JsonProperty("user_name") String userName, @JsonProperty("age") int age) {
       this.userName = userName;
       this.age = age;
@@ -1241,7 +1241,7 @@ class RegoMapperTest {
     private final List<String> items;
 
     @JsonCreator
-    public CreatorNoGetters(
+    CreatorNoGetters(
         @JsonProperty("id") String id, @JsonProperty("items") List<String> items) {
       this.id = id;
       this.items = items;
@@ -1255,7 +1255,7 @@ class RegoMapperTest {
 
     private String getterOnly;
 
-    public MixedAccessPojo() {}
+    MixedAccessPojo() {}
 
     public String getGetterOnly() {
       return getterOnly;
@@ -1302,7 +1302,7 @@ class RegoMapperTest {
     private boolean ckIdentityValid;
     private String httpHeader;
 
-    public ConsecutiveUppercasePojo() {}
+    ConsecutiveUppercasePojo() {}
 
     public String getURL() {
       return url;
@@ -1337,7 +1337,7 @@ class RegoMapperTest {
     private final boolean ckIdentityValid;
     private final String name;
 
-    public AutoDetectPojo(boolean isTrusted, boolean ckIdentityValid, String name) {
+    AutoDetectPojo(boolean isTrusted, boolean ckIdentityValid, String name) {
       this.isTrusted = isTrusted;
       this.ckIdentityValid = ckIdentityValid;
       this.name = name;

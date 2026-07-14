@@ -257,6 +257,120 @@ class TarballBundleLoaderTest {
     assertTrue(ex.getMessage().contains("No bundle path or data provided"));
   }
 
+  @Test
+  void load_decompressionBombExceedsLimit_throws() throws IOException {
+    String largeContent = "x".repeat(2000);
+    byte[] tarball = new TarballBuilder()
+        .addEntry("data.json", largeContent)
+        .build();
+
+    Store store = new InMem();
+    TarballBundleLoader loader = new TarballBundleLoader("test", tarball, 1000);
+
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> loader.load(store));
+    assertTrue(ex.getMessage().contains("limit"));
+  }
+
+  @Test
+  void load_multipleEntriesExceedCumulativeLimit_throws() throws IOException {
+    byte[] tarball = new TarballBuilder()
+        .addEntry("policy1.rego", "x".repeat(600))
+        .addEntry("policy2.rego", "x".repeat(600))
+        .build();
+
+    Store store = new InMem();
+    TarballBundleLoader loader = new TarballBundleLoader("test", tarball, 1000);
+
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> loader.load(store));
+    assertTrue(ex.getMessage().contains("limit"));
+  }
+
+  @Test
+  void load_exactBudgetExhausted_throws() throws IOException {
+    byte[] tarball = new TarballBuilder()
+        .addEntry("policy1.rego", "x".repeat(1000))
+        .addEntry("policy2.rego", "y".repeat(1))
+        .build();
+
+    Store store = new InMem();
+    TarballBundleLoader loader = new TarballBundleLoader("test", tarball, 1000);
+
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> loader.load(store));
+    assertTrue(ex.getMessage().contains("limit"));
+  }
+
+  @Test
+  void load_maxSizeBytesNearLongMaxValue_doesNotOverflow() throws IOException {
+    byte[] tarball = new TarballBuilder()
+        .addEntry("data.json", "{\"key\":\"value\"}")
+        .build();
+
+    Store store = new InMem();
+    new TarballBundleLoader("test", tarball, Long.MAX_VALUE).load(store);
+
+    assertNotNull(store.getBundles().get("test"));
+  }
+
+  @Test
+  void load_unrecognizedLargeEntryExceedsLimit_throws() throws IOException {
+    byte[] tarball = new TarballBuilder()
+        .addEntry("README.txt", "x".repeat(2000))
+        .addEntry("data.json", "{}")
+        .build();
+
+    Store store = new InMem();
+    TarballBundleLoader loader = new TarballBundleLoader("test", tarball, 1000);
+
+    IllegalArgumentException ex =
+        assertThrows(IllegalArgumentException.class, () -> loader.load(store));
+    assertTrue(ex.getMessage().contains("limit"));
+  }
+
+  @Test
+  void load_unrecognizedEntryWithinLimit_succeeds() throws IOException {
+    byte[] tarball = new TarballBuilder()
+        .addEntry("README.txt", "small")
+        .addEntry("data.json", "{\"key\":\"value\"}")
+        .build();
+
+    Store store = new InMem();
+    new TarballBundleLoader("test", tarball, 1024).load(store);
+
+    assertNotNull(store.getBundles().get("test"));
+  }
+
+  @Test
+  void load_withinSizeLimit_succeeds() throws IOException {
+    byte[] tarball = new TarballBuilder()
+        .addEntry("data.json", "{\"key\":\"value\"}")
+        .build();
+
+    Store store = new InMem();
+    new TarballBundleLoader("test", tarball, 1024).load(store);
+
+    assertNotNull(store.getBundles().get("test"));
+  }
+
+  @Test
+  void load_withDirectoryEntries_directoriesSkipped() throws IOException {
+    byte[] tarball = new TarballBuilder()
+        .addDirectory("policies/")
+        .addDirectory("policies/admin/")
+        .addEntry("policies/admin/admin.rego", "package admin")
+        .addEntry("plan.json", MINIMAL_PLAN)
+        .build();
+
+    Store store = new InMem();
+    Bundle bundle = new TarballBundleLoader("test", tarball).load(store);
+
+    assertNotNull(bundle.irPolicy);
+    assertEquals(1, bundle.rego.size());
+    assertTrue(bundle.rego.containsKey("policies/admin/admin.rego"));
+  }
+
   /** Helper to build tar.gz byte arrays for testing. */
   private static class TarballBuilder {
     private final ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
@@ -275,6 +389,14 @@ class TarballBundleLoaderTest {
       entry.setSize(bytes.length);
       tarOut.putArchiveEntry(entry);
       tarOut.write(bytes);
+      tarOut.closeArchiveEntry();
+      return this;
+    }
+
+    TarballBuilder addDirectory(String name) throws IOException {
+      String dirName = name.endsWith("/") ? name : name + "/";
+      TarArchiveEntry entry = new TarArchiveEntry(dirName);
+      tarOut.putArchiveEntry(entry);
       tarOut.closeArchiveEntry();
       return this;
     }

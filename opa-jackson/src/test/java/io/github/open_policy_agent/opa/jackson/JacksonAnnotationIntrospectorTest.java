@@ -129,12 +129,12 @@ class JacksonAnnotationIntrospectorTest {
   // --- findCreatorParamName ---
 
   static class WithCreator {
-    public WithCreator(@JsonProperty("foo") String foo, String bar) {}
+    WithCreator(@JsonProperty("foo") String foo, String bar) {}
   }
 
   @Test
   void findCreatorParamName_readsAnnotationOnParameter() throws NoSuchMethodException {
-    Constructor<?> ctor = WithCreator.class.getConstructor(String.class, String.class);
+    Constructor<?> ctor = WithCreator.class.getDeclaredConstructor(String.class, String.class);
     Parameter[] params = ctor.getParameters();
     assertThat(introspector.findCreatorParamName(params[0])).isEqualTo("foo");
     // Unannotated parameter -> null.
@@ -145,29 +145,29 @@ class JacksonAnnotationIntrospectorTest {
 
   static class CreatorPropsCtor {
     @JsonCreator(mode = JsonCreator.Mode.PROPERTIES)
-    public CreatorPropsCtor(@JsonProperty("x") String x) {}
+    CreatorPropsCtor(@JsonProperty("x") String x) {}
   }
 
   static class CreatorDelegatingCtor {
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public CreatorDelegatingCtor(String x) {}
+    CreatorDelegatingCtor(String x) {}
   }
 
   static class NoCreatorCtor {
-    public NoCreatorCtor(String x) {}
+    NoCreatorCtor(String x) {}
   }
 
   @Test
   void isJsonCreator_constructor_acceptsPropertiesNotDelegating() throws Exception {
     assertThat(
             introspector.isJsonCreator(
-                CreatorPropsCtor.class.getConstructor(String.class)))
+                CreatorPropsCtor.class.getDeclaredConstructor(String.class)))
         .isTrue();
     assertThat(
             introspector.isJsonCreator(
-                CreatorDelegatingCtor.class.getConstructor(String.class)))
+                CreatorDelegatingCtor.class.getDeclaredConstructor(String.class)))
         .isFalse();
-    assertThat(introspector.isJsonCreator(NoCreatorCtor.class.getConstructor(String.class)))
+    assertThat(introspector.isJsonCreator(NoCreatorCtor.class.getDeclaredConstructor(String.class)))
         .isFalse();
   }
 

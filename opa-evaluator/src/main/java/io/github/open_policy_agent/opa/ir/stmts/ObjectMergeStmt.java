@@ -42,16 +42,30 @@ public class ObjectMergeStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         ObjectMergeStmt that = (ObjectMergeStmt) o;
 
-        if (a != that.a) return false;
-        if (b != that.b) return false;
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (a != that.a) {
+            return false;
+        }
+        if (b != that.b) {
+            return false;
+        }
+        if (target != that.target) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

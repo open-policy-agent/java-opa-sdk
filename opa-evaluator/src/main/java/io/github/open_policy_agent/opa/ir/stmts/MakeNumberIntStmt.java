@@ -46,15 +46,27 @@ public class MakeNumberIntStmt extends BaseStmt {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         MakeNumberIntStmt that = (MakeNumberIntStmt) o;
 
-        if (value != that.value) return false;
-        if (target != that.target) return false;
-        if (getFile() != that.getFile()) return false;
-        if (getCol() != that.getCol()) return false;
+        if (value != that.value) {
+            return false;
+        }
+        if (target != that.target) {
+            return false;
+        }
+        if (getFile() != that.getFile()) {
+            return false;
+        }
+        if (getCol() != that.getCol()) {
+            return false;
+        }
         return getRow() == that.getRow();
     }
 

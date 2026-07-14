@@ -1031,7 +1031,9 @@ public class JsonBuiltins implements BuiltinProvider {
       Map<JsonNode, Map<Integer, Integer>> arrayIndexMaps = new HashMap<>();
 
       for (String path : paths) {
-        if (path.isEmpty()) continue;
+          if (path.isEmpty()) {
+              continue;
+          }
 
         String[] parts = path.split("/");
         List<String> nonEmptyParts = new ArrayList<>();
@@ -1041,14 +1043,18 @@ public class JsonBuiltins implements BuiltinProvider {
           }
         }
 
-        if (nonEmptyParts.isEmpty()) continue;
+          if (nonEmptyParts.isEmpty()) {
+              continue;
+          }
 
         // Navigate to the value in the source, tracking structure types
         JsonNode current = node;
         List<Boolean> isArrayAtLevel = new ArrayList<>();
 
         for (String part : nonEmptyParts) {
-          if (current == null) break;
+            if (current == null) {
+                break;
+            }
 
           if (current.isArray()) {
             isArrayAtLevel.add(true);
@@ -1070,7 +1076,9 @@ public class JsonBuiltins implements BuiltinProvider {
           }
         }
 
-        if (current == null) continue;
+          if (current == null) {
+              continue;
+          }
 
         // Build the path in the result using the tracked structure types
         JsonNode resultNode = result;
@@ -1187,7 +1195,9 @@ public class JsonBuiltins implements BuiltinProvider {
 
       for (int i = 0; i < parts.length; i++) {
         String part = parts[i];
-        if (part.isEmpty()) continue;
+          if (part.isEmpty()) {
+              continue;
+          }
 
         if (i == parts.length - 1) {
           lastPart = part;

@@ -78,7 +78,9 @@ class EngineEvaluateTest {
     StringBuilder sb = new StringBuilder();
     sb.append("{\"user\":{\"id\":\"").append(id).append("\",\"groups\":[");
     for (int i = 0; i < groups.length; i++) {
-      if (i > 0) sb.append(",");
+        if (i > 0) {
+            sb.append(",");
+        }
       sb.append("\"").append(groups[i]).append("\"");
     }
     sb.append("]}}");
@@ -305,7 +307,7 @@ class EngineEvaluateTest {
   public static class AuthzInput {
     private User user;
 
-    public AuthzInput() {}
+    AuthzInput() {}
 
     public User getUser() {
       return user;
@@ -319,9 +321,9 @@ class EngineEvaluateTest {
       private String id;
       private List<String> groups;
 
-      public User() {}
+      User() {}
 
-      public User(String id, List<String> groups) {
+      User(String id, List<String> groups) {
         this.id = id;
         this.groups = groups;
       }
@@ -429,7 +431,7 @@ class EngineEvaluateTest {
 
     private String reason;
 
-    public Decision() {}
+    Decision() {}
 
     public boolean isAllowed() {
       return allowed;

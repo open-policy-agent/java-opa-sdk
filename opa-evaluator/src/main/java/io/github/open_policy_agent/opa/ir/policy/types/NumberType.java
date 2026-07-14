@@ -14,8 +14,12 @@ public class NumberType implements Type {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
     NumberType that = (NumberType) o;
     return Objects.equals(that.typeMarker(), TypeMarker);
   }
