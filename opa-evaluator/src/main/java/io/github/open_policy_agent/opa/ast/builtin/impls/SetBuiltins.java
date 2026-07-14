@@ -26,8 +26,25 @@ public class SetBuiltins {
         "union", instance::union);
   }
 
+  @OpaBuiltin(
+      name = "union",
+      description = "Returns the union of the given input sets.",
+      categories = {"sets"},
+      args = {
+        @OpaType(
+            type = "set",
+            name = "xs",
+            description = "set of sets to merge",
+            dynamic = @OpaDynamic(type = "set"))
+      },
+      result =
+          @OpaType(
+              type = "set",
+              name = "y",
+              description = "the union of all `xs` sets",
+              dynamic = @OpaDynamic(type = "any")))
   public RegoSet union(EvaluationContext ctx, RegoValue[] args) {
-    RegoSet xs = (RegoSet) args[0];
+    RegoSet xs = getArg(args, 0, RegoSet.class);
 
     Set<RegoValue> y =
         xs.getValue().stream()

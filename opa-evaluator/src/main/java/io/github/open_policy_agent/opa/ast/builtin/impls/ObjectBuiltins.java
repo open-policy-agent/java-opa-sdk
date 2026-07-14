@@ -65,20 +65,34 @@ public class ObjectBuiltins {
   }
 
   @OpaBuiltin(
-      name = "object.keys",
-      description = "Returns a set of keys in the supplied object.",
+      name = "object.union",
+      description =
+          "Creates a new object of the asymmetric union of two objects. For example: "
+              + "`object.union({\"a\": 1}, {\"b\": 2})` results in `{\"a\": 1, \"b\": 2}`. "
+              + "If both objects have the same key and both values are objects, the values are "
+              + "merged recursively. Otherwise, the value in the right-hand object `b` wins.",
+      categories = {"objects"},
       args = {
         @OpaType(
             type = "object",
-            name = "object",
-            description = "object to get keys from",
+            name = "a",
+            description = "left-hand object",
+            dynamic = @OpaDynamic(keyType = "any", valueType = "any")),
+        @OpaType(
+            type = "object",
+            name = "b",
+            description = "right-hand object",
             dynamic = @OpaDynamic(keyType = "any", valueType = "any"))
       },
       result =
           @OpaType(
-              type = "set",
-              description = "set of keys in `object`",
-              dynamic = @OpaDynamic(type = "any")))
+              type = "object",
+              name = "output",
+              dynamic = @OpaDynamic(keyType = "any", valueType = "any"),
+              description =
+                  "a new object which is the result of an asymmetric recursive union of two "
+                      + "objects where conflicts are resolved by choosing the key from the "
+                      + "right-hand object `b`"))
   public RegoObject union(EvaluationContext ctx, RegoValue[] args) {
     if (!(args[0] instanceof RegoObject)) {
       throw new TypeError("object.union: operand 1 must be object but got " + args[0].getTypeName());
