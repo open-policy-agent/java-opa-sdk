@@ -1,5 +1,6 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -357,7 +358,14 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
 
   private static String hostFromUrl(URI url) {
     String host = url.getHost();
-    return host == null ? "" : host;
+    if (host == null) {
+      return "";
+    }
+    int port = url.getPort();
+    if (port == -1) {
+      return host;
+    }
+    return host + ":" + port;
   }
 
   private static String escapedPath(URI url) {
@@ -410,12 +418,7 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
     } else if (value instanceof RegoBigInt) {
       sb.append(((RegoBigInt) value).getValue().toString());
     } else if (value instanceof RegoDecimal) {
-      double d = ((RegoDecimal) value).getValue();
-      if (d == Math.floor(d) && !Double.isInfinite(d)) {
-        sb.append(Long.toString((long) d));
-      } else {
-        sb.append(Double.toString(d));
-      }
+      appendGoJsonFloat(((RegoDecimal) value).getValue(), sb);
     } else if (value instanceof RegoArray) {
       sb.append('[');
       List<RegoValue> items = ((RegoArray) value).getValues();
@@ -468,6 +471,62 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
     }
   }
 
+  /**
+   * Formats a float64 for canonical JSON, matching Go {@code encoding/json}'s {@code floatEncoder}.
+   *
+   * <p>Go uses {@code strconv.FormatFloat} with precision {@code -1} and format {@code 'f'} when
+   * {@code 1e-6 <= |f| < 1e21}, otherwise format {@code 'e'}, then strips a single leading zero
+   * from negative exponents (e.g. {@code e-07} to {@code e-7}). See {@code encode.go} in Go 1.21+.
+   */
+  private static void appendGoJsonFloat(double f, StringBuilder sb) {
+    if (Double.isNaN(f) || Double.isInfinite(f)) {
+      sb.append(Double.toString(f));
+      return;
+    }
+    // Go encodes -0.0 as "0" so the sign is not preserved in JSON output.
+    if (f == 0.0) {
+      sb.append('0');
+      return;
+    }
+    double abs = Math.abs(f);
+    boolean useExp = abs < 1e-6 || abs >= 1e21;
+    String formatted = useExp ? formatGoJsonFloatE(f) : formatGoJsonFloatF(f);
+    if (useExp) {
+      formatted = cleanupGoJsonExponent(formatted);
+    }
+    sb.append(formatted);
+  }
+
+  private static String formatGoJsonFloatF(double f) {
+    return BigDecimal.valueOf(f).stripTrailingZeros().toPlainString();
+  }
+
+  private static String formatGoJsonFloatE(double f) {
+    String s = Double.toString(f).replace('E', 'e');
+    int eIdx = s.indexOf('e');
+    if (eIdx < 0) {
+      return s;
+    }
+    String mantissa = s.substring(0, eIdx);
+    String exponent = s.substring(eIdx + 1);
+    if (mantissa.endsWith(".0")) {
+      mantissa = mantissa.substring(0, mantissa.length() - 2);
+    }
+    if (!exponent.startsWith("-")) {
+      exponent = "+" + exponent;
+    }
+    return mantissa + 'e' + exponent;
+  }
+
+  /** Mirrors Go's post-processing for {@code e-0N} where N is a single digit. */
+  private static String cleanupGoJsonExponent(String s) {
+    int n = s.length();
+    if (n >= 4 && s.charAt(n - 4) == 'e' && s.charAt(n - 3) == '-' && s.charAt(n - 2) == '0') {
+      return s.substring(0, n - 3) + s.charAt(n - 1);
+    }
+    return s;
+  }
+
   private static void writeJsonString(String s, StringBuilder sb) {
     sb.append('"');
     for (int i = 0; i < s.length(); i++) {
@@ -488,8 +547,17 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
         case '\t':
           sb.append("\\t");
           break;
+        case '&':
+          sb.append("\\u0026");
+          break;
+        case '<':
+          sb.append("\\u003c");
+          break;
+        case '>':
+          sb.append("\\u003e");
+          break;
         default:
-          if (c < 0x20) {
+          if (c < 0x20 || c == '\u2028' || c == '\u2029') {
             sb.append(String.format("\\u%04x", (int) c));
           } else {
             sb.append(c);
