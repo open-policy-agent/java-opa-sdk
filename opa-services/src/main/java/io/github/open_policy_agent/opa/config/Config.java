@@ -325,11 +325,15 @@ public class Config {
           + '}';
     }
   }
-
+    public enum Trigger {
+        PERIODIC,
+        MANUAL
+    }
   public static class BundleConfig {
     private PollingConfig polling;
     private String service;
     private String resource;
+    public static final long DEFAULT_MAX_SIZE_BYTES = 1024L * 1024L * 1024L;
 
     public PollingConfig getPolling() {
       return polling;
