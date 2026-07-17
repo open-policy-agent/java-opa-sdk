@@ -333,7 +333,14 @@ public class Config {
     private PollingConfig polling;
     private String service;
     private String resource;
+
+    @JsonProperty("trigger")
+    private Trigger trigger = Trigger.PERIODIC;
+
     public static final long DEFAULT_MAX_SIZE_BYTES = 1024L * 1024L * 1024L;
+
+    @JsonProperty("max_size_bytes")
+    private long maxSizeBytes = DEFAULT_MAX_SIZE_BYTES;
 
     public PollingConfig getPolling() {
       return polling;
@@ -362,18 +369,40 @@ public class Config {
       return this;
     }
 
+    public Trigger getTrigger() {
+      return trigger;
+    }
+
+    public BundleConfig setTrigger(Trigger trigger) {
+      this.trigger = trigger;
+      return this;
+    }
+
+    public long getMaxSizeBytes() {
+      return maxSizeBytes;
+    }
+
+    public BundleConfig setMaxSizeBytes(long maxSizeBytes) {
+      this.maxSizeBytes = maxSizeBytes;
+      return this;
+    }
+
     @Override
     public String toString() {
       return "BundleConfig{"
-          + "polling="
-          + polling
-          + ", service='"
-          + service
-          + '\''
-          + ", resource='"
-          + resource
-          + '\''
-          + '}';
+              + "polling="
+              + polling
+              + ", service='"
+              + service
+              + '\''
+              + ", resource='"
+              + resource
+              + '\''
+              + ", trigger="
+              + trigger
+              + ", maxSizeBytes="
+              + maxSizeBytes
+              + '}';
     }
   }
 

@@ -45,6 +45,10 @@ public final class BundlePlugin implements Plugin {
           errors.add("Bundle '" + name + "' has missing or empty resource path");
         }
         errors.addAll(BundleDownloader.validatePolling(bundle.getPolling(), "Bundle '" + name + "'"));
+        if (bundle.getTrigger() == Config.Trigger.MANUAL && bundle.getPolling() != null) {
+          errors.add(
+                  "Bundle '" + name + "' cannot specify polling when trigger is MANUAL");
+        }
       }
     }
     return errors;
@@ -78,7 +82,9 @@ public final class BundlePlugin implements Plugin {
             new Bundle(name, manager, svc)
                 .setService(bundleConfig.getService())
                 .setResource(bundleConfig.getResource())
-                .setPolling(bundleConfig.getPolling()));
+                .setPolling(bundleConfig.getPolling()))
+                .setTrigger(bundleConfig.getTrigger())
+                .setMaxSizeBytes(bundleConfig.getMaxSizeBytes());
       }
     }
 
@@ -177,6 +183,26 @@ public final class BundlePlugin implements Plugin {
 
     public Config.PollingConfig getPolling() {
       return polling;
+    }
+
+    @Override
+    public Bundle setTrigger(Config.Trigger trigger) {
+      super.setTrigger(trigger);
+      return this;
+    }
+
+    public Config.Trigger getTrigger() {
+      return trigger;
+    }
+
+    @Override
+    public Bundle setMaxSizeBytes(long maxSizeBytes) {
+      super.setMaxSizeBytes(maxSizeBytes);
+      return this;
+    }
+
+    public long getMaxSizeBytes() {
+      return maxSizeBytes;
     }
 
     @Override

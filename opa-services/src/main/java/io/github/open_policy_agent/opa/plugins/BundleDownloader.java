@@ -72,6 +72,10 @@ public abstract class BundleDownloader {
     return this;
   }
 
+  public Config.Trigger getTrigger() {
+    return trigger;
+  }
+
   /**
    * Construct a BundleDownloader.
    *
@@ -169,6 +173,10 @@ public abstract class BundleDownloader {
   public BundleDownloader setMaxSizeBytes(long maxSizeBytes) {
     this.maxSizeBytes = maxSizeBytes;
     return this;
+  }
+
+  public long getMaxSizeBytes() {
+    return maxSizeBytes;
   }
 
   /**
