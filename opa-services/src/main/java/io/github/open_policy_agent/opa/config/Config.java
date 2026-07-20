@@ -455,6 +455,12 @@ public class Config {
     @JsonProperty("resource")
     private String resource = "/status";
 
+    @JsonProperty("min_delay_seconds")
+    private Integer minDelaySeconds = 30;
+
+    @JsonProperty("max_delay_seconds")
+    private Integer maxDelaySeconds = 30;
+
     public Boolean getConsole() {
       return console;
     }
@@ -482,6 +488,24 @@ public class Config {
       return this;
     }
 
+    public Integer getMinDelaySeconds() {
+      return minDelaySeconds;
+    }
+
+    public StatusConfig setMinDelaySeconds(Integer minDelaySeconds) {
+      this.minDelaySeconds = minDelaySeconds;
+      return this;
+    }
+
+    public Integer getMaxDelaySeconds() {
+      return maxDelaySeconds;
+    }
+
+    public StatusConfig setMaxDelaySeconds(Integer maxDelaySeconds) {
+      this.maxDelaySeconds = maxDelaySeconds;
+      return this;
+    }
+
     @Override
     public String toString() {
       return "StatusConfig{"
@@ -493,6 +517,10 @@ public class Config {
           + ", resource='"
           + resource
           + '\''
+          + ", minDelaySeconds="
+          + minDelaySeconds
+          + ", maxDelaySeconds="
+          + maxDelaySeconds
           + '}';
     }
   }
