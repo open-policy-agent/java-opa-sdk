@@ -1,5 +1,6 @@
 package io.github.open_policy_agent.opa.plugins;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -17,7 +18,11 @@ import java.net.Socket;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -32,11 +37,19 @@ class BundleDownloaderSecurityTest {
 
   private HttpServer server;
   private Store store;
+  private ExecutorService serverExecutor;
+  private ScheduledExecutorService scheduler;
 
   @AfterEach
   void tearDown() {
+    if (scheduler != null) {
+      scheduler.shutdownNow();
+    }
     if (server != null) {
       server.stop(0);
+    }
+    if (serverExecutor != null) {
+      serverExecutor.shutdownNow();
     }
   }
 
@@ -291,6 +304,98 @@ class BundleDownloaderSecurityTest {
 
     return bundlePlugin.getBundle("authz").getInitialActivation()
         .whenComplete((v, t) -> bundlePlugin.stop());
+  }
+
+  @Test
+  void polling_slowActivationExceedingInterval_neverRunsConcurrently() throws Exception {
+    // Regression test for issue #113: the async download refactor let overlapping polls run
+    // activateBundle() concurrently against a shared Store. Poll with a zero-second interval while
+    // activation is deliberately slow, so polls would pile up if they were not serialized. The fix
+    // chains each poll off the previous download's completion, so only one activation runs at a
+    // time. (With the old fixed-timer scheduling, maxInFlight would exceed 1.)
+    byte[] bundleData = createValidBundle();
+
+    // Multi-threaded server executor so several downloads can be in flight at once — this is what
+    // would let activations overlap if polling were not serialized.
+    serverExecutor = Executors.newFixedThreadPool(8);
+    server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+    server.setExecutor(serverExecutor);
+    server.createContext("/bundle.tar.gz", exchange -> {
+      exchange.getResponseHeaders().add("Content-Type", "application/vnd.openpolicyagent.bundles");
+      exchange.sendResponseHeaders(200, bundleData.length);
+      exchange.getResponseBody().write(bundleData);
+      exchange.close();
+    });
+    server.start();
+
+    Config config = new Config();
+    config.setServices(Collections.singletonMap("test-service",
+        new Config.ServiceConfig()
+            .setName("test-service")
+            .setUrl("http://localhost:" + server.getAddress().getPort())));
+
+    Logger logger = new Logger.StandardLogger();
+    PluginManager manager =
+        new PluginManager.Builder()
+            .withId("test")
+            .withStore(new InMem())
+            .withConfig(config)
+            .withLogger(logger)
+            .build();
+
+    ConcurrencyTrackingDownloader downloader =
+        new ConcurrencyTrackingDownloader("authz", manager);
+    downloader
+        .setService("test-service")
+        .setResource("/bundle.tar.gz")
+        .setPolling(new Config.PollingConfig().setMinDelaySeconds(0).setMaxDelaySeconds(0));
+
+    scheduler = BundleDownloader.newPollScheduler("concurrency-test");
+    downloader.startPolling(scheduler);
+
+    // Let many poll cycles run back-to-back.
+    Thread.sleep(800);
+    scheduler.shutdownNow();
+    scheduler.awaitTermination(2, TimeUnit.SECONDS);
+
+    assertTrue(
+        downloader.activations.get() > 1,
+        "expected multiple poll cycles to have run, but only " + downloader.activations.get()
+            + " did");
+    assertEquals(
+        1,
+        downloader.maxInFlight.get(),
+        "activateBundle ran concurrently — max simultaneous activations was "
+            + downloader.maxInFlight.get());
+  }
+
+  /**
+   * A BundleDownloader whose activation is deliberately slow and records whether any two
+   * activations ever overlap, so a test can assert that polling stays serialized.
+   */
+  private static final class ConcurrencyTrackingDownloader extends BundleDownloader {
+    final AtomicInteger inFlight = new AtomicInteger();
+    final AtomicInteger maxInFlight = new AtomicInteger();
+    final AtomicInteger activations = new AtomicInteger();
+
+    ConcurrencyTrackingDownloader(String name, PluginManager manager) {
+      super(name, manager, null);
+    }
+
+    @Override
+    protected void activateBundle(byte[] bundleData) {
+      int now = inFlight.incrementAndGet();
+      maxInFlight.accumulateAndGet(now, Math::max);
+      try {
+        // Slower than the (zero-second) poll interval, so unserialized polls would overlap here.
+        Thread.sleep(50);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } finally {
+        inFlight.decrementAndGet();
+        activations.incrementAndGet();
+      }
+    }
   }
 
   @Test

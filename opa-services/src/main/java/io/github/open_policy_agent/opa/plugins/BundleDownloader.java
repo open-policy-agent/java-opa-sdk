@@ -189,39 +189,45 @@ public abstract class BundleDownloader {
             ? polling.getMaxDelaySeconds()
             : 120;
 
-    scheduler.schedule(this::downloadBundle, 0, TimeUnit.SECONDS);
-    scheduleNextPoll(scheduler, minDelay, maxDelay);
+    // Run the first download immediately, then chain each subsequent poll only after the previous
+    // download AND its (possibly async) activation have fully completed. Chaining off completion
+    // instead of a fixed timer keeps polling strictly serial, so overlapping downloads can never
+    // run activateBundle() concurrently against a shared Store (issue #113).
+    scheduleDownload(scheduler, minDelay, maxDelay, 0);
 
     return initialActivation;
   }
 
-  // Re-schedules the next download with a uniformly random delay in [minDelay, maxDelay],
-  // matching Go-OPA's jittered polling. ScheduledExecutorService has no built-in jitter, so the
-  // task chains itself. RejectedExecutionException after a shutdown breaks the chain cleanly.
-  private void scheduleNextPoll(ScheduledExecutorService scheduler, int minDelay, int maxDelay) {
-    long delay =
-        minDelay >= maxDelay
-            ? minDelay
-            : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
+  // Schedules one download after delaySeconds; once that download (including any async activation)
+  // completes, schedules the next poll with a fresh jittered delay in [minDelay, maxDelay]. Because
+  // the next poll is chained off the download's completion — not fired on an independent timer —
+  // at most one download is ever in flight, mirroring Go-OPA's strictly serial poll loop.
+  // ScheduledExecutorService has no built-in jitter, so the task chains itself; a
+  // RejectedExecutionException after shutdown ends the chain cleanly.
+  private void scheduleDownload(
+      ScheduledExecutorService scheduler, int minDelay, int maxDelay, long delaySeconds) {
     try {
       scheduler.schedule(
-          () -> {
-            try {
-              downloadBundle();
-            } catch (Exception e) {
-              // downloadBundle() handles its own logging; swallow so the chain keeps polling.
-              // Only Exception is caught here — Errors (OOM, etc.) propagate and let the
-              // executor's uncaught-exception handler tear down the pool, which is the right
-              // outcome for unrecoverable conditions.
-            } finally {
-              scheduleNextPoll(scheduler, minDelay, maxDelay);
-            }
-          },
-          delay,
+          () ->
+              downloadBundle()
+                  .whenComplete(
+                      (result, throwable) ->
+                          scheduleDownload(
+                              scheduler,
+                              minDelay,
+                              maxDelay,
+                              nextDelaySeconds(minDelay, maxDelay))),
+          delaySeconds,
           TimeUnit.SECONDS);
     } catch (RejectedExecutionException stopped) {
       // Scheduler was shut down; let the chain end.
     }
+  }
+
+  private static long nextDelaySeconds(int minDelay, int maxDelay) {
+    return minDelay >= maxDelay
+        ? minDelay
+        : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
   }
 
   /**
@@ -229,8 +235,14 @@ public abstract class BundleDownloader {
    *
    * <p>Handles HTTP/HTTPS downloads with ETag caching, file:// URIs, and filesystem paths. Calls
    * {@link #activateBundle(byte[])} when new bundle data is available.
+   *
+   * @return a future that completes when this download attempt — including any asynchronous
+   *     activation — has finished. The poll scheduler awaits it before scheduling the next poll, so
+   *     downloads (and therefore {@code activateBundle} calls) never overlap. The future completes
+   *     normally on both success and handled failure so that polling continues; the actual outcome
+   *     is recorded on {@code initialActivation}.
    */
-  protected void downloadBundle() {
+  protected CompletableFuture<Void> downloadBundle() {
     try {
       Config.ServiceConfig serviceConfig = manager.getConfig().getService(service);
       if (serviceConfig == null) {
@@ -239,7 +251,7 @@ public abstract class BundleDownloader {
           initialActivation.completeExceptionally(
               new RuntimeException("Service '" + service + "' not found"));
         }
-        return;
+        return CompletableFuture.completedFuture(null);
       }
 
       String baseUrl = serviceConfig.getUrl();
@@ -257,16 +269,17 @@ public abstract class BundleDownloader {
         // Handle file:// URIs
         if ("file".equalsIgnoreCase(uri.getScheme())) {
           handleFileDownload(Paths.get(uri));
-          return;
+          return CompletableFuture.completedFuture(null);
         }
 
         // Handle HTTP/HTTPS URIs
-        handleHttpDownload(uri);
+        return handleHttpDownload(uri);
       } else {
         // It's a file path (relative or absolute)
         Path basePath = Paths.get(baseUrl);
         Path filePath = basePath.resolve(resource);
         handleFileDownload(filePath);
+        return CompletableFuture.completedFuture(null);
       }
 
     } catch (Exception e) {
@@ -274,6 +287,7 @@ public abstract class BundleDownloader {
       if (!initialActivation.isDone()) {
         initialActivation.completeExceptionally(e);
       }
+      return CompletableFuture.completedFuture(null);
     }
   }
 
@@ -307,8 +321,12 @@ public abstract class BundleDownloader {
    * Handle downloading from an HTTP/HTTPS URI.
    *
    * @param uri the URI to download from
+   * @return a future that completes when the response has been handled (including activation). It
+   *     completes normally regardless of the outcome — {@code handle} turns both success and
+   *     failure into a completed stage — so the poll chain always resumes; the actual outcome is
+   *     recorded on {@code initialActivation}.
    */
-  private void handleHttpDownload(URI uri) {
+  private CompletableFuture<Void> handleHttpDownload(URI uri) {
     HttpRequest.Builder requestBuilder =
         HttpRequest.newBuilder()
             .uri(uri)
@@ -325,61 +343,69 @@ public abstract class BundleDownloader {
     }
 
     HttpRequest request = requestBuilder.build();
-    httpClient
+    return httpClient
         .sendAsync(request, sizeLimitedBodyHandler(maxSizeBytes))
-        .whenComplete(
+        .handle(
             (response, throwable) -> {
-              if (throwable != null) {
-                Throwable cause =
-                    throwable instanceof java.util.concurrent.CompletionException
-                        ? throwable.getCause()
-                        : throwable;
-                manager.getLogger().error("Bundle '%s': Download error: %s", name, cause.getMessage());
-                if (!initialActivation.isDone()) {
-                  initialActivation.completeExceptionally(cause);
-                }
-                return;
-              }
-
-              if (response.statusCode() == 304) {
-                manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
-                if (!initialActivation.isDone()) {
-                  initialActivation.complete(null);
-                }
-                return;
-              }
-
-              if (response.statusCode() == 200) {
-                String contentType = response.headers().firstValue("Content-Type").orElse("");
-                if (!isAcceptableContentType(contentType)) {
-                  String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
-                  manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
-                  if (!initialActivation.isDone()) {
-                    initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-                  }
-                  return;
-                }
-                response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
-                try {
-                  activateBundle(response.body());
-                } catch (Exception e) {
-                  manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
-                  if (!initialActivation.isDone()) {
-                    initialActivation.completeExceptionally(e);
-                  }
-                  return;
-                }
-                if (!initialActivation.isDone()) {
-                  initialActivation.complete(null);
-                }
-              } else {
-                String errorMsg = "Download failed with status " + response.statusCode();
-                manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
-                if (!initialActivation.isDone()) {
-                  initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-                }
-              }
+              handleHttpResponse(response, throwable);
+              return null;
             });
+  }
+
+  // Handles a completed HTTP exchange: records success or failure on initialActivation. Runs on the
+  // HTTP client's executor thread, but the poll chain never starts the next download until the
+  // future returned by handleHttpDownload completes, so activateBundle is never called concurrently.
+  private void handleHttpResponse(HttpResponse<byte[]> response, Throwable throwable) {
+    if (throwable != null) {
+      Throwable cause =
+          throwable instanceof java.util.concurrent.CompletionException
+              ? throwable.getCause()
+              : throwable;
+      manager.getLogger().error("Bundle '%s': Download error: %s", name, cause.getMessage());
+      if (!initialActivation.isDone()) {
+        initialActivation.completeExceptionally(cause);
+      }
+      return;
+    }
+
+    if (response.statusCode() == 304) {
+      manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
+      if (!initialActivation.isDone()) {
+        initialActivation.complete(null);
+      }
+      return;
+    }
+
+    if (response.statusCode() == 200) {
+      String contentType = response.headers().firstValue("Content-Type").orElse("");
+      if (!isAcceptableContentType(contentType)) {
+        String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
+        manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+        }
+        return;
+      }
+      response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
+      try {
+        activateBundle(response.body());
+      } catch (Exception e) {
+        manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(e);
+        }
+        return;
+      }
+      if (!initialActivation.isDone()) {
+        initialActivation.complete(null);
+      }
+    } else {
+      String errorMsg = "Download failed with status " + response.statusCode();
+      manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+      if (!initialActivation.isDone()) {
+        initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+      }
+    }
   }
 
   /**
