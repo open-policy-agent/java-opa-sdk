@@ -10,7 +10,7 @@ dependencies {
     api(project(":opa-evaluator"))
     implementation("org.slf4j:slf4j-api:2.0.18")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.1")
     testImplementation("org.assertj:assertj-core:3.27.7")
     // Log4j 2 as the SLF4J backend for tests
