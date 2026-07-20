@@ -11,8 +11,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.config.Config;
@@ -90,7 +91,7 @@ public final class DecisionLogPlugin implements Plugin {
   public Plugin initialize(PluginManager manager) {
     DecisionLogPlugin plugin = new DecisionLogPlugin();
     plugin.manager = manager;
-    plugin.scheduler = Executors.newScheduledThreadPool(1);
+    plugin.scheduler = BundleDownloader.newPollScheduler("opa-decision-log-scheduler");
 
     Config.DecisionLogsConfig logsConfig = manager.getConfig().getDecisionLogs();
     if (logsConfig != null) {
@@ -101,6 +102,7 @@ public final class DecisionLogPlugin implements Plugin {
               .setMaskDecision(logsConfig.getMaskDecision())
               .setDropDecision(logsConfig.getDropDecision())
               .setMinDelaySeconds(logsConfig.getMinDelaySeconds())
+              .setMaxDelaySeconds(logsConfig.getMaxDelaySeconds())
               .setResource(logsConfig.getResource())
               .setReporting(logsConfig.getReporting());
     }
@@ -115,15 +117,49 @@ public final class DecisionLogPlugin implements Plugin {
       return;
     }
 
-    // Get upload interval (default: 300 seconds)
-    int uploadIntervalSeconds =
+    // Get upload interval bounds (default: 300-600 seconds, matching OPA Go's decision log
+    // defaults). If only a min is configured, default the max to twice the min so the jitter
+    // window stays sensible.
+    int minDelaySeconds =
         (decisionLogs.getMinDelaySeconds() != null) ? decisionLogs.getMinDelaySeconds() : 300;
+    int maxDelaySeconds =
+        (decisionLogs.getMaxDelaySeconds() != null)
+            ? decisionLogs.getMaxDelaySeconds()
+            : minDelaySeconds * 2;
 
-    // Schedule periodic uploads
-    scheduler.scheduleAtFixedRate(
-        () -> decisionLogs.flush(), uploadIntervalSeconds, uploadIntervalSeconds, TimeUnit.SECONDS);
+    scheduleNextFlush(minDelaySeconds, maxDelaySeconds);
 
     manager.updatePluginStatus("decision_logs", PluginManager.Status.OK);
+  }
+
+  // Re-schedules the next flush with a uniformly random delay in [minDelay, maxDelay], matching
+  // Go-OPA's jittered reporting interval (mirrors BundleDownloader.scheduleNextPoll).
+  // ScheduledExecutorService has no built-in jitter, so the task chains itself.
+  // RejectedExecutionException after a shutdown breaks the chain cleanly.
+  private void scheduleNextFlush(int minDelay, int maxDelay) {
+    long delay =
+        minDelay >= maxDelay
+            ? minDelay
+            : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
+    try {
+      scheduler.schedule(
+          () -> {
+            try {
+              decisionLogs.flush();
+            } catch (Exception e) {
+              // flush() handles its own logging; swallow so the chain keeps flushing. Only
+              // Exception is caught here — Errors (OOM, etc.) propagate and let the executor's
+              // uncaught-exception handler tear down the pool, which is the right outcome for
+              // unrecoverable conditions.
+            } finally {
+              scheduleNextFlush(minDelay, maxDelay);
+            }
+          },
+          delay,
+          TimeUnit.SECONDS);
+    } catch (RejectedExecutionException stopped) {
+      // Scheduler was shut down; let the chain end.
+    }
   }
 
   @Override
@@ -207,6 +243,7 @@ public final class DecisionLogPlugin implements Plugin {
     private String maskDecision;
     private String dropDecision;
     private Integer minDelaySeconds;
+    private Integer maxDelaySeconds;
     private String resource;
     private Config.ReportingConfig reporting;
 
@@ -245,6 +282,15 @@ public final class DecisionLogPlugin implements Plugin {
 
     public DecisionLogs setMinDelaySeconds(Integer minDelaySeconds) {
       this.minDelaySeconds = minDelaySeconds;
+      return this;
+    }
+
+    public Integer getMaxDelaySeconds() {
+      return maxDelaySeconds;
+    }
+
+    public DecisionLogs setMaxDelaySeconds(Integer maxDelaySeconds) {
+      this.maxDelaySeconds = maxDelaySeconds;
       return this;
     }
 
