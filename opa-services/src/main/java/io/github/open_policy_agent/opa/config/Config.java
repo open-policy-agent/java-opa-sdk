@@ -456,10 +456,10 @@ public class Config {
     private String resource = "/status";
 
     @JsonProperty("min_delay_seconds")
-    private Integer minDelaySeconds = 30;
+    private Integer minDelaySeconds;
 
     @JsonProperty("max_delay_seconds")
-    private Integer maxDelaySeconds = 30;
+    private Integer maxDelaySeconds;
 
     public Boolean getConsole() {
       return console;

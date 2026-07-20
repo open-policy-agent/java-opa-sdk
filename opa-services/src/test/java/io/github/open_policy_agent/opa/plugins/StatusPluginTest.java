@@ -255,8 +255,7 @@ class StatusPluginTest {
     Config.StatusConfig status =
         new Config.StatusConfig()
             .setConsole(true)
-            .setMinDelaySeconds(1)
-            .setMaxDelaySeconds(null); // only min provided
+            .setMinDelaySeconds(1); // max omitted → start() uses 2 * min
     config.setStatus(status);
 
     manager =
@@ -291,8 +290,10 @@ class StatusPluginTest {
   void configDefaults_delaySecondsAreCorrect() {
     Config.StatusConfig status = new Config.StatusConfig();
 
-    assertEquals(30, status.getMinDelaySeconds());
-    assertEquals(30, status.getMaxDelaySeconds());
+    // Unset in config (null) so Jackson-omitted keys keep the start()-time defaults
+    // (min=30, max=2*min) reachable — same pattern as ReportingConfig.
+    assertNull(status.getMinDelaySeconds());
+    assertNull(status.getMaxDelaySeconds());
   }
 
   @Test
