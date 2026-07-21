@@ -17,7 +17,6 @@ import java.util.Set;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.floor;
-import static java.lang.Math.random;
 import static java.lang.Math.round;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
 
