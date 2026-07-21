@@ -189,6 +189,7 @@ class OpaTest {
   @Test
   void decisionOptions_builder_setsAllFields() {
     JsonNode input = objectMapper.createObjectNode().put("user", "bob");
+    String entrypoint = "test/allow";
 
     Opa.DecisionOptions options =
         new Opa.DecisionOptions()
@@ -199,7 +200,8 @@ class OpaTest {
             .showMetrics()
             .setProfiler(new DurationProfiler())
             .setInstrument(true)
-            .setDecisionID("test-decision-id");
+            .setDecisionID("test-decision-id")
+            .setEntrypoint(entrypoint);
 
     assertNotNull(options.getInput());
     assertNotNull(options.getPath());
@@ -208,6 +210,7 @@ class OpaTest {
     assertNotNull(options.getDecisionID());
     assertTrue(options.isStrictBuiltinErrors());
     assertTrue(options.isInstrument());
+    assertEquals(entrypoint, options.getEntrypoint());
   }
 
   @Test
@@ -217,6 +220,7 @@ class OpaTest {
     assertEquals(0, options.getNowNs());
     assertFalse(options.isStrictBuiltinErrors());
     assertFalse(options.isInstrument());
+    assertNull(options.getEntrypoint());
   }
 
   @Test
