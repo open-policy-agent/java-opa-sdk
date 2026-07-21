@@ -18,7 +18,10 @@
 
     <module name="TreeWalker">
         <!-- Imports -->
-        <module name="AvoidStarImport"/>
+        <module name="AvoidStarImport">
+            <!-- Idiomatic JUnit/Mockito style: allow these two static wildcard imports. -->
+            <property name="excludes" value="org.junit.jupiter.api.Assertions,org.mockito.Mockito"/>
+        </module>
         <module name="RedundantImport"/>
         <module name="UnusedImports"/>
 

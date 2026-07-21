@@ -1,7 +1,9 @@
 package io.github.open_policy_agent.opa.metrics;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TreeMap;
 
 public class SimpleMetrics implements Metrics {
 

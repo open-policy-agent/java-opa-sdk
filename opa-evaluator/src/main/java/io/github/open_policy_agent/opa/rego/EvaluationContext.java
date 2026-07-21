@@ -1,6 +1,10 @@
 package io.github.open_policy_agent.opa.rego;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinRegistry;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;

@@ -5,7 +5,22 @@ import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
+import io.github.open_policy_agent.opa.ast.types.RegoNumber;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Period;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.TextStyle;
@@ -21,7 +36,6 @@ import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
 import io.github.open_policy_agent.opa.ast.builtin.impls.utils.GoTimeLayoutConverter;
-import io.github.open_policy_agent.opa.ast.types.*;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 
 public class TimeBuiltins implements BuiltinProvider {

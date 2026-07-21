@@ -1,6 +1,8 @@
 package io.github.open_policy_agent.opa.ast.types;
 
-import java.util.*;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class RegoObject implements RegoValue {
