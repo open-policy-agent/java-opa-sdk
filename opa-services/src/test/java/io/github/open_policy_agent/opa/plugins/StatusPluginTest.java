@@ -178,15 +178,63 @@ class StatusPluginTest {
     Config.StatusConfig status = new Config.StatusConfig();
 
     assertFalse(status.getConsole());
+    assertEquals("/status", status.getResource());
   }
 
   @Test
   void configBuilder_setsAllFields() {
     Config.StatusConfig status =
-        new Config.StatusConfig().setService("test-service").setConsole(true);
+        new Config.StatusConfig()
+            .setService("test-service")
+            .setConsole(true)
+            .setResource("/custom/status");
 
     assertEquals("test-service", status.getService());
     assertTrue(status.getConsole());
+    assertEquals("/custom/status", status.getResource());
+  }
+
+  @Test
+  void initialize_wiresDefaultResourcePath() throws Exception {
+    Config.StatusConfig status =
+        new Config.StatusConfig().setService("test-service").setConsole(false);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    StatusPlugin plugin = (StatusPlugin) new StatusPlugin().initialize(manager);
+    StatusPlugin.Status statusReporter = getStatusReporter(plugin);
+
+    assertEquals("/status", statusReporter.getResource());
+  }
+
+  @Test
+  void initialize_wiresCustomResourcePath() throws Exception {
+    Config.StatusConfig status =
+        new Config.StatusConfig()
+            .setService("test-service")
+            .setConsole(false)
+            .setResource("/custom/status");
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    StatusPlugin plugin = (StatusPlugin) new StatusPlugin().initialize(manager);
+    StatusPlugin.Status statusReporter = getStatusReporter(plugin);
+
+    assertEquals("/custom/status", statusReporter.getResource());
   }
 
   @Test
@@ -382,10 +430,16 @@ class StatusPluginTest {
   }
 
   private ObjectNode buildStatusReport(StatusPlugin plugin) throws Exception {
+    return buildStatusReport(getStatusReporter(plugin));
+  }
+
+  private static StatusPlugin.Status getStatusReporter(StatusPlugin plugin) throws Exception {
     java.lang.reflect.Field statusField = StatusPlugin.class.getDeclaredField("status");
     statusField.setAccessible(true);
-    StatusPlugin.Status statusReporter = (StatusPlugin.Status) statusField.get(plugin);
+    return (StatusPlugin.Status) statusField.get(plugin);
+  }
 
+  private ObjectNode buildStatusReport(StatusPlugin.Status statusReporter) throws Exception {
     java.lang.reflect.Method buildStatusMethod =
         StatusPlugin.Status.class.getDeclaredMethod("buildStatusReport");
     buildStatusMethod.setAccessible(true);

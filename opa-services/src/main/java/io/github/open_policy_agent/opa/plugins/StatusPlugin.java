@@ -62,7 +62,8 @@ public final class StatusPlugin implements Plugin {
       plugin.status =
           new Status(manager, manager.getLogger())
               .setConsole(statusConfig.getConsole())
-              .setService(statusConfig.getService());
+              .setService(statusConfig.getService())
+              .setResource(statusConfig.getResource());
     }
 
     return plugin;
@@ -107,6 +108,7 @@ public final class StatusPlugin implements Plugin {
     private final Logger logger;
     private Boolean console;
     private String service;
+    private String resource;
 
     private Status(PluginManager manager, Logger logger) {
       this.manager = manager;
@@ -128,6 +130,15 @@ public final class StatusPlugin implements Plugin {
 
     public Status setService(String service) {
       this.service = service;
+      return this;
+    }
+
+    public String getResource() {
+      return resource;
+    }
+
+    public Status setResource(String resource) {
+      this.resource = resource;
       return this;
     }
 
@@ -225,9 +236,10 @@ public final class StatusPlugin implements Plugin {
       }
 
       try {
-        // Send status report to service
-        // Default resource path is /status (same as OPA)
-        svc.post("/status", statusReport.toString());
+        // Determine resource path (default: /status)
+        String path = (resource != null && !resource.isEmpty()) ? resource : "/status";
+
+        svc.post(path, statusReport.toString());
         logger.debug("Status report sent to service '%s'", service);
       } catch (Exception e) {
         logger.error("Failed to send status to service '%s': %s", service, e.getMessage());

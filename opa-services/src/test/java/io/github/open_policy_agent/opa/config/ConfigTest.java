@@ -292,6 +292,7 @@ class ConfigTest {
     Config.StatusConfig status = new Config.StatusConfig();
 
     assertFalse(status.getConsole());
+    assertEquals("/status", status.getResource());
   }
 
   @Test

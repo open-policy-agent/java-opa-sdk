@@ -452,6 +452,9 @@ public class Config {
     private Boolean console = false;
     private String service;
 
+    @JsonProperty("resource")
+    private String resource = "/status";
+
     public Boolean getConsole() {
       return console;
     }
@@ -470,9 +473,27 @@ public class Config {
       return this;
     }
 
+    public String getResource() {
+      return resource;
+    }
+
+    public StatusConfig setResource(String resource) {
+      this.resource = resource;
+      return this;
+    }
+
     @Override
     public String toString() {
-      return "StatusConfig{" + "console=" + console + ", service='" + service + '\'' + '}';
+      return "StatusConfig{"
+          + "console="
+          + console
+          + ", service='"
+          + service
+          + '\''
+          + ", resource='"
+          + resource
+          + '\''
+          + '}';
     }
   }
 
