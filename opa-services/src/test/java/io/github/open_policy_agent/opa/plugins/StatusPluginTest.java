@@ -164,6 +164,50 @@ class StatusPluginTest {
   }
 
   @Test
+  void validate_negativeDelaySeconds_returnsError() {
+    Config.StatusConfig status =
+        new Config.StatusConfig()
+            .setService("test-service")
+            .setMinDelaySeconds(-1)
+            .setMaxDelaySeconds(-5);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    StatusPlugin plugin = new StatusPlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertTrue(errors.stream().anyMatch(e -> e.contains("min_delay_seconds must be >= 0")));
+    assertTrue(errors.stream().anyMatch(e -> e.contains("max_delay_seconds must be >= 0")));
+  }
+
+  @Test
+  void validate_onlyMaxDelayNegative_returnsError() {
+    Config.StatusConfig status =
+        new Config.StatusConfig().setService("test-service").setMaxDelaySeconds(-1);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    StatusPlugin plugin = new StatusPlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertTrue(errors.stream().anyMatch(e -> e.contains("max_delay_seconds must be >= 0")));
+  }
+
+  @Test
   void initialize_noStatusConfigured_returnsPlugin() {
     manager =
         new PluginManager.Builder()
@@ -276,6 +320,32 @@ class StatusPluginTest {
     Thread.sleep(2500);
 
     verify(mockLogger, atLeast(2)).info(eq("Status: %s"), anyString());
+  }
+
+  @Test
+  void start_onlyMaxDelayBelowDefaultMin_defaultsMinToMax() throws Exception {
+    // max-only with max < 30: previously min defaulted to 30, so scheduleNextReport used
+    // min>=max → always 30s and silently ignored the configured max. Now min = min(30, max).
+    Config.StatusConfig status =
+        new Config.StatusConfig().setConsole(true).setMaxDelaySeconds(1);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    StatusPlugin plugin = new StatusPlugin();
+    plugin = (StatusPlugin) plugin.initialize(manager);
+    plugin.start();
+
+    Thread.sleep(2500);
+
+    // Immediate + chained at ~1s and ~2s proves the max was honored (not replaced by 30s).
+    verify(mockLogger, atLeast(3)).info(eq("Status: %s"), anyString());
   }
 
   @Test

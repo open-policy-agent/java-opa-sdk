@@ -49,16 +49,22 @@ public final class StatusPlugin implements Plugin {
       }
     }
 
-    // Validate delay settings
-    if (statusConfig.getMinDelaySeconds() != null && statusConfig.getMaxDelaySeconds() != null) {
-      if (statusConfig.getMinDelaySeconds() > statusConfig.getMaxDelaySeconds()) {
-        errors.add(
-            "Status min_delay_seconds ("
-                + statusConfig.getMinDelaySeconds()
-                + ") cannot be greater than max_delay_seconds ("
-                + statusConfig.getMaxDelaySeconds()
-                + ")");
-      }
+    // Validate delay settings (mirrors BundleDownloader.validatePolling)
+    Integer min = statusConfig.getMinDelaySeconds();
+    Integer max = statusConfig.getMaxDelaySeconds();
+    if (min != null && min < 0) {
+      errors.add("Status min_delay_seconds must be >= 0");
+    }
+    if (max != null && max < 0) {
+      errors.add("Status max_delay_seconds must be >= 0");
+    }
+    if (min != null && max != null && min >= 0 && max >= 0 && min > max) {
+      errors.add(
+          "Status min_delay_seconds ("
+              + min
+              + ") cannot be greater than max_delay_seconds ("
+              + max
+              + ")");
     }
 
     return errors;
@@ -94,12 +100,27 @@ public final class StatusPlugin implements Plugin {
     // Get report interval bounds (default: 30 seconds, matching OPA's previous fixed interval;
     // OPA Go's status plugin has no standalone min/max delay of its own today - reports are
     // triggered by the bundle/discovery plugin's polling - so there's no upstream number to
-    // mirror here beyond the interval this SDK already used). If only a min is configured,
-    // default the max to twice the min so the jitter window stays sensible.
-    int minDelaySeconds =
-        (status.getMinDelaySeconds() != null) ? status.getMinDelaySeconds() : 30;
-    int maxDelaySeconds =
-        (status.getMaxDelaySeconds() != null) ? status.getMaxDelaySeconds() : minDelaySeconds * 2;
+    // mirror here beyond the interval this SDK already used).
+    // - only min set → max defaults to 2 * min
+    // - only max set → min defaults to min(30, max) so a max below 30 is not silently ignored
+    // - neither set → min=30, max=60
+    Integer configuredMin = status.getMinDelaySeconds();
+    Integer configuredMax = status.getMaxDelaySeconds();
+    int minDelaySeconds;
+    int maxDelaySeconds;
+    if (configuredMin != null && configuredMax != null) {
+      minDelaySeconds = configuredMin;
+      maxDelaySeconds = configuredMax;
+    } else if (configuredMin != null) {
+      minDelaySeconds = configuredMin;
+      maxDelaySeconds = configuredMin * 2;
+    } else if (configuredMax != null) {
+      maxDelaySeconds = configuredMax;
+      minDelaySeconds = Math.min(30, configuredMax);
+    } else {
+      minDelaySeconds = 30;
+      maxDelaySeconds = 60;
+    }
 
     // Report immediately on startup (matches previous behavior), then continue with a jittered
     // chained schedule for subsequent reports - mirrors BundleDownloader.startPolling(), which
