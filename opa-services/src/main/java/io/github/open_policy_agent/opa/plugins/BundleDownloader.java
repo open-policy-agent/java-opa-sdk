@@ -189,19 +189,15 @@ public abstract class BundleDownloader {
             ? polling.getMaxDelaySeconds()
             : 120;
 
-    // Run the first download immediately, then chain each subsequent poll only after the previous
-    // download AND its (possibly async) activation have fully completed. Chaining off completion
-    // instead of a fixed timer keeps polling strictly serial, so overlapping downloads can never
-    // run activateBundle() concurrently against a shared Store (issue #113).
     scheduleDownload(scheduler, minDelay, maxDelay, 0);
 
     return initialActivation;
   }
 
-  // Schedules one download after delaySeconds; once that download (including any async activation)
-  // completes, schedules the next poll with a fresh jittered delay in [minDelay, maxDelay]. Because
-  // the next poll is chained off the download's completion — not fired on an independent timer —
-  // at most one download is ever in flight, mirroring Go-OPA's strictly serial poll loop.
+  // Schedules one download after delaySeconds;
+  // once that download completes, schedules the next poll with a fresh jittered delay in [minDelay, maxDelay].
+  // Because the next poll is chained off the download's completion — not fired on an independent timer —
+  // at most one download is ever in flight, matching Go-OPA's jittered polling.
   // ScheduledExecutorService has no built-in jitter, so the task chains itself; a
   // RejectedExecutionException after shutdown ends the chain cleanly.
   private void scheduleDownload(
@@ -238,9 +234,7 @@ public abstract class BundleDownloader {
    *
    * @return a future that completes when this download attempt — including any asynchronous
    *     activation — has finished. The poll scheduler awaits it before scheduling the next poll, so
-   *     downloads (and therefore {@code activateBundle} calls) never overlap. The future completes
-   *     normally on both success and handled failure so that polling continues; the actual outcome
-   *     is recorded on {@code initialActivation}.
+   *     downloads never overlap.
    */
   protected CompletableFuture<Void> downloadBundle() {
     try {
@@ -321,9 +315,7 @@ public abstract class BundleDownloader {
    * Handle downloading from an HTTP/HTTPS URI.
    *
    * @param uri the URI to download from
-   * @return a future that completes when the response has been handled (including activation). It
-   *     completes normally regardless of the outcome — {@code handle} turns both success and
-   *     failure into a completed stage — so the poll chain always resumes; the actual outcome is
+   * @return a future that completes when the response has been handled. The actual outcome is
    *     recorded on {@code initialActivation}.
    */
   private CompletableFuture<Void> handleHttpDownload(URI uri) {

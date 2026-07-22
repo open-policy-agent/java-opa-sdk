@@ -308,15 +308,9 @@ class BundleDownloaderSecurityTest {
 
   @Test
   void polling_slowActivationExceedingInterval_neverRunsConcurrently() throws Exception {
-    // Regression test for issue #113: the async download refactor let overlapping polls run
-    // activateBundle() concurrently against a shared Store. Poll with a zero-second interval while
-    // activation is deliberately slow, so polls would pile up if they were not serialized. The fix
-    // chains each poll off the previous download's completion, so only one activation runs at a
-    // time. (With the old fixed-timer scheduling, maxInFlight would exceed 1.)
+
     byte[] bundleData = createValidBundle();
 
-    // Multi-threaded server executor so several downloads can be in flight at once — this is what
-    // would let activations overlap if polling were not serialized.
     serverExecutor = Executors.newFixedThreadPool(8);
     server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     server.setExecutor(serverExecutor);
@@ -387,7 +381,6 @@ class BundleDownloaderSecurityTest {
       int now = inFlight.incrementAndGet();
       maxInFlight.accumulateAndGet(now, Math::max);
       try {
-        // Slower than the (zero-second) poll interval, so unserialized polls would overlap here.
         Thread.sleep(50);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
