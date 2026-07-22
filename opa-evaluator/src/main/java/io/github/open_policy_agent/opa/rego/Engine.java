@@ -527,6 +527,8 @@ public class Engine {
       private PreparedPlan preparedPlan;
       private PrintHook printHook;
       private boolean printHookSet;
+      private RegoValue runtime;
+      private boolean runtimeSet;
 
       private Builder withEngine(Engine engine) {
         this.engine = engine;
@@ -615,6 +617,18 @@ public class Engine {
       }
 
       /**
+       * Set the runtime object returned by OPA's {@code opa.runtime} builtin.
+       *
+       * @param runtime runtime metadata (env/version/commit/config), or null for empty
+       * @return this builder
+       */
+      public Builder withRuntime(RegoValue runtime) {
+        this.runtime = runtime;
+        this.runtimeSet = true;
+        return this;
+      }
+
+      /**
        * Build the PreparedQuery ready for evaluation. Captures the engine's current policy into a
        * pre-computed plan. Subsequent policy refreshes do not affect this PreparedQuery.
        *
@@ -638,6 +652,9 @@ public class Engine {
         }
         if (printHookSet) {
           contextBuilder.withPrintHook(printHook);
+        }
+        if (runtimeSet) {
+          contextBuilder.withRuntime(runtime);
         }
 
         // Warm up the plan by pre-computing expensive values

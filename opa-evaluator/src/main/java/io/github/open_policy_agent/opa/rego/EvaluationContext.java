@@ -36,6 +36,7 @@ public class EvaluationContext {
   public final boolean sortSets;
   private final NdBuiltinCache ndBuiltinCache;
   private final PrintHook printHook;
+  private final RegoValue runtime;
 
   /**
    * Tracks non-deterministic builtin cache values used during this evaluation. Format:
@@ -59,6 +60,7 @@ public class EvaluationContext {
     this.sortSets = other.sortSets;
     this.ndBuiltinCache = other.ndBuiltinCache;
     this.printHook = other.printHook;
+    this.runtime = other.runtime;
   }
 
   private EvaluationContext(Builder builder) {
@@ -76,6 +78,7 @@ public class EvaluationContext {
     this.sortSets = builder.sortSets;
     this.ndBuiltinCache = builder.ndBuiltinCache;
     this.printHook = builder.printHook;
+    this.runtime = builder.runtime;
   }
 
   public boolean isStrictBuiltinErrors() {
@@ -97,6 +100,15 @@ public class EvaluationContext {
 
   public PrintHook getPrintHook() {
     return printHook;
+  }
+
+  /**
+   * Runtime metadata returned by the {@code opa.runtime} builtin, if configured.
+   *
+   * @return the runtime value, or null when unset (builtin returns an empty object)
+   */
+  public RegoValue getRuntime() {
+    return runtime;
   }
 
   public void traceEnterEvent(Stmt stmt, int blockIndex, int stmtIndex) {
@@ -195,6 +207,7 @@ public class EvaluationContext {
     private boolean sortSets = false;
     private NdBuiltinCache ndBuiltinCache;
     private PrintHook printHook = PrintHook.logger(new Logger.StandardLogger());
+    private RegoValue runtime;
 
     public Builder withStrictBuiltinErrors() {
       this.strictBuiltinErrors = true;
@@ -258,6 +271,18 @@ public class EvaluationContext {
 
     public Builder withPrintHook(PrintHook printHook) {
       this.printHook = printHook;
+      return this;
+    }
+
+    /**
+     * Set the runtime object returned by {@code opa.runtime}. Typically includes {@code env},
+     * {@code version}, {@code commit}, and optionally {@code config}.
+     *
+     * @param runtime runtime metadata, or null for an empty object
+     * @return this builder
+     */
+    public Builder withRuntime(RegoValue runtime) {
+      this.runtime = runtime;
       return this;
     }
 
