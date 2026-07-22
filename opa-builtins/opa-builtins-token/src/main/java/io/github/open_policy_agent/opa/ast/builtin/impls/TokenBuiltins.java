@@ -8,11 +8,13 @@ import com.nimbusds.jose.jwk.*;
 import com.nimbusds.jwt.*;
 import java.io.IOException;
 import java.io.StringReader;
+import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -276,6 +278,28 @@ public class TokenBuiltins implements BuiltinProvider {
       return ((RSAKey) jwk).toPublicKey();
     } else if (jwk instanceof ECKey) {
       return ((ECKey) jwk).toPublicKey();
+    } else if (jwk instanceof OctetKeyPair) {
+      // Nimbus OctetKeyPair.toPublicKey() is unsupported in this library version;
+      // build a JCA Ed25519 PublicKey from the raw OKP "x" coordinate via SPKI DER.
+      OctetKeyPair okp = (OctetKeyPair) jwk;
+      if (!Curve.Ed25519.equals(okp.getCurve())) {
+        throw new BuiltinError("Unsupported JWK key type: " + jwk.getKeyType());
+      }
+      byte[] raw = okp.getDecodedX();
+      // Ed25519 SubjectPublicKeyInfo prefix (12 bytes) + 32-byte public key = 44 bytes total
+      byte[] spkiPrefix =
+          new byte[] {
+            0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00
+          };
+      byte[] encoded = new byte[spkiPrefix.length + raw.length];
+      System.arraycopy(spkiPrefix, 0, encoded, 0, spkiPrefix.length);
+      System.arraycopy(raw, 0, encoded, spkiPrefix.length, raw.length);
+      try {
+        return KeyFactory.getInstance("Ed25519", "BC")
+            .generatePublic(new X509EncodedKeySpec(encoded));
+      } catch (java.security.GeneralSecurityException e) {
+        throw new BuiltinError("failed to convert Ed25519 JWK to PublicKey: " + e.getMessage());
+      }
     } else {
       throw new BuiltinError("Unsupported JWK key type: " + jwk.getKeyType());
     }
