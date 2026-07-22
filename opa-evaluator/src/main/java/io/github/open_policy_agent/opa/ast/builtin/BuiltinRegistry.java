@@ -16,6 +16,7 @@ import io.github.open_policy_agent.opa.ast.builtin.impls.ComparisonBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.EncodingBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.HexBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.ObjectBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.OpaBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.PrintBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.SetBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.StringBuiltins;
@@ -40,6 +41,7 @@ public class BuiltinRegistry {
     HexBuiltins.class,
     StringBuiltins.class,
     PrintBuiltins.class,
+    OpaBuiltins.class,
   };
 
   public static final Map<String, BiFunction<EvaluationContext, RegoValue[], RegoValue>>
