@@ -5,7 +5,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 
 /** Unit tests for NdBuiltinCache. */
 public class NdBuiltinCacheTest {

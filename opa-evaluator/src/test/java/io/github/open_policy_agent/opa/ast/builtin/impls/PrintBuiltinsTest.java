@@ -3,7 +3,15 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
-import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
+import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
+import io.github.open_policy_agent.opa.ast.types.RegoNull;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.ast.types.RegoSet;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.PrintHook;

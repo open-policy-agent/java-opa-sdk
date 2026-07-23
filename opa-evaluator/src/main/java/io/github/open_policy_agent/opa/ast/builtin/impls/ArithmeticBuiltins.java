@@ -1,17 +1,32 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
-import static java.lang.Math.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
+import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
+import io.github.open_policy_agent.opa.ast.types.RegoNumber;
+import io.github.open_policy_agent.opa.ast.types.RegoSet;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
+import static java.lang.Math.abs;
+import static java.lang.Math.ceil;
+import static java.lang.Math.floor;
+import static java.lang.Math.round;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
-import java.util.*;
 import java.util.function.BiFunction;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
-import io.github.open_policy_agent.opa.ast.types.*;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.TypeError;
 

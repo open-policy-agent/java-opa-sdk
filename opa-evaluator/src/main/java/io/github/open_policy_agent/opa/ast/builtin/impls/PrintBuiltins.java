@@ -4,7 +4,11 @@ import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaDynamic;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
-import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoSet;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.PrintHook;
 

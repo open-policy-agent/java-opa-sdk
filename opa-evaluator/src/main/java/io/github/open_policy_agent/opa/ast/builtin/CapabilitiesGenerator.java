@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import io.github.open_policy_agent.opa.ast.builtin.impls.*;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.Capabilities;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;

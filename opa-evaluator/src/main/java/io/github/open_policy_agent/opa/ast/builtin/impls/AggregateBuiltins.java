@@ -7,7 +7,17 @@ import java.util.function.BiFunction;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
 import io.github.open_policy_agent.opa.ast.builtin.OpaVal;
-import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
+import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoCollection;
+import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
+import io.github.open_policy_agent.opa.ast.types.RegoNull;
+import io.github.open_policy_agent.opa.ast.types.RegoNumber;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.TypeError;
 

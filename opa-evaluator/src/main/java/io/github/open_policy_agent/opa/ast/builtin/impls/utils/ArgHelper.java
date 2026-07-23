@@ -1,6 +1,10 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls.utils;
 
-import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoCollection;
+import io.github.open_policy_agent.opa.ast.types.RegoSet;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import io.github.open_policy_agent.opa.ast.types.TypeUtils;
 import io.github.open_policy_agent.opa.rego.TypeError;
 
 import java.util.Arrays;

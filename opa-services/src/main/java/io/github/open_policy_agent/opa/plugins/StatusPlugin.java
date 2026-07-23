@@ -5,8 +5,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.config.Config;
@@ -48,6 +49,24 @@ public final class StatusPlugin implements Plugin {
       }
     }
 
+    // Validate delay settings (mirrors BundleDownloader.validatePolling)
+    Integer min = statusConfig.getMinDelaySeconds();
+    Integer max = statusConfig.getMaxDelaySeconds();
+    if (min != null && min < 0) {
+      errors.add("Status min_delay_seconds must be >= 0");
+    }
+    if (max != null && max < 0) {
+      errors.add("Status max_delay_seconds must be >= 0");
+    }
+    if (min != null && max != null && min >= 0 && max >= 0 && min > max) {
+      errors.add(
+          "Status min_delay_seconds ("
+              + min
+              + ") cannot be greater than max_delay_seconds ("
+              + max
+              + ")");
+    }
+
     return errors;
   }
 
@@ -55,14 +74,17 @@ public final class StatusPlugin implements Plugin {
   public Plugin initialize(PluginManager manager) {
     StatusPlugin plugin = new StatusPlugin();
     plugin.manager = manager;
-    plugin.scheduler = Executors.newScheduledThreadPool(1);
+    plugin.scheduler = BundleDownloader.newPollScheduler("opa-status-scheduler");
 
     Config.StatusConfig statusConfig = manager.getConfig().getStatus();
     if (statusConfig != null) {
       plugin.status =
           new Status(manager, manager.getLogger())
               .setConsole(statusConfig.getConsole())
-              .setService(statusConfig.getService());
+              .setService(statusConfig.getService())
+              .setResource(statusConfig.getResource())
+              .setMinDelaySeconds(statusConfig.getMinDelaySeconds())
+              .setMaxDelaySeconds(statusConfig.getMaxDelaySeconds());
     }
 
     return plugin;
@@ -75,10 +97,68 @@ public final class StatusPlugin implements Plugin {
       return;
     }
 
-    // Report status every 30 seconds (matches OPA default)
-    scheduler.scheduleAtFixedRate(() -> status.reportStatus(), 0, 30, TimeUnit.SECONDS);
+    // Get report interval bounds (default: 30 seconds, matching OPA's previous fixed interval;
+    // OPA Go's status plugin has no standalone min/max delay of its own today - reports are
+    // triggered by the bundle/discovery plugin's polling - so there's no upstream number to
+    // mirror here beyond the interval this SDK already used).
+    // - only min set → max defaults to 2 * min
+    // - only max set → min defaults to min(30, max) so a max below 30 is not silently ignored
+    // - neither set → min=30, max=60
+    Integer configuredMin = status.getMinDelaySeconds();
+    Integer configuredMax = status.getMaxDelaySeconds();
+    int minDelaySeconds;
+    int maxDelaySeconds;
+    if (configuredMin != null && configuredMax != null) {
+      minDelaySeconds = configuredMin;
+      maxDelaySeconds = configuredMax;
+    } else if (configuredMin != null) {
+      minDelaySeconds = configuredMin;
+      maxDelaySeconds = configuredMin * 2;
+    } else if (configuredMax != null) {
+      maxDelaySeconds = configuredMax;
+      minDelaySeconds = Math.min(30, configuredMax);
+    } else {
+      minDelaySeconds = 30;
+      maxDelaySeconds = 60;
+    }
+
+    // Report immediately on startup (matches previous behavior), then continue with a jittered
+    // chained schedule for subsequent reports - mirrors BundleDownloader.startPolling(), which
+    // downloads immediately before starting its own chained poll.
+    scheduler.schedule(() -> status.reportStatus(), 0, TimeUnit.SECONDS);
+    scheduleNextReport(minDelaySeconds, maxDelaySeconds);
 
     manager.updatePluginStatus("status", PluginManager.Status.OK);
+  }
+
+  // Re-schedules the next status report with a uniformly random delay in [minDelay, maxDelay],
+  // mirroring BundleDownloader.scheduleNextPoll and DecisionLogPlugin.scheduleNextFlush.
+  // ScheduledExecutorService has no built-in jitter, so the task chains itself.
+  // RejectedExecutionException after a shutdown breaks the chain cleanly.
+  private void scheduleNextReport(int minDelay, int maxDelay) {
+    long delay =
+        minDelay >= maxDelay
+            ? minDelay
+            : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
+    try {
+      scheduler.schedule(
+          () -> {
+            try {
+              status.reportStatus();
+            } catch (Exception e) {
+              // reportStatus() handles its own logging; swallow so the chain keeps reporting.
+              // Only Exception is caught here — Errors (OOM, etc.) propagate and let the
+              // executor's uncaught-exception handler tear down the pool, which is the right
+              // outcome for unrecoverable conditions.
+            } finally {
+              scheduleNextReport(minDelay, maxDelay);
+            }
+          },
+          delay,
+          TimeUnit.SECONDS);
+    } catch (RejectedExecutionException stopped) {
+      // Scheduler was shut down; let the chain end.
+    }
   }
 
   @Override
@@ -107,6 +187,9 @@ public final class StatusPlugin implements Plugin {
     private final Logger logger;
     private Boolean console;
     private String service;
+    private String resource;
+    private Integer minDelaySeconds;
+    private Integer maxDelaySeconds;
 
     private Status(PluginManager manager, Logger logger) {
       this.manager = manager;
@@ -128,6 +211,33 @@ public final class StatusPlugin implements Plugin {
 
     public Status setService(String service) {
       this.service = service;
+      return this;
+    }
+
+    public String getResource() {
+      return resource;
+    }
+
+    public Status setResource(String resource) {
+      this.resource = resource;
+      return this;
+    }
+
+    public Integer getMinDelaySeconds() {
+      return minDelaySeconds;
+    }
+
+    public Status setMinDelaySeconds(Integer minDelaySeconds) {
+      this.minDelaySeconds = minDelaySeconds;
+      return this;
+    }
+
+    public Integer getMaxDelaySeconds() {
+      return maxDelaySeconds;
+    }
+
+    public Status setMaxDelaySeconds(Integer maxDelaySeconds) {
+      this.maxDelaySeconds = maxDelaySeconds;
       return this;
     }
 
@@ -225,9 +335,10 @@ public final class StatusPlugin implements Plugin {
       }
 
       try {
-        // Send status report to service
-        // Default resource path is /status (same as OPA)
-        svc.post("/status", statusReport.toString());
+        // Determine resource path (default: /status)
+        String path = (resource != null && !resource.isEmpty()) ? resource : "/status";
+
+        svc.post(path, statusReport.toString());
         logger.debug("Status report sent to service '%s'", service);
       } catch (Exception e) {
         logger.error("Failed to send status to service '%s': %s", service, e.getMessage());

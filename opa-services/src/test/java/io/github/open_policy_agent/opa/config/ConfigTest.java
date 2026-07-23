@@ -292,6 +292,9 @@ class ConfigTest {
     Config.StatusConfig status = new Config.StatusConfig();
 
     assertFalse(status.getConsole());
+    assertEquals("/status", status.getResource());
+    assertNull(status.getMinDelaySeconds());
+    assertNull(status.getMaxDelaySeconds());
   }
 
   @Test
