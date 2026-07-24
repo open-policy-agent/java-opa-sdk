@@ -125,7 +125,7 @@ class ProtoComplianceTest {
     // operands in place, so sharing them between the two runs would let the first corrupt the second.
     String jsonOutcome = outcome(jsonPolicy, c);
     String protoOutcome = outcome(protoPolicy, c);
-    assertThat(protoOutcome).isEqualTo(jsonOutcome);
+    assertThat(protoOutcome).as("proto vs JSON evaluation for %s", note).isEqualTo(jsonOutcome);
   }
 
   private static String outcome(Policy policy, JsonNode c) {

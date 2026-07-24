@@ -35,6 +35,7 @@ class StructConverterTest {
   @MethodSource("numberConversions")
   void numbersConvertToNarrowestType(String label, double input, Object expected, Class<?> type) {
     assertThat(StructConverter.toObject(Value.newBuilder().setNumberValue(input).build()))
+        .as(label)
         .isEqualTo(expected)
         .isInstanceOf(type);
   }
