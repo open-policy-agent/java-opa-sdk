@@ -95,7 +95,6 @@ public class TarballBundleLoader implements BundleLoader {
           planProto = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
           totalDecompressedBytes += planProto.length;
         } else if (entryName.equals(BundleFormat.MANIFEST_PROTO)) {
-          // Check .manifest.pb before .manifest so the longer suffix wins.
           manifestProto = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
           totalDecompressedBytes += manifestProto.length;
         } else if (entryName.equals(BundleFormat.MANIFEST_JSON)) {
@@ -111,7 +110,7 @@ public class TarballBundleLoader implements BundleLoader {
           byte[] entryBytes = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
           totalDecompressedBytes += entryBytes.length;
           assembler.addRego(entryName, new String(entryBytes));
-        } else if (!entry.isDirectory()) {
+        } else {
           long entrySize = Math.max(0, entry.getSize());
           totalDecompressedBytes += entrySize;
           if (totalDecompressedBytes > maxDecompressedBytes) {
