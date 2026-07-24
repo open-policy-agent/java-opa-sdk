@@ -307,8 +307,20 @@ class BundleDownloaderSecurityTest {
   }
 
   @Test
-  void polling_slowActivationExceedingInterval_neverRunsConcurrently() throws Exception {
+  void download_chunkedBodyExceedsLimit_failsMidStream() throws Exception {
+    int chunkSize = 64 * 1024;   // 64 KB per chunk
+    int totalChunks = 20;        // 1.28 MB total
+    long limit = 10 * 1024;      // 10 KB limit
 
+    int port = startRawChunkedServer(chunkSize, totalChunks);
+
+    ExecutionException ex = assertThrows(ExecutionException.class,
+        () -> runBundleDownload(port, limit).get(10, TimeUnit.SECONDS));
+    assertTrue(ex.getCause().getMessage().contains("exceeds limit"));
+  }
+
+  @Test
+  void polling_slowActivationExceedingInterval_neverRunsConcurrently() throws Exception {
     byte[] bundleData = createValidBundle();
 
     serverExecutor = Executors.newFixedThreadPool(8);
@@ -337,9 +349,7 @@ class BundleDownloaderSecurityTest {
             .withLogger(logger)
             .build();
 
-    ConcurrencyTrackingDownloader downloader =
-        new ConcurrencyTrackingDownloader("authz", manager);
-    downloader
+    ConcurrencyTrackingDownloader downloader = (ConcurrencyTrackingDownloader) new ConcurrencyTrackingDownloader("authz", manager)
         .setService("test-service")
         .setResource("/bundle.tar.gz")
         .setPolling(new Config.PollingConfig().setMinDelaySeconds(0).setMaxDelaySeconds(0));
@@ -389,19 +399,6 @@ class BundleDownloaderSecurityTest {
         activations.incrementAndGet();
       }
     }
-  }
-
-  @Test
-  void download_chunkedBodyExceedsLimit_failsMidStream() throws Exception {
-    int chunkSize = 64 * 1024;   // 64 KB per chunk
-    int totalChunks = 20;        // 1.28 MB total
-    long limit = 10 * 1024;      // 10 KB limit
-
-    int port = startRawChunkedServer(chunkSize, totalChunks);
-
-    ExecutionException ex = assertThrows(ExecutionException.class,
-        () -> runBundleDownload(port, limit).get(10, TimeUnit.SECONDS));
-    assertTrue(ex.getCause().getMessage().contains("exceeds limit"));
   }
 
   private int startRawChunkedServer(int chunkSize, int totalChunks) throws IOException {
