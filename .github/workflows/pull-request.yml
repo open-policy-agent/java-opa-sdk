@@ -20,6 +20,7 @@ jobs:
       opa-services: ${{ steps.changes.outputs.opa-services }}
       opa-builtins: ${{ steps.changes.outputs.opa-builtins }}
       opa-slf4j: ${{ steps.changes.outputs.opa-slf4j }}
+      opa-proto: ${{ steps.changes.outputs.opa-proto }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -44,6 +45,7 @@ jobs:
           echo "opa-services=true" >> $GITHUB_OUTPUT
           echo "opa-builtins=true" >> $GITHUB_OUTPUT
           echo "opa-slf4j=true" >> $GITHUB_OUTPUT
+          echo "opa-proto=true" >> $GITHUB_OUTPUT
 
           if ! curl -s -o changed_files.json -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             "https://api.github.com/repos/${GH_REPO}/pulls/${PR_NUMBER}/files"; then
@@ -73,12 +75,14 @@ jobs:
           opa_services=$(jq -r '.changes["opa-services"] // false' opa_result.json)
           opa_builtins=$(jq -r '.changes["opa-builtins"] // false' opa_result.json)
           opa_slf4j=$(jq -r '.changes["opa-slf4j"] // false' opa_result.json)
+          opa_proto=$(jq -r '.changes["opa-proto"] // false' opa_result.json)
 
           echo "opa-evaluator=${opa_evaluator}" >> $GITHUB_OUTPUT
           echo "opa-jackson=${opa_jackson}" >> $GITHUB_OUTPUT
           echo "opa-services=${opa_services}" >> $GITHUB_OUTPUT
           echo "opa-builtins=${opa_builtins}" >> $GITHUB_OUTPUT
           echo "opa-slf4j=${opa_slf4j}" >> $GITHUB_OUTPUT
+          echo "opa-proto=${opa_proto}" >> $GITHUB_OUTPUT
 
   gh-actions-lint:
     name: GitHub Actions Lint
@@ -286,6 +290,26 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
       - run: ./gradlew :opa-slf4j:test
 
+  test-opa-proto:
+    needs: check-changes
+    if: needs.check-changes.outputs.opa-proto == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      # ProtoComplianceTest reads the compliance fixtures from the sibling opa-evaluator module
+      # (../opa-evaluator/...); the full checkout above makes that relative path resolve.
+      - run: ./gradlew :opa-proto:test
+
   verify-proto-vendor:
     name: Verify vendored proto schemas match go.mod
     runs-on: ubuntu-latest
@@ -333,6 +357,7 @@ jobs:
       - test-opa-services
       - test-opa-builtins
       - test-opa-slf4j
+      - test-opa-proto
     if: always()
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
