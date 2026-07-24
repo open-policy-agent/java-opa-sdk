@@ -36,19 +36,10 @@ public class BundleAssembler {
 
   static final BundleParser BUNDLE_PARSER = loadSingleton(BundleParser.class);
 
-  /**
-   * Holds the optional proto decoder, resolved lazily on first proto-format load.
-   *
-   * <p>Deferring resolution (rather than a {@code static final} field on {@link BundleAssembler})
-   * keeps a proto-specific misconfiguration — no {@code opa-proto} module, two providers, or a
-   * provider that fails to instantiate — from running in {@code BundleAssembler}'s own class
-   * initializer, where it would break <em>all</em> bundle loading, including JSON-only bundles that
-   * never touch proto. The holder class initializes only when {@link #requireProtoDecoder} first
-   * references it, so any such failure surfaces only when a proto bundle is actually read.
-   */
-  private static final class ProtoDecoderHolder {
-    static final ProtoBundleDecoder INSTANCE = loadOptional(ProtoBundleDecoder.class);
-  }
+  // Optional: null when opa-proto is absent (JSON-only bundles still work), the single
+  // implementation when exactly one is registered, and loadOptional throws on duplicates — a
+  // classpath error we want to surface early, just like POLICY_READER and BUNDLE_PARSER.
+  static final ProtoBundleDecoder PROTO_DECODER = loadOptional(ProtoBundleDecoder.class);
 
   /**
    * Loads exactly one implementation of the given SPI from the classpath. Throws if zero or more
@@ -75,14 +66,13 @@ public class BundleAssembler {
   }
 
   private static ProtoBundleDecoder requireProtoDecoder() {
-    ProtoBundleDecoder decoder = ProtoDecoderHolder.INSTANCE;
-    if (decoder == null) {
+    if (PROTO_DECODER == null) {
       throw new IllegalStateException(
           "No ProtoBundleDecoder implementation found on the classpath, but the bundle is in proto"
               + " format (plan.pb / .manifest.pb). Add the opa-proto module to read proto-format"
               + " bundles.");
     }
-    return decoder;
+    return PROTO_DECODER;
   }
 
   private final Bundle.Builder builder = new Bundle.Builder();
