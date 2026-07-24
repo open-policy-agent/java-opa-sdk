@@ -260,9 +260,14 @@ public class Opa {
 
   private String resolveEntrypoint(DecisionOptions options) {
     if (options != null && options.getEntrypoint() != null && !options.getEntrypoint().isEmpty()) {
-        return options.getEntrypoint();
+      return options.getEntrypoint();
     }
-    return defaultEntrypoint;
+
+    if (defaultEntrypoint != null) {
+      return defaultEntrypoint;
+    }
+
+    return "";
   }
 
   private static String resolveDecisionId(DecisionOptions options) {
@@ -283,13 +288,10 @@ public class Opa {
       return;
     }
 
-    String path =
-        (options.getPath() != null && !options.getPath().isEmpty())
-            ? options.getPath()
-            : (defaultEntrypoint != null && !defaultEntrypoint.isEmpty()) ? defaultEntrypoint : "";
+    String entrypoint = resolveEntrypoint(options);
 
     plugin.logDecision(
-        decisionId, input, result, path,
+        decisionId, input, result, entrypoint,
         ctx.getEvalStartTime(), ctx.metrics, ctx.getNdCacheValues());
   }
 
@@ -387,7 +389,6 @@ public class Opa {
 
   public static class DecisionOptions {
     private long nowNs;
-    private String path;
     private JsonNode input;
     private Object ndbCache;
     private boolean strictBuiltinErrors;
@@ -403,15 +404,6 @@ public class Opa {
 
     public DecisionOptions setNowNs(long nowNs) {
       this.nowNs = nowNs;
-      return this;
-    }
-
-    public String getPath() {
-      return path;
-    }
-
-    public DecisionOptions setPath(String path) {
-      this.path = path;
       return this;
     }
 

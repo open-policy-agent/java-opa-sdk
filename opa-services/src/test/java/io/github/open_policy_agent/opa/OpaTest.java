@@ -194,7 +194,6 @@ class OpaTest {
     Opa.DecisionOptions options =
         new Opa.DecisionOptions()
             .setNowNs(System.nanoTime())
-            .setPath("example/allow")
             .setInput(input)
             .setStrictBuiltinErrors(true)
             .showMetrics()
@@ -204,7 +203,6 @@ class OpaTest {
             .setEntrypoint(entrypoint);
 
     assertNotNull(options.getInput());
-    assertNotNull(options.getPath());
     assertTrue(options.getShowMetrics());
     assertNotNull(options.getProfiler());
     assertNotNull(options.getDecisionID());
