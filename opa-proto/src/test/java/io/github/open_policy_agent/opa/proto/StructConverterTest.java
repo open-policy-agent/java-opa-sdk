@@ -1,6 +1,7 @@
 package io.github.open_policy_agent.opa.proto;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import com.google.protobuf.ListValue;
 import com.google.protobuf.NullValue;
@@ -8,7 +9,11 @@ import com.google.protobuf.Struct;
 import com.google.protobuf.Value;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Verifies that protobuf Struct/Value conversion matches the Java types the JSON {@code .manifest}
@@ -17,28 +22,21 @@ import org.junit.jupiter.api.Test;
  */
 class StructConverterTest {
 
-  @Test
-  void integralNumbersBecomeIntegerNotDouble() {
-    // Regression for the parity bug: proto stores all numbers as double, but the JSON reader yields
-    // Integer for values that fit an int.
-    assertThat(StructConverter.toObject(Value.newBuilder().setNumberValue(3).build()))
-        .isEqualTo(3)
-        .isInstanceOf(Integer.class);
+  static Stream<Arguments> numberConversions() {
+    // proto stores all numbers as double, but the JSON reader yields the narrowest type that fits:
+    // Integer for int-range values, Long for larger integrals, Double only for fractionals.
+    return Stream.of(
+        arguments("integral fits int", 3d, 3, Integer.class),
+        arguments("integral exceeds int", 10_000_000_000d, 10_000_000_000L, Long.class),
+        arguments("fractional", 3.5d, 3.5, Double.class));
   }
 
-  @Test
-  void largeIntegralNumbersBecomeLong() {
-    long big = 10_000_000_000L; // > Integer.MAX_VALUE
-    assertThat(StructConverter.toObject(Value.newBuilder().setNumberValue(big).build()))
-        .isEqualTo(big)
-        .isInstanceOf(Long.class);
-  }
-
-  @Test
-  void fractionalNumbersStayDouble() {
-    assertThat(StructConverter.toObject(Value.newBuilder().setNumberValue(3.5).build()))
-        .isEqualTo(3.5)
-        .isInstanceOf(Double.class);
+  @ParameterizedTest(name = "{0} -> {3}")
+  @MethodSource("numberConversions")
+  void numbersConvertToNarrowestType(String label, double input, Object expected, Class<?> type) {
+    assertThat(StructConverter.toObject(Value.newBuilder().setNumberValue(input).build()))
+        .isEqualTo(expected)
+        .isInstanceOf(type);
   }
 
   @Test

@@ -2,6 +2,7 @@ package io.github.open_policy_agent.opa.proto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.bundle.FileSystemBundleLoader;
@@ -19,8 +20,12 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * Round-trip parity: the {@code authz-proto} and {@code authz-json} bundles are built from the same
@@ -56,20 +61,22 @@ class ProtoBundleParityTest {
         .isEqualTo(fromJson);
   }
 
-  @Test
-  void allow_isIdenticalAcrossFormats() {
-    // reader via data.roles, admin via membership, and a denied case
-    assertParity("authz/allow", Map.of("method", "GET", "user", "alice"));
-    assertParity("authz/allow", Map.of("method", "POST", "user", "alice"));
-    assertParity("authz/allow", Map.of("method", "POST", "user", "bob"));
-    assertParity("authz/allow", Map.of("method", "GET", "user", "carol"));
+  static Stream<Arguments> parityInputs() {
+    return Stream.of(
+        // authz/allow: reader via data.roles, admin via membership, and denied cases
+        arguments("authz/allow", Map.of("method", "GET", "user", "alice")),
+        arguments("authz/allow", Map.of("method", "POST", "user", "alice")),
+        arguments("authz/allow", Map.of("method", "POST", "user", "bob")),
+        arguments("authz/allow", Map.of("method", "GET", "user", "carol")),
+        // authz/summary: object/array/set construction, scan iteration, count/sum builtins
+        arguments("authz/summary", Map.of("method", "GET", "user", "alice")),
+        arguments("authz/summary", Map.of("method", "POST", "user", "bob")));
   }
 
-  @Test
-  void summary_isIdenticalAcrossFormats() {
-    // exercises object/array/set construction, scan iteration, and the count/sum builtins
-    assertParity("authz/summary", Map.of("method", "GET", "user", "alice"));
-    assertParity("authz/summary", Map.of("method", "POST", "user", "bob"));
+  @ParameterizedTest(name = "{0} with {1}")
+  @MethodSource("parityInputs")
+  void evaluatesIdenticallyAcrossFormats(String entrypoint, Object input) {
+    assertParity(entrypoint, input);
   }
 
   @Test
