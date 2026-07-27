@@ -17,10 +17,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import java.io.IOException;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
@@ -631,9 +631,9 @@ public class JsonBuiltins implements BuiltinProvider {
       }
 
       // Validate
-      JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-      JsonSchema schema = factory.getSchema(schemaNode);
-      Set<ValidationMessage> errors = schema.validate(documentNode);
+      SchemaRegistry registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
+      Schema schema = registry.getSchema(schemaNode);
+      List<Error> errors = schema.validate(documentNode);
 
       // Build result array
       RegoArray result = new RegoArray();
@@ -643,12 +643,12 @@ public class JsonBuiltins implements BuiltinProvider {
       } else {
         result.addValue(RegoBoolean.FALSE);
         RegoArray errorArray = new RegoArray();
-        for (ValidationMessage error : errors) {
+        for (Error error : errors) {
           RegoObject errorObj = new RegoObject();
           errorObj.setProp(new RegoString("message"), new RegoString(error.getMessage()));
           errorObj.setProp(
                   new RegoString("path"), new RegoString(error.getEvaluationPath().toString()));
-          errorObj.setProp(new RegoString("type"), new RegoString(error.getType()));
+          errorObj.setProp(new RegoString("type"), new RegoString(error.getKeyword()));
           errorArray.addValue(errorObj);
         }
         result.addValue(errorArray);
@@ -686,8 +686,8 @@ public class JsonBuiltins implements BuiltinProvider {
       }
 
       // Try to create a schema - if it succeeds, it's valid
-      JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7);
-      factory.getSchema(schemaNode);
+      SchemaRegistry registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
+      registry.getSchema(schemaNode);
 
       // Build success result
       RegoArray result = new RegoArray();
