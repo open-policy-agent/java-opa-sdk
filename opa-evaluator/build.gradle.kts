@@ -17,7 +17,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.2")
-    testImplementation("org.json:json:20260522")
+    testImplementation("org.json:json:20260719")
     testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation("org.skyscreamer:jsonassert:1.5.3")
     testImplementation("org.mockito:mockito-core:5.23.0")
