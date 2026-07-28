@@ -30,4 +30,11 @@ class JsonBuiltinsTest {
 
     assertEquals(RegoBoolean.FALSE, builtins.yamlIsValid(null, args));
   }
+
+  @Test
+  void yamlIsValidReturnsFalseForNonStringInput() {
+    RegoValue[] args = {RegoBoolean.TRUE};
+
+    assertEquals(RegoBoolean.FALSE, builtins.yamlIsValid(null, args));
+  }
 }

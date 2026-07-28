@@ -717,10 +717,12 @@ public class JsonBuiltins implements BuiltinProvider {
                   name = "result",
                   description = "`true` if `x` is valid YAML, `false` otherwise"))
   public RegoBoolean yamlIsValid(EvaluationContext ctx, RegoValue[] args) {
-    String yamlInput = getArg(args, 0, RegoString.class).getValue();
+    if (!(args[0] instanceof RegoString yamlInput)) {
+      return RegoBoolean.FALSE;
+    }
 
     try {
-      YAML_MAPPER.readTree(yamlInput);
+      YAML_MAPPER.readTree(yamlInput.getValue());
       return RegoBoolean.TRUE;
     } catch (JsonProcessingException e) {
       return RegoBoolean.FALSE;
