@@ -78,6 +78,7 @@ public final class BundlePlugin implements Plugin {
             servicePlugin == null ? null : servicePlugin.getService(bundleConfig.getService());
 
         plugin.bundles.put(
+<<<<<<< HEAD
                 name,
                 new Bundle(name, manager, svc)
                         .setService(bundleConfig.getService())
@@ -85,6 +86,14 @@ public final class BundlePlugin implements Plugin {
                         .setPolling(bundleConfig.getPolling())
                         .setTrigger(bundleConfig.getTrigger())
                         .setMaxSizeBytes(bundleConfig.getMaxSizeBytes()));      }
+=======
+            name,
+            new Bundle(name, manager, svc)
+                .setService(bundleConfig.getService())
+                .setResource(bundleConfig.getResource())
+                .setPolling(bundleConfig.getPolling()));
+      }
+>>>>>>> 1a6e0d2e887f7d8247cae25ae6cadbdb4c2b718a
     }
 
     return plugin;

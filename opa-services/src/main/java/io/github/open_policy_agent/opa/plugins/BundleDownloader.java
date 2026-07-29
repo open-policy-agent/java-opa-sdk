@@ -54,7 +54,10 @@ public abstract class BundleDownloader {
   protected String resource;
   protected Config.PollingConfig polling;
   protected Config.Trigger trigger = Config.Trigger.PERIODIC;
+<<<<<<< HEAD
   private ScheduledExecutorService scheduler;
+=======
+>>>>>>> 1a6e0d2e887f7d8247cae25ae6cadbdb4c2b718a
   protected String etag;
   protected long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
@@ -73,10 +76,13 @@ public abstract class BundleDownloader {
     return this;
   }
 
+<<<<<<< HEAD
   public Config.Trigger getTrigger() {
     return trigger;
   }
 
+=======
+>>>>>>> 1a6e0d2e887f7d8247cae25ae6cadbdb4c2b718a
   /**
    * Construct a BundleDownloader.
    *
@@ -197,7 +203,11 @@ public abstract class BundleDownloader {
 
 
   public CompletableFuture<Void> startPolling(ScheduledExecutorService scheduler) {
+<<<<<<< HEAD
     this.scheduler = scheduler;
+=======
+
+>>>>>>> 1a6e0d2e887f7d8247cae25ae6cadbdb4c2b718a
     if (trigger == Config.Trigger.MANUAL) {
       manager.getLogger().info(
               "Bundle '%s': Manual trigger mode enabled; waiting for refresh()", name);
@@ -215,18 +225,27 @@ public abstract class BundleDownloader {
 
 
 
+<<<<<<< HEAD
     scheduler.schedule(() -> downloadBundle(initialActivation), 0, TimeUnit.SECONDS);
+=======
+    scheduler.schedule(this::downloadBundle, 0, TimeUnit.SECONDS);
+>>>>>>> 1a6e0d2e887f7d8247cae25ae6cadbdb4c2b718a
     scheduleNextPoll(scheduler, minDelay, maxDelay);
 
     return initialActivation;
   }
 
   public CompletableFuture<Void> refresh() {
+<<<<<<< HEAD
     CompletableFuture<Void> refreshFuture = new CompletableFuture<>();
 
     scheduler.execute(() -> downloadBundle(refreshFuture));
 
     return refreshFuture;
+=======
+    downloadBundle();
+    return initialActivation;
+>>>>>>> 1a6e0d2e887f7d8247cae25ae6cadbdb4c2b718a
   }
 
   // Re-schedules the next download with a uniformly random delay in [minDelay, maxDelay],
