@@ -54,6 +54,7 @@ public abstract class BundleDownloader {
   protected String resource;
   protected Config.PollingConfig polling;
   protected Config.Trigger trigger = Config.Trigger.PERIODIC;
+  private ScheduledExecutorService scheduler;
   protected String etag;
   protected long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
@@ -193,8 +194,10 @@ public abstract class BundleDownloader {
    * @param scheduler the scheduler to use for periodic downloads
    * @return a future that completes when the initial bundle is downloaded and activated
    */
-  public CompletableFuture<Void> startPolling(ScheduledExecutorService scheduler) {
 
+
+  public CompletableFuture<Void> startPolling(ScheduledExecutorService scheduler) {
+    this.scheduler = scheduler;
     if (trigger == Config.Trigger.MANUAL) {
       manager.getLogger().info(
               "Bundle '%s': Manual trigger mode enabled; waiting for refresh()", name);
@@ -212,15 +215,18 @@ public abstract class BundleDownloader {
 
 
 
-    scheduler.schedule(this::downloadBundle, 0, TimeUnit.SECONDS);
+    scheduler.schedule(() -> downloadBundle(initialActivation), 0, TimeUnit.SECONDS);
     scheduleNextPoll(scheduler, minDelay, maxDelay);
 
     return initialActivation;
   }
 
   public CompletableFuture<Void> refresh() {
-    downloadBundle();
-    return initialActivation;
+    CompletableFuture<Void> refreshFuture = new CompletableFuture<>();
+
+    scheduler.execute(() -> downloadBundle(refreshFuture));
+
+    return refreshFuture;
   }
 
   // Re-schedules the next download with a uniformly random delay in [minDelay, maxDelay],
@@ -235,7 +241,7 @@ public abstract class BundleDownloader {
       scheduler.schedule(
           () -> {
             try {
-              downloadBundle();
+              downloadBundle(initialActivation);
             } catch (Exception e) {
               // downloadBundle() handles its own logging; swallow so the chain keeps polling.
               // Only Exception is caught here — Errors (OOM, etc.) propagate and let the
@@ -258,7 +264,7 @@ public abstract class BundleDownloader {
    * <p>Handles HTTP/HTTPS downloads with ETag caching, file:// URIs, and filesystem paths. Calls
    * {@link #activateBundle(byte[])} when new bundle data is available.
    */
-  protected void downloadBundle() {
+  protected void downloadBundle(CompletableFuture<Void> future) {
     try {
       Config.ServiceConfig serviceConfig = manager.getConfig().getService(service);
       if (serviceConfig == null) {
@@ -284,17 +290,17 @@ public abstract class BundleDownloader {
 
         // Handle file:// URIs
         if ("file".equalsIgnoreCase(uri.getScheme())) {
-          handleFileDownload(Paths.get(uri));
+          handleFileDownload(Paths.get(uri), future);
           return;
         }
 
         // Handle HTTP/HTTPS URIs
-        handleHttpDownload(uri);
+        handleHttpDownload(uri, future);
       } else {
         // It's a file path (relative or absolute)
         Path basePath = Paths.get(baseUrl);
         Path filePath = basePath.resolve(resource);
-        handleFileDownload(filePath);
+        handleFileDownload(filePath, future);
       }
 
     } catch (Exception e) {
@@ -310,12 +316,13 @@ public abstract class BundleDownloader {
    *
    * @param filePath the path to the file
    */
-  private void handleFileDownload(Path filePath) throws IOException {
+  private void handleFileDownload(Path filePath, CompletableFuture<Void> future) throws IOException{
     FileTime currentModTime = Files.getLastModifiedTime(filePath);
     long currentModTimeMillis = currentModTime.toMillis();
 
     if (lastModifiedTime != 0 && lastModifiedTime == currentModTimeMillis) {
       manager.getLogger().debug("Bundle '%s': File not modified, skipping activation", name);
+      future.complete(null);
       if (!initialActivation.isDone()) {
         initialActivation.complete(null);
       }
@@ -325,6 +332,8 @@ public abstract class BundleDownloader {
     byte[] bundleData = Files.readAllBytes(filePath);
     activateBundle(bundleData);
     lastModifiedTime = currentModTimeMillis;
+
+    future.complete(null);
 
     if (!initialActivation.isDone()) {
       initialActivation.complete(null);
@@ -336,7 +345,7 @@ public abstract class BundleDownloader {
    *
    * @param uri the URI to download from
    */
-  private void handleHttpDownload(URI uri) {
+  private void handleHttpDownload(URI uri, CompletableFuture<Void> future) {
     HttpRequest.Builder requestBuilder =
         HttpRequest.newBuilder()
             .uri(uri)
@@ -363,6 +372,8 @@ public abstract class BundleDownloader {
                         ? throwable.getCause()
                         : throwable;
                 manager.getLogger().error("Bundle '%s': Download error: %s", name, cause.getMessage());
+                future.completeExceptionally(cause);
+
                 if (!initialActivation.isDone()) {
                   initialActivation.completeExceptionally(cause);
                 }
@@ -371,6 +382,8 @@ public abstract class BundleDownloader {
 
               if (response.statusCode() == 304) {
                 manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
+                future.complete(null);
+
                 if (!initialActivation.isDone()) {
                   initialActivation.complete(null);
                 }
@@ -382,8 +395,12 @@ public abstract class BundleDownloader {
                 if (!isAcceptableContentType(contentType)) {
                   String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
                   manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+                  RuntimeException ex = new RuntimeException(errorMsg);
+
+                  future.completeExceptionally(ex);
+
                   if (!initialActivation.isDone()) {
-                    initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+                    initialActivation.completeExceptionally(ex);
                   }
                   return;
                 }
@@ -392,19 +409,27 @@ public abstract class BundleDownloader {
                   activateBundle(response.body());
                 } catch (Exception e) {
                   manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
+                  future.completeExceptionally(e);
+
                   if (!initialActivation.isDone()) {
                     initialActivation.completeExceptionally(e);
                   }
                   return;
                 }
+                future.complete(null);
+
                 if (!initialActivation.isDone()) {
                   initialActivation.complete(null);
                 }
               } else {
                 String errorMsg = "Download failed with status " + response.statusCode();
                 manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+                RuntimeException ex = new RuntimeException(errorMsg);
+
+                future.completeExceptionally(ex);
+
                 if (!initialActivation.isDone()) {
-                  initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+                  initialActivation.completeExceptionally(ex);
                 }
               }
             });

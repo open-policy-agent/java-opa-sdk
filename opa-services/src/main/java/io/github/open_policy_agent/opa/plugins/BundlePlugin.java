@@ -47,7 +47,7 @@ public final class BundlePlugin implements Plugin {
         errors.addAll(BundleDownloader.validatePolling(bundle.getPolling(), "Bundle '" + name + "'"));
         if (bundle.getTrigger() == Config.Trigger.MANUAL && bundle.getPolling() != null) {
           errors.add(
-                  "Bundle '" + name + "' cannot specify polling when trigger is MANUAL");
+                  "Bundle '" + name + "' cannot specify polling when trigger is manual");
         }
       }
     }
@@ -78,14 +78,13 @@ public final class BundlePlugin implements Plugin {
             servicePlugin == null ? null : servicePlugin.getService(bundleConfig.getService());
 
         plugin.bundles.put(
-            name,
-            new Bundle(name, manager, svc)
-                .setService(bundleConfig.getService())
-                .setResource(bundleConfig.getResource())
-                .setPolling(bundleConfig.getPolling()))
-                .setTrigger(bundleConfig.getTrigger())
-                .setMaxSizeBytes(bundleConfig.getMaxSizeBytes());
-      }
+                name,
+                new Bundle(name, manager, svc)
+                        .setService(bundleConfig.getService())
+                        .setResource(bundleConfig.getResource())
+                        .setPolling(bundleConfig.getPolling())
+                        .setTrigger(bundleConfig.getTrigger())
+                        .setMaxSizeBytes(bundleConfig.getMaxSizeBytes()));      }
     }
 
     return plugin;
@@ -100,11 +99,19 @@ public final class BundlePlugin implements Plugin {
     // Set initial status so wait logic knows plugin is registered
     manager.updatePluginStatus("bundles", PluginManager.Status.NOT_READY);
 
+    bundles.values().forEach(bundle -> bundle.startPolling(scheduler));
+
     // Collect all initial activation futures
     CompletableFuture<?>[] activationFutures =
         bundles.values().stream()
-            .map(bundle -> bundle.startPolling(scheduler))
-            .toArray(CompletableFuture[]::new);
+                .filter(bundle -> bundle.getTrigger() == Config.Trigger.PERIODIC)
+                .map(Bundle::getInitialActivation)
+                .toArray(CompletableFuture[]::new);
+
+    if (activationFutures.length == 0) {
+      manager.updatePluginStatus("bundles", PluginManager.Status.OK);
+      return;
+    }
 
     // Wait for all bundles to complete initial activation
     CompletableFuture.allOf(activationFutures)
