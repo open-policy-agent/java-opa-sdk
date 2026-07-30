@@ -62,6 +62,42 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
   // Required HTTP request keys.
   private static final List<String> REQUIRED_REQUEST_KEYS = List.of("method", "url");
 
+  /**
+   * Allowed HTTP request object keys, mirrored from OPA's {@code allowedKeyNames} in {@code
+   * v1/topdown/http.go}. {@code providers.aws.sign_req} reuses {@code validateHTTPRequestOperand},
+   * so unknown keys must be rejected with the same error as {@code http.send}.
+   */
+  private static final Set<String> ALLOWED_REQUEST_KEYS =
+      Set.of(
+          "method",
+          "url",
+          "body",
+          "enable_redirect",
+          "force_json_decode",
+          "force_yaml_decode",
+          "headers",
+          "raw_body",
+          "tls_use_system_certs",
+          "tls_ca_cert",
+          "tls_ca_cert_file",
+          "tls_ca_cert_env_variable",
+          "tls_client_cert",
+          "tls_client_cert_file",
+          "tls_client_cert_env_variable",
+          "tls_client_key",
+          "tls_client_key_file",
+          "tls_client_key_env_variable",
+          "tls_insecure_skip_verify",
+          "tls_server_name",
+          "timeout",
+          "cache",
+          "force_cache",
+          "force_cache_duration_seconds",
+          "raise_error",
+          "caching_mode",
+          "max_retry_attempts",
+          "cache_ignored_headers");
+
   // Headers that may be mutated in transit and are therefore excluded from the canonical request.
   private static final Set<String> IGNORED_HEADERS =
       Set.of("authorization", "user-agent", "x-amzn-trace-id");
@@ -275,6 +311,24 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
   }
 
   private void validateHttpRequestOperand(RegoObject reqObj) {
+    // Match OPA's validateHTTPRequestOperand: reject unknown keys before missing-required checks.
+    List<String> invalid = new ArrayList<>();
+    reqObj
+        .stream()
+        .forEach(
+            e -> {
+              RegoValue key = e.getKey();
+              if (!(key instanceof RegoString)
+                  || !ALLOWED_REQUEST_KEYS.contains(((RegoString) key).getValue())) {
+                invalid.add(
+                    key instanceof RegoString ? ((RegoString) key).getValue() : key.toString());
+              }
+            });
+    if (!invalid.isEmpty()) {
+      throw new TypeError(
+          "operand 1 invalid request parameters(s): " + formatKeySet(invalid));
+    }
+
     List<String> missing = new ArrayList<>();
     for (String key : REQUIRED_REQUEST_KEYS) {
       if (reqObj.getProperty(key) == null) {
