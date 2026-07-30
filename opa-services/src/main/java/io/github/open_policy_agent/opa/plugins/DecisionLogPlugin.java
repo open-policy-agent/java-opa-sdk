@@ -57,28 +57,48 @@ public final class DecisionLogPlugin implements Plugin {
       }
     }
 
-    // Validate delay settings
-    if (logsConfig.getMinDelaySeconds() != null && logsConfig.getMaxDelaySeconds() != null) {
-      if (logsConfig.getMinDelaySeconds() > logsConfig.getMaxDelaySeconds()) {
-        errors.add(
-            "Decision logs min_delay_seconds ("
-                + logsConfig.getMinDelaySeconds()
-                + ") cannot be greater than max_delay_seconds ("
-                + logsConfig.getMaxDelaySeconds()
-                + ")");
-      }
+    // Validate delay settings using the same defaults as start() (OPA Go rejects when
+    // post-default min > max; e.g. max_delay_seconds: 120 alone defaults min to 300).
+    Integer configuredMin = logsConfig.getMinDelaySeconds();
+    Integer configuredMax = logsConfig.getMaxDelaySeconds();
+    if (configuredMin != null && configuredMin < 0) {
+      errors.add("Decision logs min_delay_seconds must be >= 0");
+    }
+    if (configuredMax != null && configuredMax < 0) {
+      errors.add("Decision logs max_delay_seconds must be >= 0");
+    }
+    int effectiveMin = configuredMin != null ? configuredMin : 300;
+    int effectiveMax =
+        configuredMax != null ? configuredMax : effectiveMin * 2;
+    if (effectiveMin > effectiveMax) {
+      errors.add(
+          "Decision logs min_delay_seconds ("
+              + effectiveMin
+              + ") cannot be greater than max_delay_seconds ("
+              + effectiveMax
+              + ")");
     }
 
-    // Validate reporting config if present
+    // Validate reporting config if present (same defaulting as above when used)
     if (logsConfig.getReporting() != null) {
       Config.ReportingConfig reporting = logsConfig.getReporting();
-      if (reporting.getMinDelaySeconds() != null && reporting.getMaxDelaySeconds() != null) {
-        if (reporting.getMinDelaySeconds() > reporting.getMaxDelaySeconds()) {
+      Integer rMin = reporting.getMinDelaySeconds();
+      Integer rMax = reporting.getMaxDelaySeconds();
+      if (rMin != null && rMin < 0) {
+        errors.add("Decision logs reporting min_delay_seconds must be >= 0");
+      }
+      if (rMax != null && rMax < 0) {
+        errors.add("Decision logs reporting max_delay_seconds must be >= 0");
+      }
+      if (rMin != null || rMax != null) {
+        int rEffectiveMin = rMin != null ? rMin : 300;
+        int rEffectiveMax = rMax != null ? rMax : rEffectiveMin * 2;
+        if (rEffectiveMin > rEffectiveMax) {
           errors.add(
               "Decision logs reporting min_delay_seconds ("
-                  + reporting.getMinDelaySeconds()
+                  + rEffectiveMin
                   + ") cannot be greater than max_delay_seconds ("
-                  + reporting.getMaxDelaySeconds()
+                  + rEffectiveMax
                   + ")");
         }
       }

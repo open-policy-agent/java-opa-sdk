@@ -101,6 +101,53 @@ class DecisionLogPluginTest {
   }
 
   @Test
+  void validate_maxOnlyBelowDefaultMin_returnsError() {
+    // max_delay_seconds: 120 alone would default min to 300 → effective min > max
+    Config.DecisionLogsConfig decisionLogs =
+        new Config.DecisionLogsConfig().setService("test-service").setMaxDelaySeconds(120);
+    config.setDecisionLogs(decisionLogs);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    DecisionLogPlugin plugin = new DecisionLogPlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertFalse(errors.isEmpty());
+    assertTrue(
+        errors.stream()
+            .anyMatch(
+                e ->
+                    e.contains("min_delay_seconds")
+                        && e.contains("cannot be greater than max_delay_seconds")));
+  }
+
+  @Test
+  void validate_minOnly_defaultsMaxToTwiceMin_returnsNoErrors() {
+    Config.DecisionLogsConfig decisionLogs =
+        new Config.DecisionLogsConfig().setService("test-service").setMinDelaySeconds(60);
+    config.setDecisionLogs(decisionLogs);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    DecisionLogPlugin plugin = new DecisionLogPlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertTrue(errors.isEmpty());
+  }
+
+  @Test
   void validate_decisionLogsConsoleOnly_returnsNoErrors() {
     Config.DecisionLogsConfig decisionLogs = new Config.DecisionLogsConfig().setConsole(true);
     config.setDecisionLogs(decisionLogs);
