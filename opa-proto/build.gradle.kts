@@ -72,9 +72,6 @@ abstract class VendorProtoSchemas @Inject constructor(private val exec: ExecOper
         exec.exec {
             commandLine(go(), "mod", "download", MODULE)
             workingDir = goDir
-            // The temporary commit pin isn't in sum.golang.org yet; go.sum still enforces integrity.
-            // Remove once pinned to a tagged OPA release.
-            environment("GOSUMDB", "off")
         }
         val moduleCache = capture("env", "GOMODCACHE").trim()
 
@@ -96,7 +93,6 @@ abstract class VendorProtoSchemas @Inject constructor(private val exec: ExecOper
         exec.exec {
             commandLine(listOf(go()) + args)
             workingDir = goMod.get().asFile.parentFile
-            environment("GOSUMDB", "off")
             standardOutput = out
         }
         return out.toString()

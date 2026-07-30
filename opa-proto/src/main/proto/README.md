@@ -15,13 +15,10 @@ the OPA version required by
 [`tools/generate-compliance-tests/go.mod`](../../../../tools/generate-compliance-tests/go.mod),
 which is the single place this SDK declares which OPA revision it targets.
 
-At the time of writing that is a temporary commit pin
-(`v1.18.2-0.20260706175033-f6092b9ce472`, i.e. commit `f6092b9ce` — the merge of
-[open-policy-agent/opa#8825](https://github.com/open-policy-agent/opa/pull/8825),
-schemas from [#8775](https://github.com/open-policy-agent/opa/pull/8775)), because
-`opa build --format=proto` has not yet shipped in a tagged release. Once a release
-containing the flag is available (targeting v1.19.0), bump `go.mod` to that release
-and re-vendor — see below.
+At the time of writing that is `v1.19.0`, the first tagged release containing
+`opa build --format=proto`
+([open-policy-agent/opa#8825](https://github.com/open-policy-agent/opa/pull/8825),
+schemas from [#8775](https://github.com/open-policy-agent/opa/pull/8775)).
 
 ## Updating
 
