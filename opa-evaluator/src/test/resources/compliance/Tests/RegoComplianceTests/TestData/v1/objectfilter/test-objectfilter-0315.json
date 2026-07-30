@@ -77,8 +77,16 @@
 								],
 								"result": {
 									"description": "remaining data from `object` with only keys specified in `keys`",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "filtered",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}

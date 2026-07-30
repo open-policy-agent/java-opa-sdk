@@ -95,8 +95,16 @@
 								],
 								"result": {
 									"description": "result of removing all keys specified in `paths`",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}

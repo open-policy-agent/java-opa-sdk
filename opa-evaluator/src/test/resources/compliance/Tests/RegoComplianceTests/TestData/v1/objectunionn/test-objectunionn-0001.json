@@ -45,8 +45,16 @@
 								],
 								"result": {
 									"description": "asymmetric recursive union of all objects in `objects`, merged from left to right, where conflicts are resolved by choosing the key from the right-hand object",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -348,8 +356,16 @@
 								],
 								"result": {
 									"description": "asymmetric recursive union of all objects in `objects`, merged from left to right, where conflicts are resolved by choosing the key from the right-hand object",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -674,8 +690,16 @@
 								],
 								"result": {
 									"description": "asymmetric recursive union of all objects in `objects`, merged from left to right, where conflicts are resolved by choosing the key from the right-hand object",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -1039,8 +1063,16 @@
 								],
 								"result": {
 									"description": "asymmetric recursive union of all objects in `objects`, merged from left to right, where conflicts are resolved by choosing the key from the right-hand object",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -1438,8 +1470,16 @@
 								],
 								"result": {
 									"description": "asymmetric recursive union of all objects in `objects`, merged from left to right, where conflicts are resolved by choosing the key from the right-hand object",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -2001,8 +2041,16 @@
 								],
 								"result": {
 									"description": "asymmetric recursive union of all objects in `objects`, merged from left to right, where conflicts are resolved by choosing the key from the right-hand object",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}

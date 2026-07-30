@@ -93,8 +93,16 @@
 								],
 								"result": {
 									"description": "result of removing the specified `keys` from `object`",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}

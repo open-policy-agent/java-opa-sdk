@@ -1,0 +1,897 @@
+{
+	"cases": [
+		{
+			"note": "strings/format_int: bignum exact (\u003e64-bit integer, all bases + negative)",
+			"query": "data.generated.p = x",
+			"modules": [
+				"package generated\n\np := result if {\n\tresult := {\n\t\t\"b16\": format_int(18446744073709551617, 16),\n\t\t\"b10\": format_int(18446744073709551617, 10),\n\t\t\"b8\": format_int(18446744073709551617, 8),\n\t\t\"b2\": format_int(18446744073709551617, 2),\n\t\t\"neg16\": format_int(-18446744073709551617, 16),\n\t\t\"neg10\": format_int(-18446744073709551617, 10),\n\t\t\"frac16\": format_int(15.9, 16),\n\t\t\"fracneg16\": format_int(-15.9, 16),\n\t}\n}\n"
+			],
+			"data": {},
+			"want_result": [
+				{
+					"x": {
+						"b10": "18446744073709551617",
+						"b16": "10000000000000001",
+						"b2": "10000000000000000000000000000000000000000000000000000000000000001",
+						"b8": "2000000000000000000001",
+						"frac16": "f",
+						"fracneg16": "-f",
+						"neg10": "-18446744073709551617",
+						"neg16": "-10000000000000001"
+					}
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "18446744073709551617"
+						},
+						{
+							"value": "10"
+						},
+						{
+							"value": "16"
+						},
+						{
+							"value": "2"
+						},
+						{
+							"value": "8"
+						},
+						{
+							"value": "15.9"
+						},
+						{
+							"value": "-15.9"
+						},
+						{
+							"value": "-18446744073709551617"
+						},
+						{
+							"value": "b10"
+						},
+						{
+							"value": "b16"
+						},
+						{
+							"value": "b2"
+						},
+						{
+							"value": "b8"
+						},
+						{
+							"value": "frac16"
+						},
+						{
+							"value": "fracneg16"
+						},
+						{
+							"value": "neg10"
+						},
+						{
+							"value": "neg16"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "format_int",
+							"decl": {
+								"args": [
+									{
+										"description": "number to format",
+										"name": "number",
+										"type": "number"
+									},
+									{
+										"description": "base of number representation to use",
+										"name": "base",
+										"type": "number"
+									}
+								],
+								"result": {
+									"description": "formatted number",
+									"name": "output",
+									"type": "string"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.generated.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.generated.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 10,
+												"row": 6,
+												"index": 1,
+												"Index": 1,
+												"target": 4
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 10,
+												"row": 6,
+												"index": 2,
+												"Index": 2,
+												"target": 5
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "local",
+														"value": 5
+													}
+												],
+												"result": 6,
+												"file": 0,
+												"col": 10,
+												"row": 6
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 7,
+												"file": 0,
+												"col": 10,
+												"row": 6
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 10,
+												"row": 5,
+												"index": 1,
+												"Index": 1,
+												"target": 8
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 10,
+												"row": 5,
+												"index": 3,
+												"Index": 3,
+												"target": 9
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 8
+													},
+													{
+														"type": "local",
+														"value": 9
+													}
+												],
+												"result": 10,
+												"file": 0,
+												"col": 10,
+												"row": 5
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 10
+												},
+												"target": 11,
+												"file": 0,
+												"col": 10,
+												"row": 5
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 9,
+												"row": 8,
+												"index": 1,
+												"Index": 1,
+												"target": 12
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 9,
+												"row": 8,
+												"index": 4,
+												"Index": 4,
+												"target": 13
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 12
+													},
+													{
+														"type": "local",
+														"value": 13
+													}
+												],
+												"result": 14,
+												"file": 0,
+												"col": 9,
+												"row": 8
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 14
+												},
+												"target": 15,
+												"file": 0,
+												"col": 9,
+												"row": 8
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 9,
+												"row": 7,
+												"index": 1,
+												"Index": 1,
+												"target": 16
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 9,
+												"row": 7,
+												"index": 5,
+												"Index": 5,
+												"target": 17
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 16
+													},
+													{
+														"type": "local",
+														"value": 17
+													}
+												],
+												"result": 18,
+												"file": 0,
+												"col": 9,
+												"row": 7
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 18
+												},
+												"target": 19,
+												"file": 0,
+												"col": 9,
+												"row": 7
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 13,
+												"row": 11,
+												"index": 6,
+												"Index": 6,
+												"target": 20
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 13,
+												"row": 11,
+												"index": 3,
+												"Index": 3,
+												"target": 21
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 20
+													},
+													{
+														"type": "local",
+														"value": 21
+													}
+												],
+												"result": 22,
+												"file": 0,
+												"col": 13,
+												"row": 11
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 22
+												},
+												"target": 23,
+												"file": 0,
+												"col": 13,
+												"row": 11
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 16,
+												"row": 12,
+												"index": 7,
+												"Index": 7,
+												"target": 24
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 16,
+												"row": 12,
+												"index": 3,
+												"Index": 3,
+												"target": 25
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 24
+													},
+													{
+														"type": "local",
+														"value": 25
+													}
+												],
+												"result": 26,
+												"file": 0,
+												"col": 16,
+												"row": 12
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 26
+												},
+												"target": 27,
+												"file": 0,
+												"col": 16,
+												"row": 12
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 12,
+												"row": 10,
+												"index": 8,
+												"Index": 8,
+												"target": 28
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 12,
+												"row": 10,
+												"index": 2,
+												"Index": 2,
+												"target": 29
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 28
+													},
+													{
+														"type": "local",
+														"value": 29
+													}
+												],
+												"result": 30,
+												"file": 0,
+												"col": 12,
+												"row": 10
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 30
+												},
+												"target": 31,
+												"file": 0,
+												"col": 12,
+												"row": 10
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 12,
+												"row": 9,
+												"index": 8,
+												"Index": 8,
+												"target": 32
+											}
+										},
+										{
+											"type": "MakeNumberRefStmt",
+											"stmt": {
+												"file": 0,
+												"col": 12,
+												"row": 9,
+												"index": 3,
+												"Index": 3,
+												"target": 33
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "format_int",
+												"args": [
+													{
+														"type": "local",
+														"value": 32
+													},
+													{
+														"type": "local",
+														"value": 33
+													}
+												],
+												"result": 34,
+												"file": 0,
+												"col": 12,
+												"row": 9
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 34
+												},
+												"target": 35,
+												"file": 0,
+												"col": 12,
+												"row": 9
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 9
+												},
+												"value": {
+													"type": "local",
+													"value": 7
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 10
+												},
+												"value": {
+													"type": "local",
+													"value": 11
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 11
+												},
+												"value": {
+													"type": "local",
+													"value": 15
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 12
+												},
+												"value": {
+													"type": "local",
+													"value": 19
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 13
+												},
+												"value": {
+													"type": "local",
+													"value": 23
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 14
+												},
+												"value": {
+													"type": "local",
+													"value": 27
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 15
+												},
+												"value": {
+													"type": "local",
+													"value": 31
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 16
+												},
+												"value": {
+													"type": "local",
+													"value": 35
+												},
+												"object": 36,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 36
+												},
+												"target": 37,
+												"file": 0,
+												"col": 2,
+												"row": 4
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 37
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"generated",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": {
+						"b10": "18446744073709551617",
+						"b16": "10000000000000001",
+						"b2": "10000000000000000000000000000000000000000000000000000000000000001",
+						"b8": "2000000000000000000001",
+						"frac16": "f",
+						"fracneg16": "-f",
+						"neg10": "-18446744073709551617",
+						"neg16": "-10000000000000001"
+					}
+				}
+			],
+			"ignore": false
+		}
+	]
+}
