@@ -5,15 +5,96 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 0.3.0
+
+This release raises the minimum Java version to 17, adds the `opa-proto` module
+for proto-format plan bundles, and expands builtin coverage (`opa.runtime`,
+`array.flatten`, `yaml.is_valid`, `internal.member_2`/`internal.member_3`).
+The service plugins gain dynamic entrypoint evaluation, a configurable status
+resource path, jittered upload intervals, and plugin auto-discovery in status
+reports, alongside a hardened bundle downloader, a bump to OPA v1.19.0 for
+compliance fixtures, and a much stricter CI pipeline.
+
 ### Breaking Changes
 
-- Renamed the statement type enum from `Stmt.STMT_TYPE` to `Stmt.StmtType`.
-- Removed duplicate per-statement `StmtType` string constants, such as `ArrayAppendStmt.StmtType`; statement type names now come from `Stmt.StmtType#getTypeName()`.
-- Removed the unused `MakeObjectStmt#getStmtType()` helper.
+- The minimum supported Java version is now **17** (was 11) ([#47](https://github.com/open-policy-agent/java-opa-sdk/pull/47))
+- Renamed the statement type enum from `Stmt.STMT_TYPE` to `Stmt.StmtType`; removed the duplicate per-statement `StmtType` string constants (such as `ArrayAppendStmt.StmtType`) and the unused `MakeObjectStmt#getStmtType()` helper — statement type names now come from `Stmt.StmtType#getTypeName()` ([#95](https://github.com/open-policy-agent/java-opa-sdk/pull/95))
+- Renamed `Metrics#Clear` to `Metrics#clear` ([#70](https://github.com/open-policy-agent/java-opa-sdk/pull/70))
+- Fixed a typo in the decision log config accessors: `getDropDedcision`/`setDropDedcision` are now `getDropDecision`/`setDropDecision` ([#94](https://github.com/open-policy-agent/java-opa-sdk/pull/94))
 
-### Changed
+### Runtime, SDK, Tooling
 
-- Updated statement deserialization to use `Stmt.StmtType#getTypeName()` as the single source of statement type names.
+- Support proto-format plan bundles via the new `opa-proto` module (`opa build --format=proto`) ([#110](https://github.com/open-policy-agent/java-opa-sdk/pull/110)) authored by @sspaink
+- Support dynamic entrypoint evaluation via `DecisionOptions` ([#174](https://github.com/open-policy-agent/java-opa-sdk/pull/174)) authored by @babayanv
+- Implement the `opa.runtime` builtin ([#177](https://github.com/open-policy-agent/java-opa-sdk/pull/177)) authored by @arimu1
+- Implement the `internal.member_2` and `internal.member_3` builtins ([#176](https://github.com/open-policy-agent/java-opa-sdk/pull/176)) authored by @arimu1
+- Add the `yaml.is_valid` builtin ([#150](https://github.com/open-policy-agent/java-opa-sdk/pull/150)) authored by @Aayush10016
+- Implement the `array.flatten` builtin ([#148](https://github.com/open-policy-agent/java-opa-sdk/pull/148)) authored by @ume3445
+- Add a configurable resource path for status uploads ([#170](https://github.com/open-policy-agent/java-opa-sdk/pull/170)) authored by @arimu1
+- Jitter the `StatusPlugin` report interval between min/max delay ([#159](https://github.com/open-policy-agent/java-opa-sdk/pull/159)) authored by @arimu1
+- Jitter the `DecisionLogPlugin` upload interval between min/max delay ([#158](https://github.com/open-policy-agent/java-opa-sdk/pull/158)) authored by @arimu1
+- Auto-discover plugins in the status report ([#111](https://github.com/open-policy-agent/java-opa-sdk/pull/111)) authored by @Develop-KIM
+- Harden the bundle downloader against security vulnerabilities ([#71](https://github.com/open-policy-agent/java-opa-sdk/pull/71)) authored by @polachandu
+- Fix missing/incorrect `@OpaBuiltin` annotations for `union` and `object.union` ([#157](https://github.com/open-policy-agent/java-opa-sdk/pull/157)) authored by @ML-dev-crypto
+- Bump OPA to v1.19.0 and regenerate the compliance fixtures ([#181](https://github.com/open-policy-agent/java-opa-sdk/pull/181)) authored by @sspaink
+- Bump OPA to v1.18.2 and keep the compliance fixtures in sync ([#121](https://github.com/open-policy-agent/java-opa-sdk/pull/121)) authored by @sspaink
+
+### Build and CI
+
+- Test each module on Java 17 and 21 ([#105](https://github.com/open-policy-agent/java-opa-sdk/pull/105)) authored by @sspaink
+- Compile all modules on every PR ([#106](https://github.com/open-policy-agent/java-opa-sdk/pull/106)) authored by @sspaink
+- Test and type-check Rego policy on PRs ([#107](https://github.com/open-policy-agent/java-opa-sdk/pull/107)) authored by @sspaink
+- Add CodeQL static security analysis ([#104](https://github.com/open-policy-agent/java-opa-sdk/pull/104)) authored by @sspaink
+- Add dependency review to PRs and dependency graph submission ([#103](https://github.com/open-policy-agent/java-opa-sdk/pull/103)) authored by @sspaink
+- Add zizmor GitHub Actions security linting ([#102](https://github.com/open-policy-agent/java-opa-sdk/pull/102)) authored by @sspaink
+- Bump Gradle from 8.14.4 to 9.6.0 ([#61](https://github.com/open-policy-agent/java-opa-sdk/pull/61)) authored by @sspaink
+- Add `CODEOWNERS` to auto-request maintainer reviews ([#108](https://github.com/open-policy-agent/java-opa-sdk/pull/108)) authored by @sspaink
+- Group Dependabot updates into one PR per ecosystem ([#168](https://github.com/open-policy-agent/java-opa-sdk/pull/168)) authored by @sspaink
+- Expand wildcard imports to satisfy `AvoidStarImport` (79 violations) ([#171](https://github.com/open-policy-agent/java-opa-sdk/pull/171)) authored by @arimu1
+- Mop up long-tail Checkstyle violations ([#100](https://github.com/open-policy-agent/java-opa-sdk/pull/100)) authored by @wipheg
+- Add braces to single-line if/else statements (`NeedBraces`) ([#109](https://github.com/open-policy-agent/java-opa-sdk/pull/109)) authored by @Wassef-Chebbi
+
+### Docs, Website, Ecosystem
+
+- Add `AGENTS.md` and `CONTRIBUTING.md` ([#175](https://github.com/open-policy-agent/java-opa-sdk/pull/175)) authored by @sspaink
+- Backfill the changelog with 0.1.0 and 0.2.0 release history ([#147](https://github.com/open-policy-agent/java-opa-sdk/pull/147)) authored by @sspaink
+
+### Miscellaneous
+
+- Dependency updates; notably:
+    - Bump com.fasterxml.jackson:jackson-bom from 2.17.0 to 2.22.1 ([#97](https://github.com/open-policy-agent/java-opa-sdk/pull/97), [#164](https://github.com/open-policy-agent/java-opa-sdk/pull/164))
+    - Bump com.fasterxml.jackson.core:jackson-databind from 2.21.3 to 2.22.1 ([#116](https://github.com/open-policy-agent/java-opa-sdk/pull/116))
+    - Bump com.fasterxml.jackson.datatype:jackson-datatype-jsr310 from 2.17.0 to 2.22.1 ([#154](https://github.com/open-policy-agent/java-opa-sdk/pull/154), [#161](https://github.com/open-policy-agent/java-opa-sdk/pull/161))
+    - Bump com.fasterxml.jackson.dataformat:jackson-dataformat-yaml from 2.17.0 to 2.22.1 ([#119](https://github.com/open-policy-agent/java-opa-sdk/pull/119))
+    - Bump com.google.code.gson:gson from 2.11.0 to 2.14.0 ([#122](https://github.com/open-policy-agent/java-opa-sdk/pull/122))
+    - Bump com.google.guava:guava from 33.4.5-jre to 33.6.0-jre ([#123](https://github.com/open-policy-agent/java-opa-sdk/pull/123))
+    - Bump org.bouncycastle:bcpkix-jdk18on from 1.82 to 1.85 ([#125](https://github.com/open-policy-agent/java-opa-sdk/pull/125), [#162](https://github.com/open-policy-agent/java-opa-sdk/pull/162))
+    - Bump org.semver4j:semver4j from 5.4.1 to 6.0.0 ([#40](https://github.com/open-policy-agent/java-opa-sdk/pull/40))
+    - Bump org.apache.logging.log4j:log4j-core from 2.26.0 to 2.26.1 ([#117](https://github.com/open-policy-agent/java-opa-sdk/pull/117))
+    - Bump org.junit.jupiter:junit-jupiter from 5.10.1 to 6.1.2 ([#23](https://github.com/open-policy-agent/java-opa-sdk/pull/23), [#98](https://github.com/open-policy-agent/java-opa-sdk/pull/98), [#160](https://github.com/open-policy-agent/java-opa-sdk/pull/160))
+    - Bump org.junit.jupiter:junit-jupiter-params from 5.8.2 to 6.1.0 ([#50](https://github.com/open-policy-agent/java-opa-sdk/pull/50))
+    - Bump org.junit.platform:junit-platform-launcher from 1.10.1 to 6.1.2 ([#124](https://github.com/open-policy-agent/java-opa-sdk/pull/124), [#163](https://github.com/open-policy-agent/java-opa-sdk/pull/163))
+    - Bump com.vanniktech.maven.publish from 0.30.0 to 0.37.0 ([#96](https://github.com/open-policy-agent/java-opa-sdk/pull/96))
+    - Bump org.gradle.toolchains.foojay-resolver-convention from 0.10.0 to 1.0.0 ([#99](https://github.com/open-policy-agent/java-opa-sdk/pull/99))
+    - Bump gradle-wrapper from 9.6.0 to 9.6.1 ([#118](https://github.com/open-policy-agent/java-opa-sdk/pull/118))
+    - Bump actions/checkout from 6 to 7 ([#49](https://github.com/open-policy-agent/java-opa-sdk/pull/49))
+    - Bump actions/setup-java from 5.4.0 to 5.5.0 ([#115](https://github.com/open-policy-agent/java-opa-sdk/pull/115), [#167](https://github.com/open-policy-agent/java-opa-sdk/pull/167))
+    - Bump actions/setup-go from 6.0.0 to 6.5.0 ([#126](https://github.com/open-policy-agent/java-opa-sdk/pull/126))
+    - Grouped GitHub Actions and Gradle dependency updates ([#173](https://github.com/open-policy-agent/java-opa-sdk/pull/173), [#179](https://github.com/open-policy-agent/java-opa-sdk/pull/179), [#180](https://github.com/open-policy-agent/java-opa-sdk/pull/180))
+
+### New Contributors
+
+- @shanksmp made their first contribution in [#70](https://github.com/open-policy-agent/java-opa-sdk/pull/70)
+- @DevAgumon made their first contribution in [#94](https://github.com/open-policy-agent/java-opa-sdk/pull/94)
+- @Wassef-Chebbi made their first contribution in [#109](https://github.com/open-policy-agent/java-opa-sdk/pull/109)
+- @wipheg made their first contribution in [#100](https://github.com/open-policy-agent/java-opa-sdk/pull/100)
+- @polachandu made their first contribution in [#71](https://github.com/open-policy-agent/java-opa-sdk/pull/71)
+- @Develop-KIM made their first contribution in [#111](https://github.com/open-policy-agent/java-opa-sdk/pull/111)
+- @ume3445 made their first contribution in [#148](https://github.com/open-policy-agent/java-opa-sdk/pull/148)
+- @ML-dev-crypto made their first contribution in [#157](https://github.com/open-policy-agent/java-opa-sdk/pull/157)
+- @arimu1 made their first contribution in [#171](https://github.com/open-policy-agent/java-opa-sdk/pull/171)
+- @babayanv made their first contribution in [#174](https://github.com/open-policy-agent/java-opa-sdk/pull/174)
+- @Aayush10016 made their first contribution in [#150](https://github.com/open-policy-agent/java-opa-sdk/pull/150)
 
 ## 0.2.0
 
