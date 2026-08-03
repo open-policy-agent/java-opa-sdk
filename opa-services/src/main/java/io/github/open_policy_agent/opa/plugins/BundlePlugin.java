@@ -44,6 +44,11 @@ public final class BundlePlugin implements Plugin {
         if (bundle.getResource() == null || bundle.getResource().isEmpty()) {
           errors.add("Bundle '" + name + "' has missing or empty resource path");
         }
+        if (bundle.getDownloadTimeoutSeconds() <= 0) {
+          errors.add(
+              "Bundle '" + name + "' download_timeout_seconds must be > 0 (got "
+                  + bundle.getDownloadTimeoutSeconds() + ")");
+        }
         errors.addAll(BundleDownloader.validatePolling(bundle.getPolling(), "Bundle '" + name + "'"));
       }
     }
@@ -79,6 +84,7 @@ public final class BundlePlugin implements Plugin {
                 .setResource(bundleConfig.getResource())
                 .setPolling(bundleConfig.getPolling());
         bundle.setMaxSizeBytes(bundleConfig.getMaxSizeBytes());
+        bundle.setDownloadTimeoutSeconds(bundleConfig.getDownloadTimeoutSeconds());
         plugin.bundles.put(name, bundle);
       }
     }
