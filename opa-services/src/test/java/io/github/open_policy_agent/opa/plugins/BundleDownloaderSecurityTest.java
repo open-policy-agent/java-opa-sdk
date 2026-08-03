@@ -17,6 +17,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -317,6 +318,69 @@ class BundleDownloaderSecurityTest {
     ExecutionException ex = assertThrows(ExecutionException.class,
         () -> runBundleDownload(port, limit).get(10, TimeUnit.SECONDS));
     assertTrue(ex.getCause().getMessage().contains("exceeds limit"));
+  }
+
+  @Test
+  void polling_serverAcceptsButNeverReplies_timesOutAndKeepsPolling() throws Exception {
+    CountDownLatch connections = new CountDownLatch(2);
+    ServerSocket silentServer = new ServerSocket(0);
+    int port = silentServer.getLocalPort();
+
+    Thread accepter = new Thread(() -> {
+      try {
+        while (!Thread.currentThread().isInterrupted()) {
+          silentServer.accept();
+          connections.countDown();
+        }
+      } catch (IOException ignored) {
+      }
+    });
+    accepter.setDaemon(true);
+    accepter.start();
+
+    try {
+      Config config = new Config();
+      config.setServices(Collections.singletonMap("test-service",
+          new Config.ServiceConfig()
+              .setName("test-service")
+              .setUrl("http://localhost:" + port)
+              .setResponseHeaderTimeoutSeconds(1)));
+      config.setBundles(Collections.singletonMap("authz",
+          new Config.BundleConfig()
+              .setService("test-service")
+              .setResource("/bundle.tar.gz")
+              .setPolling(
+                  new Config.PollingConfig().setMinDelaySeconds(0).setMaxDelaySeconds(0))));
+
+      Logger logger = new Logger.StandardLogger();
+      PluginManager manager =
+          new PluginManager.Builder()
+              .withId("test")
+              .withStore(new InMem())
+              .withConfig(config)
+              .withLogger(logger)
+              .build();
+
+      ServicePlugin servicePlugin = (ServicePlugin) new ServicePlugin().initialize(manager);
+      manager.registerPlugin("services", servicePlugin);
+      servicePlugin.start();
+
+      BundlePlugin bundlePlugin = (BundlePlugin) new BundlePlugin().initialize(manager);
+      manager.registerPlugin("bundles", bundlePlugin);
+      try {
+        bundlePlugin.start();
+
+        assertTrue(
+            connections.await(10, TimeUnit.SECONDS),
+            "polling stopped after a stalled request — expected the request timeout to fail the "
+                + "exchange so the poll chain retries");
+      } finally {
+        bundlePlugin.stop();
+      }
+    } finally {
+      silentServer.close();
+      accepter.interrupt();
+    }
   }
 
   @Test

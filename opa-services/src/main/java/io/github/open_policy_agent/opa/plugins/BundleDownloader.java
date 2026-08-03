@@ -57,6 +57,10 @@ public abstract class BundleDownloader {
   protected long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
 
+  // Fallback response timeout when no service config is available; matches the
+  // response_header_timeout_seconds default in Config.ServiceConfig.
+  private static final int DEFAULT_RESPONSE_TIMEOUT_SECONDS = 10;
+
   private static final Set<String> ALLOWED_CONTENT_TYPES =
       Set.of(
           "application/vnd.openpolicyagent.bundles",
@@ -226,6 +230,15 @@ public abstract class BundleDownloader {
         : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
   }
 
+  // Per-request response timeout
+  private Duration requestTimeout() {
+    int seconds =
+        authService != null
+            ? authService.getResponseHeaderTimeoutSeconds()
+            : DEFAULT_RESPONSE_TIMEOUT_SECONDS;
+    return Duration.ofSeconds(seconds > 0 ? seconds : DEFAULT_RESPONSE_TIMEOUT_SECONDS);
+  }
+
   /**
    * Download the bundle from the configured service and resource.
    *
@@ -322,6 +335,7 @@ public abstract class BundleDownloader {
     HttpRequest.Builder requestBuilder =
         HttpRequest.newBuilder()
             .uri(uri)
+            .timeout(requestTimeout())
             .header("Accept", "application/vnd.openpolicyagent.bundles")
             .GET();
 
