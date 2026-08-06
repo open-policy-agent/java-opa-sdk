@@ -198,7 +198,7 @@ public class Opa {
     // Bridge JsonNode <-> POJO here at the opa-services boundary.
     Object pojoInput = JSON_MAPPER.convertValue(options.getInput(), Object.class);
     List<Object> rawResults = engine.evaluate(ctx, pojoInput);
-    JsonNode resultNode = JSON_MAPPER.valueToTree(rawResults.get(0));
+    JsonNode resultNode = unwrapResultKey(JSON_MAPPER.valueToTree(rawResults.get(0)));
 
     logDecision(decisionId, options.getInput(), resultNode, options, ctx);
 
@@ -280,6 +280,15 @@ public class Opa {
       return options.decisionID;
     }
     return UUID.randomUUID().toString();
+  }
+
+  // IR plans wrap every result as {"result": <value>}, the same envelope Engine strips on its typed
+  // result path. Callers and decision log events both see the decision itself.
+  private static JsonNode unwrapResultKey(JsonNode result) {
+    if (result != null && result.isObject() && result.has("result")) {
+      return result.get("result");
+    }
+    return result;
   }
 
   private void logDecision(

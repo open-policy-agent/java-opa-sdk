@@ -279,6 +279,45 @@ Opa opa = new Opa.Builder()
     .build();
 ```
 
+### Decision Log Masking
+
+Decision events can be redacted before they are buffered, uploaded, or written to the console. The
+`decision_logs.mask_decision` path (default `system/log/mask`) is evaluated with the decision event
+as its input, and the rules it returns are applied to the event:
+
+```rego
+package system.log
+
+import rego.v1
+
+# Shorthand form: remove the field.
+mask contains "/input/password" if {
+	input.input.password
+}
+
+# Structured form: remove or upsert a value.
+mask contains {"op": "upsert", "path": "/result/token", "value": "**REDACTED**"} if {
+	input.result.token
+}
+```
+
+Rule paths must be slash-prefixed and start with `input`, `result`, or `nd_builtin_cache` — the
+decision's input, its result, and the non-deterministic builtin cache, as they appear in the event.
+Removed paths are recorded in the event's `erased` array, upserted paths in `masked`. Paths that are
+undefined in the event are skipped.
+
+Because this SDK evaluates compiled IR plans, **the mask policy has to be built as an entrypoint**:
+
+```bash
+opa build -t plan -e authz/allow -e system/log/mask -o bundle.tar.gz policies/
+```
+
+If no plan for the configured path is present, masking is skipped — and if `mask_decision` was set
+to something other than the default, that is logged as a warning, since it means events are being
+logged unmasked. If the mask policy fails to evaluate, or returns a rule the SDK cannot parse, the
+error is logged and the event is dropped rather than logged unmasked (matching OPA's Go
+implementation).
+
 ## Decision Options
 
 For fine-grained control over individual decisions:

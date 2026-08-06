@@ -311,7 +311,7 @@ See [opa-services/README.md](opa-services/README.md#tls-and-mtls) for a full mTL
 | `service` | string | - | Service for log uploads |
 | `console` | boolean | false | Enable console logging |
 | `resource` | string | `/logs` | Resource path for uploads |
-| `mask_decision` | string | `system/log/mask` | Policy path for masking |
+| `mask_decision` | string | `system/log/mask` | Policy path for masking (must be a plan entrypoint; see [masking](opa-services/README.md#decision-log-masking)) |
 | `drop_decision` | string | `system/log/drop` | Policy path for filtering |
 
 #### Status

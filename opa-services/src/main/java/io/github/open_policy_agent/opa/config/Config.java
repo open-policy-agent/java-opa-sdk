@@ -157,12 +157,16 @@ public class Config {
   }
 
   public static class DecisionLogsConfig {
+
+    /** Default {@code mask_decision} path, applied when the configuration does not set one. */
+    public static final String DEFAULT_MASK_DECISION = "system/log/mask";
+
     private Boolean console = false;
 
     private ReportingConfig reporting;
 
     @JsonProperty("mask_decision")
-    private String maskDecision = "system/log/mask";
+    private String maskDecision = DEFAULT_MASK_DECISION;
 
     @JsonProperty("drop_decision")
     private String dropDecision = "system/log/drop";

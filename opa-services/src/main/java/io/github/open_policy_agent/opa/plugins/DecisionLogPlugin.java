@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -17,8 +18,11 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.config.Config;
+import io.github.open_policy_agent.opa.ir.policy.Policy;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.metrics.Metrics;
+import io.github.open_policy_agent.opa.rego.Engine;
+import io.github.open_policy_agent.opa.storage.Store;
 
 /**
  * Plugin that logs policy decision events.
@@ -37,6 +41,7 @@ public final class DecisionLogPlugin implements Plugin {
   private DecisionLogs decisionLogs;
   private PluginManager manager;
   private ScheduledExecutorService scheduler;
+  private PluginManager.BundleActivationListener maskListener;
 
   public DecisionLogPlugin() {}
 
@@ -125,6 +130,11 @@ public final class DecisionLogPlugin implements Plugin {
               .setMaxDelaySeconds(logsConfig.getMaxDelaySeconds())
               .setResource(logsConfig.getResource())
               .setReporting(logsConfig.getReporting());
+
+      // A new bundle means a new policy, so the cached mask query has to be rebuilt.
+      DecisionLogs logs = plugin.decisionLogs;
+      plugin.maskListener = bundleName -> logs.dropMaskQuery();
+      manager.registerBundleActivationListener(plugin.maskListener);
     }
 
     return plugin;
@@ -184,6 +194,11 @@ public final class DecisionLogPlugin implements Plugin {
 
   @Override
   public void stop() {
+    if (maskListener != null) {
+      manager.deregisterBundleActivationListener(maskListener);
+      maskListener = null;
+    }
+
     if (scheduler != null) {
       manager.getLogger().info("Stopping decision logs plugin...");
 
@@ -258,14 +273,18 @@ public final class DecisionLogPlugin implements Plugin {
     private final Logger logger;
     private final PluginManager manager;
     private final ConcurrentLinkedQueue<ObjectNode> buffer = new ConcurrentLinkedQueue<>();
+    private final Object maskLock = new Object();
     private Boolean console;
     private String service;
-    private String maskDecision;
+    private String maskEntrypoint;
     private String dropDecision;
     private Integer minDelaySeconds;
     private Integer maxDelaySeconds;
     private String resource;
     private Config.ReportingConfig reporting;
+    private Engine.PreparedQuery maskQuery;
+    private String maskQueryFailure;
+    private boolean maskQueryPrepared;
 
     private DecisionLogs(Logger logger, PluginManager manager) {
       this.logger = logger;
@@ -287,7 +306,10 @@ public final class DecisionLogPlugin implements Plugin {
     }
 
     public DecisionLogs setMaskDecision(String maskDecision) {
-      this.maskDecision = maskDecision;
+      // Configured as a data path ("/system/log/mask"); plan entrypoints have no leading slash.
+      String entrypoint = maskDecision == null ? "" : maskDecision.trim().replaceAll("^/+|/+$", "");
+      this.maskEntrypoint = entrypoint.isEmpty() ? null : entrypoint;
+      dropMaskQuery();
       return this;
     }
 
@@ -361,8 +383,11 @@ public final class DecisionLogPlugin implements Plugin {
             buildDecisionEvent(
                 decisionId, input, result, path, requestedBy, timestamp, metrics, ndCacheValues);
 
-        // TODO: Apply mask decision policy if configured
         // TODO: Apply drop decision policy if configured
+
+        if (!applyMask(event)) {
+          return; // masking failed: drop the event rather than log it unmasked, as OPA Go does
+        }
 
         // Add to buffer (thread-safe)
         buffer.add(event);
@@ -385,6 +410,111 @@ public final class DecisionLogPlugin implements Plugin {
       } catch (Exception e) {
         logger.error("Failed to log decision: %s", e.getMessage());
       }
+    }
+
+    /**
+     * Evaluate the configured {@code mask_decision} policy against the event and apply the
+     * redactions it returns. The event is the policy's input, so rules address the decision's data
+     * as {@code /input/...}, {@code /result/...} or {@code /nd_builtin_cache/...}.
+     *
+     * @param event the decision event to redact in place
+     * @return true when the event may be logged, false when masking failed and it must be dropped
+     */
+    private boolean applyMask(ObjectNode event) {
+      String entrypoint = maskEntrypoint;
+      if (entrypoint == null) {
+        return true;
+      }
+
+      try {
+        Engine.PreparedQuery query = maskQuery(entrypoint);
+        if (query == null) {
+          return true; // no mask policy in the bundle
+        }
+
+        // The typed overload strips the {"result": <value>} envelope IR plans add.
+        List<Object> results = query.eval(MAPPER.convertValue(event, Object.class), Object.class);
+        if (results.isEmpty()) {
+          return true; // mask rule undefined for this event
+        }
+
+        MaskRuleSet.parse(MAPPER.valueToTree(results.get(0))).apply(event);
+        return true;
+      } catch (Exception e) {
+        logger.error("Log event masking failed: %s", describe(e));
+        return false;
+      }
+    }
+
+    // Prepared on first use and cached until a new bundle is activated (Go-OPA's prepareOnce).
+    // Returns null when no plan holds the mask entrypoint. A preparation failure is cached too and
+    // re-raised per event, so a broken mask policy drops events instead of logging them unmasked.
+    private Engine.PreparedQuery maskQuery(String entrypoint) {
+      synchronized (maskLock) {
+        if (!maskQueryPrepared) {
+          try {
+            maskQuery = prepareMaskQuery(entrypoint);
+          } catch (RuntimeException e) {
+            maskQueryFailure = describe(e);
+          }
+          // Set only after the attempt yields a query or a cached failure: an Error leaves the
+          // flag unset and propagates, rather than quietly disabling masking.
+          maskQueryPrepared = true;
+        }
+        if (maskQueryFailure != null) {
+          throw new IllegalStateException(maskQueryFailure);
+        }
+        return maskQuery;
+      }
+    }
+
+    private Engine.PreparedQuery prepareMaskQuery(String entrypoint) {
+      Store store = manager.getStore();
+      Policy policy = store.getIrPolicyForEntrypoint(entrypoint);
+      // getIrPolicyForEntrypoint falls back to the first policy it finds, so the plan itself has
+      // to be looked up to tell "no mask policy" apart from "some other policy".
+      if (policy == null
+          || policy.getPlans() == null
+          || policy.getPlans().getPlans() == null
+          || policy.getPlans().getPlanByName(entrypoint) == null) {
+        reportMissingMaskPolicy(entrypoint);
+        return null;
+      }
+
+      return new Engine.Builder()
+          .withStore(store)
+          .withEntrypoint(entrypoint)
+          .build()
+          .prepareForEvaluation()
+          .build();
+    }
+
+    // A mask policy not built as a plan entrypoint leaves masking silently inactive. The default
+    // path is absent in most deployments, so only an explicitly configured one is worth a warning.
+    private void reportMissingMaskPolicy(String entrypoint) {
+      if (Config.DecisionLogsConfig.DEFAULT_MASK_DECISION.equals(entrypoint)) {
+        logger.debug("No decision log mask policy found for entrypoint '%s'", entrypoint);
+        return;
+      }
+
+      logger.warn(
+          "Decision log masking is inactive: no plan for mask_decision entrypoint '%s'."
+              + " Was the bundle built with 'opa build -t plan -e %s ...'?",
+          entrypoint, entrypoint);
+    }
+
+    /** Discard the cached mask query so the next masked event re-prepares it. */
+    void dropMaskQuery() {
+      synchronized (maskLock) {
+        maskQueryPrepared = false;
+        maskQuery = null;
+        maskQueryFailure = null;
+      }
+    }
+
+    // Not every exception carries a message, so fall back to the type name rather than "null".
+    private static String describe(Throwable t) {
+      return t.getMessage() != null ? t.getMessage() : t.toString();
     }
 
     /**
