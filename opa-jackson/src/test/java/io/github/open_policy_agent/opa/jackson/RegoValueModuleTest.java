@@ -95,6 +95,77 @@ class RegoValueModuleTest {
   }
 
   @Test
+  void serialize_regoObject_compositeKeysUseCompactJson() throws IOException {
+    // Composite keys arise from e.g. `{path: value | [path, value] := walk(x)}`. OPA names them by
+    // their compact JSON encoding, so no spaces after the separators.
+    RegoObject obj = new RegoObject();
+    RegoArray path = new RegoArray();
+    path.addValue(new RegoString("a"));
+    path.addValue(RegoInt32.of(0));
+    path.addValue(new RegoString("b"));
+    obj.setProp(path, new RegoString("AA"));
+
+    assertThat(mapper.writeValueAsString(obj)).isEqualTo("{\"[\\\"a\\\",0,\\\"b\\\"]\":\"AA\"}");
+  }
+
+  @Test
+  void serialize_regoObject_compositeKeysOfEveryKind() throws IOException {
+    // Sets and objects can be keys too, not just arrays. Expected output is the `opa eval` result
+    // for {{"s1", "s2"}: "set-key", {"k": [1, 2]}: "obj-key", [["nested"], 3]: "nested-key"}.
+    RegoSet setKey = new RegoSet(false);
+    setKey.addValue(new RegoString("s1"));
+    setKey.addValue(new RegoString("s2"));
+
+    RegoArray inner = new RegoArray();
+    inner.addValue(RegoInt32.of(1));
+    inner.addValue(RegoInt32.of(2));
+    RegoObject objKey = new RegoObject();
+    objKey.setProp(new RegoString("k"), inner);
+
+    RegoArray nestedKey = new RegoArray();
+    RegoArray nestedFirst = new RegoArray();
+    nestedFirst.addValue(new RegoString("nested"));
+    nestedKey.addValue(nestedFirst);
+    nestedKey.addValue(RegoInt32.of(3));
+
+    RegoObject obj = new RegoObject();
+    obj.setProp(objKey, new RegoString("obj-key"));
+    obj.setProp(setKey, new RegoString("set-key"));
+    obj.setProp(nestedKey, new RegoString("nested-key"));
+
+    // Keys sort lexicographically by their JSON text, which is how OPA orders them: " < [ < {.
+    assertThat(mapper.writeValueAsString(obj))
+        .isEqualTo(
+            "{\"[\\\"s1\\\",\\\"s2\\\"]\":\"set-key\","
+                + "\"[[\\\"nested\\\"],3]\":\"nested-key\","
+                + "\"{\\\"k\\\":[1,2]}\":\"obj-key\"}");
+  }
+
+  @Test
+  void serialize_regoObject_compositeKeyOrderFollowsJsonText() throws IOException {
+    // Sorting on the compact encoding is what makes this match OPA: with the old spaced form,
+    // "[\"a\", 10]" sorted before "[\"a\", \"z\"]" (space < quote), i.e. the wrong order.
+    RegoObject obj = new RegoObject();
+    obj.setProp(arrayKey(new RegoString("a"), RegoInt32.of(2)), new RegoString("two"));
+    obj.setProp(arrayKey(new RegoString("a"), RegoInt32.of(10)), new RegoString("ten"));
+    obj.setProp(arrayKey(new RegoString("a"), new RegoString("z")), new RegoString("zed"));
+
+    assertThat(mapper.writeValueAsString(obj))
+        .isEqualTo(
+            "{\"[\\\"a\\\",\\\"z\\\"]\":\"zed\","
+                + "\"[\\\"a\\\",10]\":\"ten\","
+                + "\"[\\\"a\\\",2]\":\"two\"}");
+  }
+
+  private static RegoArray arrayKey(RegoValue... items) {
+    RegoArray key = new RegoArray();
+    for (RegoValue item : items) {
+      key.addValue(item);
+    }
+    return key;
+  }
+
+  @Test
   void serialize_nestedStructure() throws IOException {
     RegoObject obj = new RegoObject();
     RegoArray arr = new RegoArray();

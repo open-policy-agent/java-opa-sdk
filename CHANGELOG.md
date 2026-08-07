@@ -5,6 +5,12 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Runtime, SDK, Tooling
+
+- Implement the `walk` builtin
+- Encode composite object keys (arrays/sets/objects) as compact JSON to match
+  Go-OPA, instead of leaking Java's collection formatting
+
 ### Build and CI
 
 - Fail the compliance suite on fixtures whose builtin cannot be resolved, instead

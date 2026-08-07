@@ -1,5 +1,6 @@
 package io.github.open_policy_agent.opa.jackson;
 
+import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -22,6 +23,7 @@ import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
@@ -128,12 +130,15 @@ public class RegoValueModule extends SimpleModule {
   }
 
   private static final class RegoObjectSerializer extends JsonSerializer<RegoObject> {
+    /** Used to render composite object keys on their own; kept static since factories are heavy. */
+    private static final JsonFactory KEY_FACTORY = new JsonFactory();
+
     @Override
     public void serialize(RegoObject v, JsonGenerator g, SerializerProvider p) throws IOException {
       // OPA (Go) emits sorted keys; preserve that for round-trip fidelity.
       Map<String, RegoValue> sorted = new TreeMap<>();
       for (Map.Entry<RegoValue, RegoValue> entry : v.getProperties().entrySet()) {
-        sorted.put(keyToString(entry.getKey()), entry.getValue());
+        sorted.put(keyToString(entry.getKey(), p), entry.getValue());
       }
       g.writeStartObject();
       for (Map.Entry<String, RegoValue> entry : sorted.entrySet()) {
@@ -143,14 +148,22 @@ public class RegoValueModule extends SimpleModule {
       g.writeEndObject();
     }
 
-    private static String keyToString(RegoValue key) {
+    private static String keyToString(RegoValue key, SerializerProvider p) throws IOException {
       if (key instanceof RegoString) {
         return ((RegoString) key).getValue();
       }
       if (key instanceof RegoNumber) {
         return ((RegoNumber) key).getBigIntValue().toString();
       }
-      return key.toString();
+      // Composite keys (arrays/sets/objects, e.g. the paths produced by walk) are named by their
+      // compact JSON encoding, matching Go-OPA. Re-serializing through the provider keeps nested
+      // values consistent with the rest of the document; RegoValue.toString() would instead leak
+      // Java's collection formatting ("[a, 0]" rather than ["a",0]).
+      StringWriter out = new StringWriter();
+      try (JsonGenerator keyGen = KEY_FACTORY.createGenerator(out)) {
+        p.defaultSerializeValue(key, keyGen);
+      }
+      return out.toString();
     }
   }
 
