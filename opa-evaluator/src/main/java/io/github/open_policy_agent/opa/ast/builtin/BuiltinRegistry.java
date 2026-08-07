@@ -21,6 +21,7 @@ import io.github.open_policy_agent.opa.ast.builtin.impls.PrintBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.SetBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.StringBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.TypeBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.UriBuiltins;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.Capabilities;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
