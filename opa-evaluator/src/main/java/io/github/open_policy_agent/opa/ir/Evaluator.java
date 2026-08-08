@@ -927,7 +927,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
         return false;
       } catch (io.github.open_policy_agent.opa.ast.builtin.BuiltinError e) {
         if (ctx.isStrictBuiltinErrors()) {
-          throw e;
+          throw new io.github.open_policy_agent.opa.ast.builtin.BuiltinError(name, e);
         }
         return false;
       }

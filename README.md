@@ -59,8 +59,8 @@ Most applications should depend on the `opa-services` module, which transitively
 **Gradle**
 
 ```kotlin
-implementation("io.github.open-policy-agent:opa-services:0.1.0")
-runtimeOnly("io.github.open-policy-agent:opa-builtins:0.1.0")
+implementation("io.github.open-policy-agent:opa-services:0.3.0")
+runtimeOnly("io.github.open-policy-agent:opa-builtins:0.3.0")
 ```
 
 **Maven**
@@ -69,12 +69,12 @@ runtimeOnly("io.github.open-policy-agent:opa-builtins:0.1.0")
 <dependency>
     <groupId>io.github.open-policy-agent</groupId>
     <artifactId>opa-services</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0</version>
 </dependency>
 <dependency>
     <groupId>io.github.open-policy-agent</groupId>
     <artifactId>opa-builtins</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0</version>
     <scope>runtime</scope>
 </dependency>
 ```
@@ -84,9 +84,9 @@ For lightweight evaluation without the plugin runtime, depend on `opa-evaluator`
 **Gradle**
 
 ```kotlin
-implementation("io.github.open-policy-agent:opa-evaluator:0.1.0")
-runtimeOnly("io.github.open-policy-agent:opa-jackson:0.1.0")
-runtimeOnly("io.github.open-policy-agent:opa-builtins:0.1.0")
+implementation("io.github.open-policy-agent:opa-evaluator:0.3.0")
+runtimeOnly("io.github.open-policy-agent:opa-jackson:0.3.0")
+runtimeOnly("io.github.open-policy-agent:opa-builtins:0.3.0")
 ```
 
 **Maven**
@@ -95,18 +95,18 @@ runtimeOnly("io.github.open-policy-agent:opa-builtins:0.1.0")
 <dependency>
     <groupId>io.github.open-policy-agent</groupId>
     <artifactId>opa-evaluator</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0</version>
 </dependency>
 <dependency>
     <groupId>io.github.open-policy-agent</groupId>
     <artifactId>opa-jackson</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0</version>
     <scope>runtime</scope>
 </dependency>
 <dependency>
     <groupId>io.github.open-policy-agent</groupId>
     <artifactId>opa-builtins</artifactId>
-    <version>0.1.0</version>
+    <version>0.3.0</version>
     <scope>runtime</scope>
 </dependency>
 ```

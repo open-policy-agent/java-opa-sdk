@@ -15,6 +15,7 @@ dependencies {
 
     runtimeOnly(project(":opa-builtins"))
     runtimeOnly(project(":opa-jackson"))
+    runtimeOnly(project(":opa-proto"))
 
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.2")

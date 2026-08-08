@@ -60,3 +60,19 @@ changes["opa-slf4j"] if {
 	some changed_file in input
 	startswith(changed_file.filename, "gradle/")
 }
+
+changes["opa-proto"] if {
+	some changed_file in input
+	startswith(changed_file.filename, "opa-proto/")
+} else if {
+	# ProtoComplianceTest decodes the base64 plan_proto fixtures emitted by this generator, so a
+	# change here (notably an OPA version bump) can alter the proto plans and must re-run its tests.
+	some changed_file in input
+	startswith(changed_file.filename, "tools/generate-compliance-tests/")
+} else if {
+	some changed_file in input
+	changed_file.filename in build_change_files
+} else if {
+	some changed_file in input
+	startswith(changed_file.filename, "gradle/")
+}

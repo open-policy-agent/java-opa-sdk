@@ -24,6 +24,8 @@ dependencies {
     testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation("org.mockito:mockito-core:5.23.0")
     testImplementation(project(":opa-jackson"))
+    // opa-proto provides the ProtoBundleDecoder SPI used to read proto-format bundles.
+    testImplementation(project(":opa-proto"))
 }
 
 tasks.test {

@@ -71,33 +71,46 @@ public class TarballBundleLoader implements BundleLoader {
 
   private Bundle createBundleFromStream(String id, InputStream in, Store store) {
     BundleAssembler assembler = new BundleAssembler();
+    // Plan and manifest bytes are buffered rather than loaded inline: tar entries arrive in
+    // arbitrary order, and the mixed-format check needs to see the whole file set before deciding
+    // which format to decode. Data and Rego files carry no format ambiguity, so they load inline.
+    byte[] planJson = null;
+    byte[] planProto = null;
+    byte[] manifestJson = null;
+    byte[] manifestProto = null;
     try (GZIPInputStream gzipIn = new GZIPInputStream(in);
         TarArchiveInputStream tarIn = new TarArchiveInputStream(gzipIn, true)) {
       org.apache.commons.compress.archivers.tar.TarArchiveEntry entry;
       long totalDecompressedBytes = 0;
       while ((entry = tarIn.getNextTarEntry()) != null) {
+        if (entry.isDirectory()) {
+          continue;
+        }
         String entryName =
             entry.getName().startsWith("/") ? entry.getName().substring(1) : entry.getName();
-        if (!entry.isDirectory() && entryName.equals("plan.json")) {
-          byte[] entryBytes = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
-          totalDecompressedBytes += entryBytes.length;
-          assembler.loadPlan(new ByteArrayInputStream(entryBytes));
-        } else if (!entry.isDirectory()
-            && (entryName.equals("data.json") || entryName.endsWith("/data.json"))) {
+        if (entryName.equals(BundleFormat.PLAN_JSON)) {
+          planJson = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
+          totalDecompressedBytes += planJson.length;
+        } else if (entryName.equals(BundleFormat.PLAN_PROTO)) {
+          planProto = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
+          totalDecompressedBytes += planProto.length;
+        } else if (entryName.equals(BundleFormat.MANIFEST_PROTO)) {
+          manifestProto = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
+          totalDecompressedBytes += manifestProto.length;
+        } else if (entryName.equals(BundleFormat.MANIFEST_JSON)) {
+          manifestJson = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
+          totalDecompressedBytes += manifestJson.length;
+        } else if (entryName.equals("data.json") || entryName.endsWith("/data.json")) {
           byte[] entryBytes = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
           totalDecompressedBytes += entryBytes.length;
           int lastSlash = entryName.lastIndexOf('/');
           String dataPath = lastSlash < 0 ? "" : entryName.substring(0, lastSlash);
           assembler.loadData(dataPath, new ByteArrayInputStream(entryBytes));
-        } else if (!entry.isDirectory() && entryName.equals(".manifest")) {
-          byte[] entryBytes = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
-          totalDecompressedBytes += entryBytes.length;
-          assembler.loadManifest(new ByteArrayInputStream(entryBytes));
-        } else if (!entry.isDirectory() && entryName.endsWith(".rego")) {
+        } else if (entryName.endsWith(".rego")) {
           byte[] entryBytes = readWithLimit(tarIn, maxDecompressedBytes - totalDecompressedBytes);
           totalDecompressedBytes += entryBytes.length;
           assembler.addRego(entryName, new String(entryBytes));
-        } else if (!entry.isDirectory()) {
+        } else {
           long entrySize = Math.max(0, entry.getSize());
           totalDecompressedBytes += entrySize;
           if (totalDecompressedBytes > maxDecompressedBytes) {
@@ -105,10 +118,22 @@ public class TarballBundleLoader implements BundleLoader {
           }
         }
       }
+
+      assembler.loadPlanAndManifest(
+          bytesSource(planJson),
+          bytesSource(planProto),
+          bytesSource(manifestJson),
+          bytesSource(manifestProto));
+
       return assembler.finish(id, store);
     } catch (IOException e) {
       throw new IllegalArgumentException("Error extracting bundle: " + e.getMessage(), e);
     }
+  }
+
+  /** An {@link InputStreamSource} over the buffered bytes, or {@code null} when the entry is absent. */
+  private static InputStreamSource bytesSource(byte[] bytes) {
+    return bytes != null ? () -> new ByteArrayInputStream(bytes) : null;
   }
 
   private static byte[] readWithLimit(InputStream in, long remaining) throws IOException {

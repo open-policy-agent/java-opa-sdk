@@ -115,8 +115,16 @@
 								],
 								"result": {
 									"description": "remaining data from `object` with only keys specified in `paths`",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "filtered",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -607,7 +615,8 @@
 					}
 				}
 			],
-			"ignore": false
+			"ignore": false,
+			"plan_proto": "ClgKAwoBeAoDCgFhCgMKAWIKAwoBYwoDCgE3CgMKAWQKAwoBOAoDCgFlCgMKATkSDQoLanNvbi5maWx0ZXIaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EnwKegoEZXZhbBJyCisIARABGAFaIwoTZzAuZGF0YS5nZW5lcmF0ZWQucBIECgIQABIECgIQARgCChAIARABGAE6CAoECgIQAhADCgsIARABGAHCAQIIBAoXCAEQARgB8gEOCgQKAhgAEgQKAhADGAQKCwgBEAEYAYoCAggEGrQECrEEChNnMC5kYXRhLmdlbmVyYXRlZC5wEgIAARgCItIDCgsIABABGAOCAgIIAwoLCAAQAhgEwgECCAQKCwgAEAIYBMIBAggFCgsIABACGATCAQIIBgoNCAAQAhgEugEECAQQBwoXCAAQAhgE8gEOCgQKAhgDEgQKAhAHGAYKDQgAEAIYBLoBBAgGEAgKFwgAEAIYBPIBDgoECgIYBRIECgIQCBgGChcIABACGATyAQ4KBAoCGAISBAoCEAYYBQoXCAAQAhgE8gEOCgQKAhgBEgQKAhAFGAQKDQgAEAIYBLoBBAgIEAkKFwgAEAIYBPIBDgoECgIYBxIECgIQCRgECgsIABACGATKAQIICgoNCAAQAhgEogEECAMQCwoQCAAQAhgEIggKBAoCGAEQCwoQCAAQAhgEIggKBAoCGAIQCwoQCAAQAhgEIggKBAoCGAMQCwoRCAAQAhgEogIICgQKAhALEAoKDQgAEAIYBKIBBAgBEAwKEAgAEAIYBCIICgQKAhgHEAwKEQgAEAIYBKICCAoECgIQDBAKCiMIABACGARaGwoLanNvbi5maWx0ZXISBAoCEAQSBAoCEAoYDQoQCAAQAhgEOggKBAoCEA0QDgoQCAAQAhgFOggKBAoCEA4QDwoQCAAQARgDMggKBAoCEA8QAyIeCgoIABABGAN6AggDChAIABABGAMyCAoECgIQAxACIg0KCwgAEAEYA5ICAggCKgJnMCoJZ2VuZXJhdGVkKgFw"
 		}
 	]
 }

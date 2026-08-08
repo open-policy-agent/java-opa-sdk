@@ -94,8 +94,16 @@
 								],
 								"result": {
 									"description": "result of removing all keys specified in `paths`",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -442,7 +450,8 @@
 				}
 			},
 			"want_plan_result": null,
-			"ignore": false
+			"ignore": false,
+			"plan_proto": "CkYKAwoBeAoDCgFhCgMKAWIKAwoBYwoFCgMxMjMSDQoLanNvbi5yZW1vdmUaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EnwKegoEZXZhbBJyCisIARABGAFaIwoTZzAuZGF0YS5nZW5lcmF0ZWQucBIECgIQABIECgIQARgCChAIARABGAE6CAoECgIQAhADCgsIARABGAHCAQIIBAoXCAEQARgB8gEOCgQKAhgAEgQKAhADGAQKCwgBEAEYAYoCAggEGvUCCvICChNnMC5kYXRhLmdlbmVyYXRlZC5wEgIAARgCIpMCCgsIABABGAOCAgIIAwoWCAAQAhgEYg4KBAoCEAASBAoCGAAYBAoQCAAQAhgEOggKBAoCEAQQBQoLCAAQAhgFwgECCAYKCwgAEAIYBcIBAggHCgsIABACGAXCAQIICAoNCAAQAhgFugEECAQQCQoXCAAQAhgF8gEOCgQKAhgDEgQKAhAJGAgKFwgAEAIYBfIBDgoECgIYAhIECgIQCBgHChcIABACGAXyAQ4KBAoCGAESBAoCEAcYBgojCAAQAhgFWhsKC2pzb24ucmVtb3ZlEgQKAhAGEgQKAhAFGAoKEAgAEAIYBToICgQKAhAKEAsKEAgAEAIYBjoICgQKAhALEAwKEAgAEAEYAzIICgQKAhAMEAMiHgoKCAAQARgDegIIAwoQCAAQARgDMggKBAoCEAMQAiINCgsIABABGAOSAgIIAioCZzAqCWdlbmVyYXRlZCoBcA=="
 		}
 	]
 }
