@@ -12,18 +12,13 @@
 # opa-builtins/README.md, but the BuiltinProvider entry in each module's
 # META-INF/services file is commented out, so ServiceLoader never finds them
 # and they are unreachable for consumers. Tracked separately from this list;
-# un-commenting the five files is the fix, after which the parity failures the
+# un-commenting the file is the fix, after which the parity failures the
 # fixtures then expose need triage.
-
-# opa-builtins-crypto
-crypto.hmac.equal
-crypto.hmac.md5
-crypto.hmac.sha1
-crypto.hmac.sha256
-crypto.hmac.sha512
-crypto.md5
-crypto.sha1
-crypto.sha256
+#
+# opa-builtins-crypto and opa-builtins-semver are done — registering them
+# needed no parity fixes. The three below do: registering all of them at once
+# fails 32 compliance cases (json 16, net 13, regex 3) and exhausts the default
+# test heap, so they are being taken one module at a time.
 
 # opa-builtins-json
 json.filter
@@ -57,10 +52,6 @@ regex.match
 regex.replace
 regex.split
 regex.template_match
-
-# opa-builtins-semver
-semver.compare
-semver.is_valid
 
 # --- Not implemented anywhere in the SDK -------------------------------------
 
