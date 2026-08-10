@@ -34,7 +34,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import java.io.ByteArrayInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
@@ -139,21 +138,22 @@ public class ComplianceTest {
    * ignored.
    */
   private static Set<String> loadKnownMissingBuiltins() {
-    try (InputStream in =
-        ComplianceTest.class.getClassLoader().getResourceAsStream(KNOWN_MISSING_RESOURCE)) {
-      if (in == null) {
-        throw new IllegalStateException(KNOWN_MISSING_RESOURCE + " not found on the classpath");
-      }
-      Set<String> names = new TreeSet<>();
-      new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
+    URL resource = ComplianceTest.class.getClassLoader().getResource(KNOWN_MISSING_RESOURCE);
+    if (resource == null) {
+      throw new IllegalStateException(KNOWN_MISSING_RESOURCE + " not found on the classpath");
+    }
+    Set<String> names = new TreeSet<>();
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8))) {
+      reader
           .lines()
           .map(line -> line.replaceFirst("#.*", "").trim())
           .filter(line -> !line.isEmpty())
           .forEach(names::add);
-      return Set.copyOf(names);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
+    return Set.copyOf(names);
   }
 
   private static String buildMissingFunctionsReport() {
