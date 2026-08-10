@@ -35,13 +35,6 @@ yaml.marshal
 yaml.unmarshal
 
 # opa-builtins-net
-net.cidr_contains
-net.cidr_contains_matches
-net.cidr_expand
-net.cidr_intersects
-net.cidr_is_valid
-net.cidr_merge
-net.lookup_ip_addr
 
 # opa-builtins-regex
 regex.find_all_string_submatch_n
