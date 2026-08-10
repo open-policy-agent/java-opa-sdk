@@ -17,6 +17,7 @@ The opa-builtins module is a convenience aggregator — it has no source code of
 | **[opa-builtins-net](../opa-builtins-net/)** | CidrBuiltins | Network/CIDR operations | `net.cidr_contains`, `net.cidr_intersects`, `net.cidr_merge` |
 | **[opa-builtins-crypto](../opa-builtins-crypto/)** | CryptoBuiltins | Hashing and HMAC | `crypto.md5`, `crypto.sha256`, `crypto.hmac.sha256`, `crypto.hmac.equal` |
 | **[opa-builtins-json](../opa-builtins-json/)** | JsonBuiltins | JSON operations | `json.filter`, `json.remove`, `json.patch`, `json.match_schema` |
+| **[opa-builtins-providers-aws](../opa-builtins-providers-aws/)** | ProvidersAwsBuiltins | AWS request signing | `providers.aws.sign_req` |
 
 Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) are core builtins included directly in **opa-evaluator**.
 
@@ -33,6 +34,7 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | `count`, `sum`, `product`, `max`, `min`, `sort` | Yes |
 | **Arrays** | |
 | `array.concat`, `array.reverse`, `array.slice` | Yes |
+| `array.flatten` | Yes |
 | **Sets** | |
 | `&` (intersection), `\|` (union), `-` (difference) | Yes |
 | `intersection`, `union` | Yes |
@@ -57,12 +59,15 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | **Types** | |
 | `is_array`, `is_boolean`, `is_null`, `is_number` | Yes |
 | `is_object`, `is_set`, `is_string`, `type_name` | Yes |
+| `to_number` | Yes |
 | **Encoding** | |
 | `base64.decode`, `base64.encode`, `base64.is_valid` | Yes |
 | `base64url.decode`, `base64url.encode`, `base64url.encode_no_pad` | Yes |
 | `hex.decode`, `hex.encode` | Yes |
-| `yaml.marshal`, `yaml.unmarshal` | Yes |
+| `yaml.marshal`, `yaml.unmarshal`, `yaml.is_valid` | Yes |
 | `urlquery.*` | No |
+| **URI** (in opa-evaluator) | |
+| `uri.parse`, `uri.is_valid` | Yes |
 | **JSON** (opa-builtins-json) | |
 | `json.is_valid`, `json.unmarshal`, `json.marshal` | Yes |
 | `json.marshal_with_options` | Yes |
@@ -91,11 +96,15 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | `net.cidr_is_valid`, `net.lookup_ip_addr` | Yes |
 | **Semantic Versions** (opa-builtins-semver) | |
 | `semver.compare`, `semver.is_valid` | Yes |
+| **Providers** (opa-builtins-providers-aws) | |
+| `providers.aws.sign_req` | Yes |
+| **Runtime** | |
+| `opa.runtime` | Yes |
 | **Comparison** | |
 | `equal`, `neq`, `lt`, `lte`, `gt`, `gte` | Yes |
 | **Not Yet Implemented** | |
 | `bits.*`, `graph.*`, `units.*`, `http.send` | No |
-| `uuid.*`, `graphql.*`, `rego.*`, `providers.*` | No |
+| `uuid.*`, `graphql.*`, `rego.*` | No |
 
 ## Adding Custom Builtins
 
