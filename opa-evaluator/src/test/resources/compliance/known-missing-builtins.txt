@@ -44,14 +44,6 @@ net.cidr_merge
 net.lookup_ip_addr
 
 # opa-builtins-regex
-regex.find_all_string_submatch_n
-regex.find_n
-regex.globs_match
-regex.is_valid
-regex.match
-regex.replace
-regex.split
-regex.template_match
 
 # --- Not implemented anywhere in the SDK -------------------------------------
 
