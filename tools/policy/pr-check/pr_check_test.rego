@@ -68,6 +68,15 @@ test_builtins_change_triggers_builtins if {
 	pr_check.changes["opa-builtins"] with input as example_builtins_changelist
 }
 
+# The compliance suite that gates builtin coverage runs in opa-evaluator.
+test_builtins_change_triggers_evaluator if {
+	pr_check.changes["opa-evaluator"] with input as example_builtins_changelist
+}
+
+test_generator_change_triggers_evaluator if {
+	pr_check.changes["opa-evaluator"] with input as example_generator_changelist
+}
+
 test_slf4j_change_triggers_slf4j if {
 	pr_check.changes["opa-slf4j"] with input as example_slf4j_changelist
 }

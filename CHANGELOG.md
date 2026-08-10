@@ -5,6 +5,11 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Build and CI
+
+- Fail the compliance suite on fixtures whose builtin cannot be resolved, instead
+  of skipping them silently, and run it for `opa-builtins` changes
+
 ## 0.3.0
 
 This release raises the minimum Java version to 17, adds the `opa-proto` module
