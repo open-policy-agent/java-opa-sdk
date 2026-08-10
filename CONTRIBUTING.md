@@ -16,8 +16,13 @@ When contributing, please consider the following pointers:
   and `builtin_metadata.json` / `capabilities.json`). When implementing or
   fixing a builtin, verify the corresponding Go behavior for edge cases (key/JWK
   types, error vs. `false`, strict-mode behavior, pre-hashing, etc.) rather than
-  guessing. Note the compliance-test harness may silently skip cases for
-  unimplemented builtins, so a new builtin needs its own explicit assertion.
+  guessing. The compliance-test harness skips a case only when the builtin it
+  calls is listed in
+  `opa-evaluator/src/test/resources/compliance/known-missing-builtins.txt`, so
+  implementing a builtin means deleting its line there in the same change.
+  Behavior the upstream fixtures do not cover still needs its own test — and
+  consider contributing the missing case to OPA, so every implementation is held
+  to it.
 - **Public APIs:** This SDK is meant to be embedded, so keep the public surface
   minimal. Prefer package-private types and methods; only make something `public`
   when consumers genuinely need it. A published API is a long-term commitment.

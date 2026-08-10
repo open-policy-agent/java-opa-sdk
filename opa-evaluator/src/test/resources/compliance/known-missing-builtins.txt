@@ -1,0 +1,117 @@
+# Builtins that the OPA compliance fixtures exercise but this SDK does not
+# resolve at evaluation time. ComplianceTest skips a case only when the builtin
+# it calls is listed here, and fails the case otherwise — so a fixture can no
+# longer pass silently just because its builtin is absent (see AGENTS.md).
+#
+# The list is a ratchet: ComplianceTest also fails when an entry here is no
+# longer missing, so implementing a builtin means deleting its line in the same
+# change. Format is one builtin name per line; `#` starts a comment.
+
+# --- Implemented, but never registered ---------------------------------------
+# These live in opa-builtins sub-modules and are listed as supported in
+# opa-builtins/README.md, but the BuiltinProvider entry in each module's
+# META-INF/services file is commented out, so ServiceLoader never finds them
+# and they are unreachable for consumers. Tracked separately from this list;
+# un-commenting the five files is the fix, after which the parity failures the
+# fixtures then expose need triage.
+
+# opa-builtins-crypto
+crypto.hmac.equal
+crypto.hmac.md5
+crypto.hmac.sha1
+crypto.hmac.sha256
+crypto.hmac.sha512
+crypto.md5
+crypto.sha1
+crypto.sha256
+
+# opa-builtins-json
+json.filter
+json.is_valid
+json.marshal
+json.marshal_with_options
+json.match_schema
+json.patch
+json.remove
+json.unmarshal
+json.verify_schema
+yaml.is_valid
+yaml.marshal
+yaml.unmarshal
+
+# opa-builtins-net
+net.cidr_contains
+net.cidr_contains_matches
+net.cidr_expand
+net.cidr_intersects
+net.cidr_is_valid
+net.cidr_merge
+net.lookup_ip_addr
+
+# opa-builtins-regex
+regex.find_all_string_submatch_n
+regex.find_n
+regex.globs_match
+regex.is_valid
+regex.match
+regex.replace
+regex.split
+regex.template_match
+
+# opa-builtins-semver
+semver.compare
+semver.is_valid
+
+# --- Not implemented anywhere in the SDK -------------------------------------
+
+bits.and
+bits.lsh
+bits.negate
+bits.or
+bits.rsh
+bits.xor
+
+crypto.parse_private_keys
+crypto.x509.parse_and_verify_certificates
+crypto.x509.parse_certificate_request
+crypto.x509.parse_certificates
+crypto.x509.parse_keypair
+crypto.x509.parse_rsa_private_key
+
+glob.match
+glob.quote_meta
+
+graph.reachable
+graph.reachable_paths
+
+graphql.is_valid
+graphql.parse
+graphql.parse_and_verify
+graphql.parse_query
+graphql.parse_schema
+graphql.schema_is_valid
+
+http.send
+
+internal.template_string
+
+io.jwt.verify_eddsa
+
+rego.parse_module
+
+strings.render_template
+strings.split_n
+
+units.parse
+units.parse_bytes
+
+urlquery.decode
+urlquery.decode_object
+urlquery.encode
+urlquery.encode_object
+
+uuid.parse
+uuid.rfc4122
+
+# Delete this line along with the walk implementation in #141.
+walk

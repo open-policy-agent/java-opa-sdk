@@ -55,10 +55,14 @@ Use the Gradle wrapper. Java **17** toolchain.
 ## Testing expectations
 
 - Unit tests use JUnit 5 (`useJUnitPlatform()`).
-- Builtin behavior is additionally covered by OPA compliance fixtures. Note that
-  the harness may silently skip cases for unimplemented builtins (a missing
-  function is not a hard failure), so a newly-added builtin needs its own
-  assertion, not just a fixture that "passes."
+- Builtin behavior is additionally covered by OPA compliance fixtures. A fixture
+  whose builtin the SDK cannot resolve fails `ComplianceTest` unless that builtin
+  is listed in
+  `opa-evaluator/src/test/resources/compliance/known-missing-builtins.txt`, so an
+  unimplemented builtin can no longer make its cases pass silently. The list is a
+  ratchet: implementing a builtin (or registering its `BuiltinProvider`) means
+  deleting its line in the same change, since the suite also fails on entries no
+  fixture reports as missing.
 - Add or update tests for the behavior you change; verify against OPA parity for
   builtins.
 
