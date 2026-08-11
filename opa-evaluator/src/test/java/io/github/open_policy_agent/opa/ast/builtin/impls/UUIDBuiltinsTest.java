@@ -84,6 +84,44 @@ class UUIDBuiltinsTest {
     assertNull(builtins.parse(null, new RegoValue[] {new RegoString("123")}));
   }
 
+  /**
+   * google/uuid compares the urn prefix with {@code strings.EqualFold}, so any casing parses. Not
+   * covered by the upstream uuid fixtures; verified with {@code opa eval} against OPA 1.19.0.
+   */
+  @Test
+  void parsesUrnPrefixCaseInsensitively() {
+    for (String prefix : new String[] {"urn:uuid:", "URN:UUID:", "Urn:Uuid:"}) {
+      RegoObject result =
+          (RegoObject)
+              builtins.parse(
+                  null,
+                  new RegoValue[] {new RegoString(prefix + "000003e8-48b9-21ee-b200-325096b39f47")});
+
+      assertEquals(RegoInt32.of(2), result.getProperty("version"), prefix);
+      assertEquals(new RegoString("RFC4122"), result.getProperty("variant"), prefix);
+      assertEquals(new RegoBigInt(1000L), result.getProperty("id"), prefix);
+    }
+  }
+
+  /**
+   * google/uuid only examines the middle 36 bytes of the 38-byte "Microsoft style" form, so the
+   * surrounding bytes are not required to be braces — {@code opa eval} accepts all of these.
+   */
+  @Test
+  void parsesThirtyEightByteFormWithoutRequiringBraces() {
+    for (String input :
+        new String[] {
+          "{000003e8-48b9-21ee-b200-325096b39f47}",
+          "(000003e8-48b9-21ee-b200-325096b39f47)",
+          "X000003e8-48b9-21ee-b200-325096b39f47Y",
+          "{000003e8-48b9-21ee-b200-325096b39f47X"
+        }) {
+      RegoObject result = (RegoObject) builtins.parse(null, new RegoValue[] {new RegoString(input)});
+
+      assertEquals(RegoInt32.of(2), result.getProperty("version"), input);
+    }
+  }
+
   @Test
   void parseRejectsLenientJavaUuidFieldWidths() {
     assertNull(builtins.parse(null, new RegoValue[] {new RegoString("1-1-1-1-1")}));

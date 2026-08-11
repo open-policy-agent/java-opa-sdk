@@ -23,6 +23,7 @@ public class UUIDBuiltins {
 
   private static final long UUID_EPOCH_OFFSET_100NS = 122192928000000000L;
   private static final String RFC4122 = "uuid.rfc4122";
+  private static final String URN_PREFIX = "urn:uuid:";
   private static final SecureRandom RANDOM = new SecureRandom();
   private static final Pattern CANONICAL_UUID_PATTERN =
       Pattern.compile(
@@ -137,16 +138,16 @@ public class UUIDBuiltins {
         value = input;
         break;
       case 38:
-        if (!input.startsWith("{") || !input.endsWith("}")) {
-          return null;
-        }
+        // google/uuid only examines the middle 36 bytes of the "Microsoft style"
+        // form, so the surrounding bytes are not required to be braces.
         value = input.substring(1, input.length() - 1);
         break;
       case 45:
-        if (!input.startsWith("urn:uuid:")) {
+        // google/uuid compares the prefix with strings.EqualFold.
+        if (!input.regionMatches(true, 0, URN_PREFIX, 0, URN_PREFIX.length())) {
           return null;
         }
-        value = input.substring("urn:uuid:".length());
+        value = input.substring(URN_PREFIX.length());
         break;
       default:
         return null;
