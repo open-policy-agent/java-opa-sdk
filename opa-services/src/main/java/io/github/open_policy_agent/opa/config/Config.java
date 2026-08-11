@@ -330,25 +330,10 @@ public class Config {
     /** Default maximum bundle size (compressed download and decompressed contents): 512 MB. */
     public static final long DEFAULT_MAX_SIZE_BYTES = 512L * 1024 * 1024;
 
-    /**
-     * Default bundle download timeout: 5 minutes. This bounds the <em>entire</em> HTTP exchange,
-     * so it is sized to let a bundle at the default {@link #DEFAULT_MAX_SIZE_BYTES} (512 MB) limit
-     * download over a slow link, while still guaranteeing a stalled server cannot block polling
-     * indefinitely.
-     */
-    public static final int DEFAULT_DOWNLOAD_TIMEOUT_SECONDS = 300;
 
     private PollingConfig polling;
     private String service;
     private String resource;
-
-    /**
-     * Maximum time allowed for a single bundle download, in seconds. Defaults to {@link
-     * #DEFAULT_DOWNLOAD_TIMEOUT_SECONDS} (5 minutes).
-     *
-     */
-    @JsonProperty("download_timeout_seconds")
-    private int downloadTimeoutSeconds = DEFAULT_DOWNLOAD_TIMEOUT_SECONDS;
 
     /**
      * Maximum bundle size in bytes, applied both to the compressed HTTP download and to the
@@ -394,18 +379,6 @@ public class Config {
 
     public BundleConfig setResource(String resource) {
       this.resource = resource;
-      return this;
-    }
-
-    public int getDownloadTimeoutSeconds() {
-      return downloadTimeoutSeconds;
-    }
-
-    /**
-     * Set the maximum time allowed for a single bundle download, in seconds. Must be positive.
-     */
-    public BundleConfig setDownloadTimeoutSeconds(int downloadTimeoutSeconds) {
-      this.downloadTimeoutSeconds = downloadTimeoutSeconds;
       return this;
     }
 
