@@ -1,6 +1,8 @@
 package io.github.open_policy_agent.opa.ir;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 import io.github.open_policy_agent.opa.ir.policy.Func;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;

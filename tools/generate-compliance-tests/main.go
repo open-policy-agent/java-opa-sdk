@@ -1,14 +1,33 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
 
 	cases "github.com/open-policy-agent/opa/build/generate-extended-cases"
+	"github.com/open-policy-agent/opa/v1/ir"
+	"google.golang.org/protobuf/proto"
 	//"github.com/open-policy-agent/opa/v1/ast"
 )
+
+// caseWithProto augments each generated case with the protobuf wire-form of its
+// plan (base64-encoded), alongside the existing JSON plan. Embedding the
+// upstream case means every original field is emitted verbatim, in order, with
+// "plan_proto" appended last — so the proto column can be added to the fixtures
+// without perturbing the JSON that the JSON-path compliance test already reads.
+// The ProtoComplianceTest in opa-proto decodes this field, giving the proto
+// decoder the same coverage as the JSON reader across the whole suite.
+type caseWithProto struct {
+	*cases.ExtendedTestCase
+	PlanProto string `json:"plan_proto"`
+}
+
+type setWithProto struct {
+	Cases []caseWithProto `json:"cases"`
+}
 
 func main() {
 	//if len(os.Args) < 3 {
@@ -50,7 +69,26 @@ func main() {
 			continue
 		}
 
-		tcJson, err := json.MarshalIndent(extendedSet, "", "\t")
+		// Encode each plan to its protobuf wire-form using OPA's own IR->proto
+		// converter (the same path as `opa build --format=proto`), so the proto
+		// fixtures are faithful to OPA rather than a Java-side re-encoding.
+		out := setWithProto{Cases: make([]caseWithProto, len(extendedSet.Cases))}
+		for i, tc := range extendedSet.Cases {
+			pbPolicy, perr := ir.PolicyToProto(tc.Plan)
+			if perr != nil {
+				panic(fmt.Errorf("Failed to convert plan to proto for %s: %w", tc.Filename, perr))
+			}
+			bs, merr := proto.MarshalOptions{Deterministic: true}.Marshal(pbPolicy)
+			if merr != nil {
+				panic(fmt.Errorf("Failed to marshal proto plan for %s: %w", tc.Filename, merr))
+			}
+			out.Cases[i] = caseWithProto{
+				ExtendedTestCase: tc,
+				PlanProto:        base64.StdEncoding.EncodeToString(bs),
+			}
+		}
+
+		tcJson, err := json.MarshalIndent(out, "", "\t")
 		if err != nil {
 			panic(fmt.Errorf("Failed to marshal test case to json: %s\n", err.Error()))
 		}

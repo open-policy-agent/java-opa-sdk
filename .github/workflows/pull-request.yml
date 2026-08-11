@@ -20,8 +20,9 @@ jobs:
       opa-services: ${{ steps.changes.outputs.opa-services }}
       opa-builtins: ${{ steps.changes.outputs.opa-builtins }}
       opa-slf4j: ${{ steps.changes.outputs.opa-slf4j }}
+      opa-proto: ${{ steps.changes.outputs.opa-proto }}
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -44,6 +45,7 @@ jobs:
           echo "opa-services=true" >> $GITHUB_OUTPUT
           echo "opa-builtins=true" >> $GITHUB_OUTPUT
           echo "opa-slf4j=true" >> $GITHUB_OUTPUT
+          echo "opa-proto=true" >> $GITHUB_OUTPUT
 
           if ! curl -s -o changed_files.json -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             "https://api.github.com/repos/${GH_REPO}/pulls/${PR_NUMBER}/files"; then
@@ -73,12 +75,14 @@ jobs:
           opa_services=$(jq -r '.changes["opa-services"] // false' opa_result.json)
           opa_builtins=$(jq -r '.changes["opa-builtins"] // false' opa_result.json)
           opa_slf4j=$(jq -r '.changes["opa-slf4j"] // false' opa_result.json)
+          opa_proto=$(jq -r '.changes["opa-proto"] // false' opa_result.json)
 
           echo "opa-evaluator=${opa_evaluator}" >> $GITHUB_OUTPUT
           echo "opa-jackson=${opa_jackson}" >> $GITHUB_OUTPUT
           echo "opa-services=${opa_services}" >> $GITHUB_OUTPUT
           echo "opa-builtins=${opa_builtins}" >> $GITHUB_OUTPUT
           echo "opa-slf4j=${opa_slf4j}" >> $GITHUB_OUTPUT
+          echo "opa-proto=${opa_proto}" >> $GITHUB_OUTPUT
 
   gh-actions-lint:
     name: GitHub Actions Lint
@@ -88,39 +92,77 @@ jobs:
       security-events: write # zizmor-action uploads its SARIF results to the Security tab
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Run zizmor
-        uses: zizmorcore/zizmor-action@192e21d79ab29983730a13d1382995c2307fbcaa # v0.5.7
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+
+  rego-policy:
+    name: Rego Policy Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Download OPA
+        uses: open-policy-agent/setup-opa@b2b258e089860efaadaaf71bf6e3aecb4a3eeff1 # v2.4.0
+        with:
+          version: latest
+      # tools/policy/ holds the Rego that drives this workflow's own change
+      # filter. A parse/type error or a broken rule there would silently break
+      # CI gating, so type-check it strictly and run its unit tests.
+      - name: Check policy
+        run: opa check --strict tools/policy/
+      - name: Test policy
+        run: opa test tools/policy/ -v
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # Diffs the dependency graph between the PR base and head, failing on newly
+      # introduced vulnerabilities or disallowed licenses. Relies on the baseline
+      # graph submitted by dependency-submission.yml on pushes to main.
+      - name: Dependency Review
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
 
   lint:
     name: Checkstyle & PMD
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - run: ./gradlew checkstyleMain checkstyleTest pmdMain pmdTest
 
   validate-pom:
     name: Validate Publish POMs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - name: Generate POMs
         run: ./gradlew generatePomFileForMavenPublication
       # Maven's built-in model validator catches the rule that bit us at v0.1.0:
@@ -143,14 +185,14 @@ jobs:
     name: Build All Modules
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5.4.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       # Compiles every module's main and test sources unconditionally. The
       # per-module test jobs are gated by a change filter, so a change in one
       # module that breaks compilation of an untouched module would otherwise
@@ -166,14 +208,14 @@ jobs:
       matrix:
         java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - run: ./gradlew :opa-evaluator:test
 
   test-opa-jackson:
@@ -184,14 +226,14 @@ jobs:
       matrix:
         java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - run: ./gradlew :opa-jackson:test
 
   test-opa-services:
@@ -202,14 +244,14 @@ jobs:
       matrix:
         java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - run: ./gradlew :opa-services:test
 
   test-opa-builtins:
@@ -220,14 +262,14 @@ jobs:
       matrix:
         java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - run: ./gradlew :opa-builtins:test
 
   test-opa-slf4j:
@@ -238,15 +280,65 @@ jobs:
       matrix:
         java: [17, 21] # 17 is the minimum supported / release JDK
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
       - run: ./gradlew :opa-slf4j:test
+
+  test-opa-proto:
+    needs: check-changes
+    if: needs.check-changes.outputs.opa-proto == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: [17, 21] # 17 is the minimum supported / release JDK
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      # ProtoComplianceTest reads the compliance fixtures from the sibling opa-evaluator module
+      # (../opa-evaluator/...); the full checkout above makes that relative path resolve.
+      - run: ./gradlew :opa-proto:test
+
+  verify-proto-vendor:
+    name: Verify vendored proto schemas match go.mod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: tools/generate-compliance-tests/go.mod
+      # The vendored .proto files in opa-proto must always match the OPA version
+      # pinned in tools/generate-compliance-tests/go.mod (the source of truth).
+      # Re-vendor via the Gradle task and fail if it produces any change — i.e. the
+      # OPA version was bumped, or a .proto was hand-edited, without re-vendoring.
+      - name: Re-vendor and check for drift
+        run: |
+          set -e
+          ./gradlew --rerun-tasks :opa-proto:vendorProtoSchemas
+          if ! git diff --quiet -- opa-proto/src/main/proto; then
+            echo "::error::Vendored proto schemas are out of sync with the OPA version in tools/generate-compliance-tests/go.mod. Run ./gradlew :opa-proto:vendorProtoSchemas and commit the result."
+            git --no-pager diff -- opa-proto/src/main/proto
+            exit 1
+          fi
+          echo "Vendored proto schemas are in sync with the pinned OPA version."
 
   pr-check-summary:
     name: PR Check Summary
@@ -254,17 +346,21 @@ jobs:
     needs:
       - check-changes
       - gh-actions-lint
+      - rego-policy
+      - dependency-review
       - lint
       - validate-pom
       - build
+      - verify-proto-vendor
       - test-opa-evaluator
       - test-opa-jackson
       - test-opa-services
       - test-opa-builtins
       - test-opa-slf4j
+      - test-opa-proto
     if: always()
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 

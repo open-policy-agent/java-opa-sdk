@@ -1,6 +1,9 @@
 package io.github.open_policy_agent.opa.ir.policy;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
 /** Represents a collection of named query plans to expose in the policy. */
 public class Plans {

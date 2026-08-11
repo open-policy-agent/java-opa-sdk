@@ -1,7 +1,11 @@
 package io.github.open_policy_agent.opa.profiling;
 
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 import io.github.open_policy_agent.opa.ir.stmts.CallStmt;
 import io.github.open_policy_agent.opa.ir.stmts.Stmt;
 import io.github.open_policy_agent.opa.ir.stmts.Stmt.StmtType;

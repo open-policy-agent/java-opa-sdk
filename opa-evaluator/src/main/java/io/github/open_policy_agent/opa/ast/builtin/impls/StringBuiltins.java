@@ -21,6 +21,7 @@ import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.TypeError;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -588,10 +589,11 @@ public class StringBuiltins {
       formatted = Integer.toString(ri.getValue(), base);
     } else if (args[0] instanceof RegoBigInt) {
       RegoBigInt ri = (RegoBigInt) args[0];
-      formatted = Long.toString(ri.getValue().longValue(), base);
+      formatted = ri.getValue().toString(base);
     } else if (args[0] instanceof RegoDecimal) {
       RegoDecimal rd = (RegoDecimal) args[0];
-      formatted = Long.toString(rd.getValue().longValue(), base);
+      // toBigInteger() truncates toward zero, matching OPA's round-down-to-integer semantics.
+      formatted = BigDecimal.valueOf(rd.getValue()).toBigInteger().toString(base);
     } else {
       throw new UnsupportedOperationException(
           "Unsupported type for format_int operation: " + args[0].getClass().getSimpleName());

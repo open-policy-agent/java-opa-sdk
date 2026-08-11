@@ -32,9 +32,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.io.ByteArrayInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,7 +51,9 @@ import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -58,10 +64,21 @@ public class ComplianceTest {
       Pattern.compile("^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]*$");
   private static final PolicyReader POLICY_READER =
       ServiceLoader.load(PolicyReader.class).findFirst().orElseThrow();
+  private static final String KNOWN_MISSING_RESOURCE = "compliance/known-missing-builtins.txt";
   private static String complianceDir;
-  private static  Set<String> missingFunctions = ConcurrentHashMap.newKeySet();
 
-  private static  boolean ignoreFunctionNotFoundTests = true;
+  /**
+   * Builtins the fixtures call but this SDK cannot resolve. A case that calls one of these is
+   * skipped; a case calling any other unresolved builtin fails, so an unimplemented builtin can no
+   * longer make its fixtures pass silently.
+   */
+  private static final Set<String> knownMissingBuiltins = loadKnownMissingBuiltins();
+
+  /** Builtins from {@link #knownMissingBuiltins} actually hit during this run. */
+  private static final Set<String> missingFunctions = ConcurrentHashMap.newKeySet();
+
+  private static final AtomicInteger casesExecuted = new AtomicInteger();
+  private static final AtomicInteger casesDiscovered = new AtomicInteger();
 
   /**
    * Alternate acceptable error message substrings for tests where the Java IR evaluator produces a
@@ -73,7 +90,10 @@ public class ComplianceTest {
           "eval_type_error: strings.any_suffix_match: eval_type_error: operand 2 must be one of {string, set, array} but got number",
           "operand 0 must be array of strings but got array containing number"
       ),
-        "strings/any_prefix_match/type_error_strict", List.of("eval_type_error: strings.any_prefix_match: operand 0 must be array of strings but got array containing number")
+        "strings/any_prefix_match/type_error_strict", List.of("eval_type_error: strings.any_prefix_match: operand 0 must be array of strings but got array containing number"),
+        // SnakeYAML phrases the unterminated-flow-sequence diagnostic differently from Go's
+        // yaml.v2 ("did not find expected ',' or ']'"). The line number and shape match.
+        "jsonbuiltins/yaml unmarshal error", List.of("yaml: line 1: expected ',' or ']', but got <stream end>")
   );
 
   static {
@@ -96,15 +116,55 @@ public class ComplianceTest {
   @AfterAll
   public static void reportMissingFunctions() {
     if (!missingFunctions.isEmpty()) {
-      String report = buildMissingFunctionsReport();
-      // TODO: add missing builtins
-      System.err.println(report);
+      System.err.println(buildMissingFunctionsReport());
     }
+    // A filtered run (e.g. --tests "...ComplianceTest$some case") only reaches a subset of the
+    // fixtures, so entries could look stale when they are simply not exercised. Only ratchet when
+    // every discovered case ran.
+    if (casesExecuted.get() != casesDiscovered.get()) {
+      return;
+    }
+    Set<String> stale = new TreeSet<>(knownMissingBuiltins);
+    stale.removeAll(missingFunctions);
+    if (!stale.isEmpty()) {
+      fail(
+          "These builtins are listed in "
+              + KNOWN_MISSING_RESOURCE
+              + " but no compliance case reported them missing — they are either implemented now or"
+              + " no longer covered by a fixture. Remove them from the list: "
+              + stale);
+    }
+  }
+
+  /**
+   * Reads the known-missing builtin list. One name per line; blank lines and {@code #} comments are
+   * ignored.
+   */
+  private static Set<String> loadKnownMissingBuiltins() {
+    URL resource = ComplianceTest.class.getClassLoader().getResource(KNOWN_MISSING_RESOURCE);
+    if (resource == null) {
+      throw new IllegalStateException(KNOWN_MISSING_RESOURCE + " not found on the classpath");
+    }
+    Set<String> names = new TreeSet<>();
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8))) {
+      reader
+          .lines()
+          .map(line -> line.replaceFirst("#.*", "").trim())
+          .filter(line -> !line.isEmpty())
+          .forEach(names::add);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+    return Set.copyOf(names);
   }
 
   private static String buildMissingFunctionsReport() {
     StringBuilder sb = new StringBuilder();
     sb.append("\n=== Missing Builtin Report ===\n");
+    sb.append("Cases skipped for builtins listed in ")
+        .append(KNOWN_MISSING_RESOURCE)
+        .append(":\n");
     sb.append("Total missing builtins: ").append(missingFunctions.size()).append("\n");
     missingFunctions.stream().sorted().forEach(fn -> sb.append("  - ").append(fn).append("\n"));
     sb.append("================================\n");
@@ -123,6 +183,7 @@ public class ComplianceTest {
                       JsonNode root = mapper.readTree(f);
                       List<JsonNode> cases = new ArrayList<>();
                       root.get("cases").forEach(cases::add);
+                      casesDiscovered.addAndGet(cases.size());
                       return cases.stream()
                               .map(c -> new Object[]{
                                       c.get("note").asText("unknown"), c
@@ -343,6 +404,7 @@ public class ComplianceTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("getComplianceTestData")
   public void testEvaluate(String caseName, JsonNode root) {
+    casesExecuted.incrementAndGet();
     try {
       ObjectMapper mapper = new ObjectMapper().registerModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule());
 
@@ -422,11 +484,14 @@ public class ComplianceTest {
 
         JsonNode want = root.get("want_result");
         if (want == null) {
-          JsonNode wantError = root.get("want_error");
-          if (wantError != null) {
-            fail("error wanted but not thrown: " + wantError.asText());
+          if (root.has("want_error") || root.has("want_error_code")) {
+            fail(
+                "error wanted but not thrown: "
+                    + (root.has("want_error")
+                        ? root.get("want_error").asText()
+                        : root.get("want_error_code").asText()));
           }
-          System.out.println("no want_result for: " + caseName);
+          fail("case declares neither want_result nor want_error, so it asserts nothing");
           return;
         }
 
@@ -448,15 +513,21 @@ public class ComplianceTest {
           }
         }
       } catch (OpaException re) {
-        // Track missing functions for reporting
+        // A builtin the SDK does not resolve makes the case unrunnable. Skip it only when the
+        // builtin is a known gap, so that an unlisted one fails instead of passing silently.
         if (re instanceof FunctionNotFoundError) {
           String functionName = (String) re.getContext().get("name");
-          if (functionName != null) {
-            missingFunctions.add(functionName);
+          if (functionName == null || !knownMissingBuiltins.contains(functionName)) {
+            fail(
+                "builtin '"
+                    + functionName
+                    + "' could not be resolved, so this case asserted nothing. Implement the"
+                    + " builtin (and register its provider in META-INF/services), or add it to "
+                    + KNOWN_MISSING_RESOURCE
+                    + " with a reason.");
           }
-          if (ignoreFunctionNotFoundTests) {
-            return;
-          }
+          missingFunctions.add(functionName);
+          return;
         }
 
         if (root.get("want_error_code") == null && root.get("want_error") == null) {

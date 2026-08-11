@@ -8,7 +8,20 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import io.github.open_policy_agent.opa.ast.builtin.impls.*;
+import io.github.open_policy_agent.opa.ast.builtin.impls.AggregateBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.ArithmeticBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.ArrayBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.CastBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.ComparisonBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.EncodingBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.HexBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.ObjectBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.OpaBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.PrintBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.SetBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.StringBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.TypeBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.UriBuiltins;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.Capabilities;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
@@ -27,8 +40,10 @@ public class BuiltinRegistry {
     ArrayBuiltins.class,
     EncodingBuiltins.class,
     HexBuiltins.class,
+    UriBuiltins.class,
     StringBuiltins.class,
     PrintBuiltins.class,
+    OpaBuiltins.class,
   };
 
   public static final Map<String, BiFunction<EvaluationContext, RegoValue[], RegoValue>>

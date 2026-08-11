@@ -92,8 +92,16 @@
 								],
 								"result": {
 									"description": "result of removing all keys specified in `paths`",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -373,7 +381,8 @@
 					}
 				}
 			],
-			"ignore": false
+			"ignore": false,
+			"plan_proto": "CjoKAwoBeAoDCgFhCgMKATcSDQoLanNvbi5yZW1vdmUaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EnwKegoEZXZhbBJyCisIARABGAFaIwoTZzAuZGF0YS5nZW5lcmF0ZWQucBIECgIQABIECgIQARgCChAIARABGAE6CAoECgIQAhADCgsIARABGAHCAQIIBAoXCAEQARgB8gEOCgQKAhgAEgQKAhADGAQKCwgBEAEYAYoCAggEGowCCokCChNnMC5kYXRhLmdlbmVyYXRlZC5wEgIAARgCIqoBCgsIABABGAOCAgIIAwoLCAAQAhgEwgECCAQKDQgAEAIYBLoBBAgCEAUKFwgAEAIYBPIBDgoECgIYARIECgIQBRgECgsIABACGATKAQIIBgojCAAQAhgEWhsKC2pzb24ucmVtb3ZlEgQKAhAEEgQKAhAGGAcKEAgAEAIYBDoICgQKAhAHEAgKEAgAEAIYBToICgQKAhAIEAkKEAgAEAEYAzIICgQKAhAJEAMiHgoKCAAQARgDegIIAwoQCAAQARgDMggKBAoCEAMQAiINCgsIABABGAOSAgIIAioCZzAqCWdlbmVyYXRlZCoBcA=="
 		}
 	]
 }

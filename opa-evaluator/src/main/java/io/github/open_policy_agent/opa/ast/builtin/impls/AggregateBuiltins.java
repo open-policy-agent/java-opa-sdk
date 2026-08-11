@@ -7,7 +7,18 @@ import java.util.function.BiFunction;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
 import io.github.open_policy_agent.opa.ast.builtin.OpaVal;
-import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
+import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoCollection;
+import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
+import io.github.open_policy_agent.opa.ast.types.RegoNull;
+import io.github.open_policy_agent.opa.ast.types.RegoNumber;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.ast.types.RegoSet;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.TypeError;
 
@@ -22,7 +33,8 @@ public class AggregateBuiltins {
                 "sum", instance::sum,
                 "count", instance::count,
                 "product", instance::product,
-                "internal.member_2", instance::member);
+                "internal.member_2", instance::member2,
+                "internal.member_3", instance::member3);
     }
 
     @OpaBuiltin(
@@ -170,7 +182,16 @@ public class AggregateBuiltins {
         }
     }
 
-    public RegoBoolean member(EvaluationContext ctx, RegoValue[] args) {
+    @OpaBuiltin(
+            name = "internal.member_2",
+            description = "Checks membership of an item in a collection or object",
+            categories = {"aggregates"},
+            args = {
+                    @OpaType(type = "any", name = "x", description = "item to check for membership"),
+                    @OpaType(type = "any", name = "collection", description = "collection or object to check in")
+            },
+            result = @OpaType(type = "boolean", description = "true if x is in collection; false otherwise"))
+    public RegoBoolean member2(EvaluationContext ctx, RegoValue[] args) {
         RegoValue x = args[0];
         RegoValue y = args[1];
 
@@ -186,6 +207,52 @@ public class AggregateBuiltins {
             }
         }
         // For non-collections (string, number, etc.), return false
+        return RegoBoolean.FALSE;
+    }
+
+    @OpaBuiltin(
+            name = "internal.member_3",
+            description = "Checks key/index and item membership in a collection or object",
+            categories = {"aggregates"},
+            args = {
+                    @OpaType(type = "any", name = "key", description = "key or index"),
+                    @OpaType(type = "any", name = "value", description = "item or value"),
+                    @OpaType(type = "any", name = "collection", description = "collection or object to check in")
+            },
+            result = @OpaType(type = "boolean", description = "true if key and value match in collection; false otherwise"))
+    public RegoBoolean member3(EvaluationContext ctx, RegoValue[] args) {
+        RegoValue key = args[0];
+        RegoValue value = args[1];
+        RegoValue collection = args[2];
+
+        if (collection instanceof RegoObject) {
+            RegoObject obj = (RegoObject) collection;
+            if (obj.hasProperty(key) && obj.getProperty(key).equals(value)) {
+                return RegoBoolean.TRUE;
+            }
+        } else if (collection instanceof RegoArray) {
+            RegoArray array = (RegoArray) collection;
+            if (key instanceof RegoInt32) {
+                int idx = ((RegoInt32) key).getValue();
+                if (idx >= 0 && idx < array.length() && array.getValues().get(idx).equals(value)) {
+                    return RegoBoolean.TRUE;
+                }
+            } else if (key instanceof RegoNumber && !((RegoNumber) key).isDecimal()) {
+                BigInteger bigInt = ((RegoNumber) key).getBigIntValue();
+                if (bigInt != null && bigInt.compareTo(BigInteger.ZERO) >= 0
+                        && bigInt.compareTo(BigInteger.valueOf(array.length())) < 0) {
+                    int idx = bigInt.intValue();
+                    if (array.getValues().get(idx).equals(value)) {
+                        return RegoBoolean.TRUE;
+                    }
+                }
+            }
+        } else if (collection instanceof RegoSet) {
+            RegoSet set = (RegoSet) collection;
+            if (key.equals(value) && set.contains(value)) {
+                return RegoBoolean.TRUE;
+            }
+        }
         return RegoBoolean.FALSE;
     }
 }

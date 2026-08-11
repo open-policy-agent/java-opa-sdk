@@ -14,10 +14,10 @@ dependencies {
     // for testing.
     testImplementation(project(":opa-jackson"))
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.1")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.1")
-    testImplementation("org.json:json:20260522")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.2")
+    testImplementation("org.json:json:20260719")
     testImplementation("org.assertj:assertj-core:3.27.7")
     testImplementation("org.skyscreamer:jsonassert:1.5.3")
     testImplementation("org.mockito:mockito-core:5.23.0")
@@ -26,6 +26,10 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    // The jsonpatch/json_patch_tests fixture evaluates the whole upstream JSON Patch spec suite
+    // inside one policy, building every case into comprehensions. That exceeds Gradle's default
+    // 512m test heap; 1g is enough today, so this leaves some headroom.
+    maxHeapSize = "2g"
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

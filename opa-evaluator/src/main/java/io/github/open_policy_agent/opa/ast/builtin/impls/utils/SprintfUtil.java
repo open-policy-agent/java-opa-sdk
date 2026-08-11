@@ -3,7 +3,17 @@ package io.github.open_policy_agent.opa.ast.builtin.impls.utils;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
-import io.github.open_policy_agent.opa.ast.types.*;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
+import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
+import io.github.open_policy_agent.opa.ast.types.RegoNull;
+import io.github.open_policy_agent.opa.ast.types.RegoNumber;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.ast.types.RegoSet;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 
 /**
  * *** This implementation was "borrowed" from the OpaSwift code, so changes made here might need to

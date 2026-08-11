@@ -17,7 +17,7 @@ public class NondeterministicAnnotationTest {
     // List of builtins that should be marked as nondeterministic
     List<String> expectedNondeterministicBuiltins =
         List.of(
-            "time.now_ns", "io.jwt.decode_verify", "io.jwt.encode_sign", "io.jwt.encode_sign_raw");
+            "time.now_ns", "io.jwt.decode_verify", "io.jwt.encode_sign", "io.jwt.encode_sign_raw", "opa.runtime");
 
     for (String builtinName : expectedNondeterministicBuiltins) {
       // Find the descriptor for this builtin

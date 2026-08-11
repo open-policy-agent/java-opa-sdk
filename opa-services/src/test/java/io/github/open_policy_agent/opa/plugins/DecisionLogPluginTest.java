@@ -101,6 +101,53 @@ class DecisionLogPluginTest {
   }
 
   @Test
+  void validate_maxOnlyBelowDefaultMin_returnsError() {
+    // max_delay_seconds: 120 alone would default min to 300 → effective min > max
+    Config.DecisionLogsConfig decisionLogs =
+        new Config.DecisionLogsConfig().setService("test-service").setMaxDelaySeconds(120);
+    config.setDecisionLogs(decisionLogs);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    DecisionLogPlugin plugin = new DecisionLogPlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertFalse(errors.isEmpty());
+    assertTrue(
+        errors.stream()
+            .anyMatch(
+                e ->
+                    e.contains("min_delay_seconds")
+                        && e.contains("cannot be greater than max_delay_seconds")));
+  }
+
+  @Test
+  void validate_minOnly_defaultsMaxToTwiceMin_returnsNoErrors() {
+    Config.DecisionLogsConfig decisionLogs =
+        new Config.DecisionLogsConfig().setService("test-service").setMinDelaySeconds(60);
+    config.setDecisionLogs(decisionLogs);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    DecisionLogPlugin plugin = new DecisionLogPlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertTrue(errors.isEmpty());
+  }
+
+  @Test
   void validate_decisionLogsConsoleOnly_returnsNoErrors() {
     Config.DecisionLogsConfig decisionLogs = new Config.DecisionLogsConfig().setConsole(true);
     config.setDecisionLogs(decisionLogs);
@@ -430,6 +477,80 @@ class DecisionLogPluginTest {
                     e.contains("reporting")
                         && e.contains("min_delay_seconds")
                         && e.contains("max_delay_seconds")));
+  }
+
+  @Test
+  void start_periodicFlush_usesJitteredChainedSchedule() throws Exception {
+    // min == max makes the jittered delay deterministic (always 1s), keeping the test fast and
+    // non-flaky while still exercising the chained re-scheduling in scheduleNextFlush.
+    Config.DecisionLogsConfig decisionLogs =
+        new Config.DecisionLogsConfig()
+            .setService("test-service")
+            .setMinDelaySeconds(1)
+            .setMaxDelaySeconds(1);
+    config.setDecisionLogs(decisionLogs);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    DecisionLogPlugin plugin = new DecisionLogPlugin();
+    plugin = (DecisionLogPlugin) plugin.initialize(manager);
+    plugin.start();
+
+    DecisionLogPlugin.DecisionLogs decisionLogger = plugin.getDecisionLogs();
+    JsonNode input = mapper.createObjectNode().put("user", "eve");
+    JsonNode result = mapper.createObjectNode().put("allow", true);
+
+    // Queue an event before each tick so the chained schedule has something to flush.
+    decisionLogger.logDecision(
+        "decision-a", input, result, "data.authz.allow", null, 0, null, null);
+    Thread.sleep(1500);
+    decisionLogger.logDecision(
+        "decision-b", input, result, "data.authz.allow", null, 0, null, null);
+    Thread.sleep(1500);
+
+    // Two flushes ~1s apart proves scheduleNextFlush re-chains itself instead of firing once
+    // (which scheduleAtFixedRate-based code would still do, but a one-shot schedule() would not).
+    verify(mockLogger, atLeast(2)).debug(eq("Flushed %d decision log events"), anyInt());
+  }
+
+  @Test
+  void start_onlyMinDelayConfigured_defaultsMaxToTwiceMin() throws Exception {
+    Config.DecisionLogsConfig decisionLogs =
+        new Config.DecisionLogsConfig()
+            .setService("test-service")
+            .setMinDelaySeconds(1)
+            .setMaxDelaySeconds(null); // only min provided
+    config.setDecisionLogs(decisionLogs);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    DecisionLogPlugin plugin = new DecisionLogPlugin();
+    plugin = (DecisionLogPlugin) plugin.initialize(manager);
+    plugin.start();
+
+    DecisionLogPlugin.DecisionLogs decisionLogger = plugin.getDecisionLogs();
+    JsonNode input = mapper.createObjectNode().put("user", "frank");
+    JsonNode result = mapper.createObjectNode().put("allow", true);
+    decisionLogger.logDecision(
+        "decision-c", input, result, "data.authz.allow", null, 0, null, null);
+
+    // With max unset, start() falls back to 2x min (2s here). If the fallback instead used the
+    // unrelated 300s plugin-level default, no flush would happen within this window.
+    Thread.sleep(2500);
+
+    verify(mockLogger, atLeastOnce()).debug(eq("Flushed %d decision log events"), anyInt());
   }
 
   @Test

@@ -7,7 +7,12 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.config.Config;
@@ -243,17 +248,31 @@ public class Opa {
     boolean useMetrics = showMetrics || (options != null && options.showMetrics);
     Metrics metrics = useMetrics ? new SimpleMetrics() : NoOpMetrics.Instance();
 
+    String entrypoint = resolveEntrypoint(options);
+
     EvaluationContext.Builder builder =
         new EvaluationContext.Builder()
             .withStore(store)
             .withMetrics(metrics)
-            .withEntrypoint(defaultEntrypoint);
+            .withEntrypoint(entrypoint);
 
     if (options != null && options.getProfiler() != null) {
       builder.withProfiler(options.getProfiler());
     }
 
     return builder.build();
+  }
+
+  private String resolveEntrypoint(DecisionOptions options) {
+    if (options != null && options.getEntrypoint() != null && !options.getEntrypoint().isEmpty()) {
+      return options.getEntrypoint();
+    }
+
+    if (defaultEntrypoint != null) {
+      return defaultEntrypoint;
+    }
+
+    return "";
   }
 
   private static String resolveDecisionId(DecisionOptions options) {
@@ -274,13 +293,10 @@ public class Opa {
       return;
     }
 
-    String path =
-        (options.getPath() != null && !options.getPath().isEmpty())
-            ? options.getPath()
-            : (defaultEntrypoint != null && !defaultEntrypoint.isEmpty()) ? defaultEntrypoint : "";
+    String entrypoint = resolveEntrypoint(options);
 
     plugin.logDecision(
-        decisionId, input, result, path,
+        decisionId, input, result, entrypoint,
         ctx.getEvalStartTime(), ctx.metrics, ctx.getNdCacheValues());
   }
 
@@ -378,7 +394,6 @@ public class Opa {
 
   public static class DecisionOptions {
     private long nowNs;
-    private String path;
     private JsonNode input;
     private Object ndbCache;
     private boolean strictBuiltinErrors;
@@ -386,6 +401,7 @@ public class Opa {
     private Profiler profiler;
     private boolean instrument;
     String decisionID;
+    private String entrypoint;
 
     public long getNowNs() {
       return nowNs;
@@ -393,15 +409,6 @@ public class Opa {
 
     public DecisionOptions setNowNs(long nowNs) {
       this.nowNs = nowNs;
-      return this;
-    }
-
-    public String getPath() {
-      return path;
-    }
-
-    public DecisionOptions setPath(String path) {
-      this.path = path;
       return this;
     }
 
@@ -465,6 +472,15 @@ public class Opa {
 
     public DecisionOptions setDecisionID(String decisionID) {
       this.decisionID = decisionID;
+      return this;
+    }
+
+    public String getEntrypoint() {
+      return entrypoint;
+    }
+
+    public DecisionOptions setEntrypoint(String entrypoint) {
+      this.entrypoint = entrypoint;
       return this;
     }
   }

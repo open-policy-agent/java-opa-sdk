@@ -71,8 +71,16 @@
 								],
 								"result": {
 									"description": "a new object which is the result of an asymmetric recursive union of two objects where conflicts are resolved by choosing the key from the right-hand object `b`",
+									"dynamic": {
+										"key": {
+											"type": "any"
+										},
+										"value": {
+											"type": "any"
+										}
+									},
 									"name": "output",
-									"type": "any"
+									"type": "object"
 								},
 								"type": "function"
 							}
@@ -381,7 +389,8 @@
 					}
 				}
 			],
-			"ignore": false
+			"ignore": false,
+			"plan_proto": "CkUKAwoBeAoDCgFhCgMKATEKAwoBYgoDCgEyEg4KDG9iamVjdC51bmlvbhoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SfAp6CgRldmFsEnIKKwgBEAEYAVojChNnMC5kYXRhLmdlbmVyYXRlZC5wEgQKAhAAEgQKAhABGAIKEAgBEAEYAToICgQKAhACEAMKCwgBEAEYAcIBAggEChcIARABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAEQARgBigICCAQatQIKsgIKE2cwLmRhdGEuZ2VuZXJhdGVkLnASAgABGAIi0wEKCwgAEAEYA4ICAggDCgsIABACGATCAQIIBAoNCAAQAhgEugEECAIQBQoXCAAQAhgE8gEOCgQKAhgBEgQKAhAFGAQKCwgAEAIYBMIBAggGCg0IABACGAS6AQQIBBAHChcIABACGATyAQ4KBAoCGAMSBAoCEAcYBgokCAAQAhgEWhwKDG9iamVjdC51bmlvbhIECgIQBBIECgIQBhgIChAIABACGAQ6CAoECgIQCBAJChAIABACGAU6CAoECgIQCRAKChAIABABGAMyCAoECgIQChADIh4KCggAEAEYA3oCCAMKEAgAEAEYAzIICgQKAhADEAIiDQoLCAAQARgDkgICCAIqAmcwKglnZW5lcmF0ZWQqAXA="
 		}
 	]
 }

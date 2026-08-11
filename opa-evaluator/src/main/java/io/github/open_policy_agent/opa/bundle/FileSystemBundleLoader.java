@@ -31,19 +31,14 @@ public class FileSystemBundleLoader implements BundleLoader {
     BundleAssembler assembler = new BundleAssembler();
 
     try {
-      Path planPath = directory.resolve("plan.json");
-      if (Files.isRegularFile(planPath)) {
-        try (InputStream in = Files.newInputStream(planPath)) {
-          assembler.loadPlan(in);
-        }
-      }
-
-      Path manifestPath = directory.resolve(".manifest");
-      if (Files.isRegularFile(manifestPath)) {
-        try (InputStream in = Files.newInputStream(manifestPath)) {
-          assembler.loadManifest(in);
-        }
-      }
+      // OPA emits plan/manifest in either JSON (plan.json/.manifest) or proto
+      // (plan.pb/.manifest.pb). BundleAssembler detects the format, rejects mixed-format bundles,
+      // and loads each artifact; we only supply a stream for the files that exist.
+      assembler.loadPlanAndManifest(
+          fileSource(directory.resolve(BundleFormat.PLAN_JSON)),
+          fileSource(directory.resolve(BundleFormat.PLAN_PROTO)),
+          fileSource(directory.resolve(BundleFormat.MANIFEST_JSON)),
+          fileSource(directory.resolve(BundleFormat.MANIFEST_PROTO)));
 
       try (Stream<Path> walk = Files.walk(directory)) {
         walk.filter(Files::isRegularFile)
@@ -80,5 +75,10 @@ public class FileSystemBundleLoader implements BundleLoader {
       throw new IllegalArgumentException(
           "Error reading bundle directory: " + e.getMessage(), e);
     }
+  }
+
+  /** An {@link InputStreamSource} that opens {@code path}, or {@code null} if it is not a file. */
+  private static InputStreamSource fileSource(Path path) {
+    return Files.isRegularFile(path) ? () -> Files.newInputStream(path) : null;
   }
 }
