@@ -26,6 +26,10 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    // The jsonpatch/json_patch_tests fixture evaluates the whole upstream JSON Patch spec suite
+    // inside one policy, building every case into comprehensions. That exceeds Gradle's default
+    // 512m test heap; 1g is enough today, so this leaves some headroom.
+    maxHeapSize = "2g"
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

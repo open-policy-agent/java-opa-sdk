@@ -90,7 +90,10 @@ public class ComplianceTest {
           "eval_type_error: strings.any_suffix_match: eval_type_error: operand 2 must be one of {string, set, array} but got number",
           "operand 0 must be array of strings but got array containing number"
       ),
-        "strings/any_prefix_match/type_error_strict", List.of("eval_type_error: strings.any_prefix_match: operand 0 must be array of strings but got array containing number")
+        "strings/any_prefix_match/type_error_strict", List.of("eval_type_error: strings.any_prefix_match: operand 0 must be array of strings but got array containing number"),
+        // SnakeYAML phrases the unterminated-flow-sequence diagnostic differently from Go's
+        // yaml.v2 ("did not find expected ',' or ']'"). The line number and shape match.
+        "jsonbuiltins/yaml unmarshal error", List.of("yaml: line 1: expected ',' or ']', but got <stream end>")
   );
 
   static {
