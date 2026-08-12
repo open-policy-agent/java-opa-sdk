@@ -14,6 +14,7 @@ import io.github.open_policy_agent.opa.ast.builtin.impls.ArrayBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.CastBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.ComparisonBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.EncodingBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.GraphBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.HexBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.ObjectBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.OpaBuiltins;
@@ -40,6 +41,7 @@ public class BuiltinRegistry {
     ArithmeticBuiltins.class,
     ArrayBuiltins.class,
     EncodingBuiltins.class,
+    GraphBuiltins.class,
     HexBuiltins.class,
     UriBuiltins.class,
     StringBuiltins.class,
