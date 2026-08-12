@@ -330,7 +330,6 @@ public class Config {
     /** Default maximum bundle size (compressed download and decompressed contents): 512 MB. */
     public static final long DEFAULT_MAX_SIZE_BYTES = 512L * 1024 * 1024;
 
-
     private PollingConfig polling;
     private String service;
     private String resource;
