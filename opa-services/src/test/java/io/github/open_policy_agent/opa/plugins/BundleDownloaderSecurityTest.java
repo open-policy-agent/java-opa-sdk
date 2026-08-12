@@ -343,13 +343,12 @@ class BundleDownloaderSecurityTest {
       config.setServices(Collections.singletonMap("test-service",
           new Config.ServiceConfig()
               .setName("test-service")
-              .setUrl("http://localhost:" + port)));
+              .setUrl("http://localhost:" + port)
+              .setResponseHeaderTimeoutSeconds(1)));
       config.setBundles(Collections.singletonMap("authz",
           new Config.BundleConfig()
               .setService("test-service")
               .setResource("/bundle.tar.gz")
-              // Short download timeout so the test does not wait on the 5-minute default.
-              .setDownloadTimeoutSeconds(1)
               .setPolling(
                   new Config.PollingConfig().setMinDelaySeconds(0).setMaxDelaySeconds(0))));
 

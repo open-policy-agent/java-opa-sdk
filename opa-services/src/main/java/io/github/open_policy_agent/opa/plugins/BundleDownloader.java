@@ -2,24 +2,21 @@ package io.github.open_policy_agent.opa.plugins;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Flow;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -56,7 +53,12 @@ public abstract class BundleDownloader {
   protected String etag;
   protected long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
-  protected int downloadTimeoutSeconds = Config.BundleConfig.DEFAULT_DOWNLOAD_TIMEOUT_SECONDS;
+
+  // Fallback when no service config is available; matches the response_header_timeout_seconds
+  // default in Config.ServiceConfig.
+  private static final int DEFAULT_RESPONSE_HEADER_TIMEOUT_SECONDS = 10;
+
+  private static final int READ_BUFFER_BYTES = 8192;
 
   private static final Set<String> ALLOWED_CONTENT_TYPES =
       Set.of(
@@ -166,11 +168,6 @@ public abstract class BundleDownloader {
     return this;
   }
 
-  public BundleDownloader setDownloadTimeoutSeconds(int downloadTimeoutSeconds) {
-    this.downloadTimeoutSeconds = downloadTimeoutSeconds;
-    return this;
-  }
-
   /**
    * @return a future that completes when the first bundle download succeeds, or completes
    *     exceptionally with the underlying download/activation error
@@ -234,7 +231,11 @@ public abstract class BundleDownloader {
 
   // Per-request download timeout.
   private Duration requestTimeout() {
-    return Duration.ofSeconds(downloadTimeoutSeconds);
+    int seconds =
+        authService != null
+            ? authService.getResponseHeaderTimeoutSeconds()
+            : DEFAULT_RESPONSE_HEADER_TIMEOUT_SECONDS;
+    return Duration.ofSeconds(seconds > 0 ? seconds : DEFAULT_RESPONSE_HEADER_TIMEOUT_SECONDS);
   }
 
   /**
@@ -347,10 +348,15 @@ public abstract class BundleDownloader {
     }
 
     HttpRequest request = requestBuilder.build();
-    return httpClient
-        .sendAsync(request, sizeLimitedBodyHandler(maxSizeBytes))
+
+    CompletableFuture<HttpResponse<InputStream>> exchange =
+        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream());
+    return exchange
         .handle(
             (response, throwable) -> {
+              if (throwable != null) {
+                exchange.cancel(true);
+              }
               handleHttpResponse(response, throwable);
               return null;
             });
@@ -359,7 +365,7 @@ public abstract class BundleDownloader {
   // Handles a completed HTTP exchange: records success or failure on initialActivation. Runs on the
   // HTTP client's executor thread, but the poll chain never starts the next download until the
   // future returned by handleHttpDownload completes, so activateBundle is never called concurrently.
-  private void handleHttpResponse(HttpResponse<byte[]> response, Throwable throwable) {
+  private void handleHttpResponse(HttpResponse<InputStream> response, Throwable throwable) {
     if (throwable != null) {
       Throwable cause =
           throwable instanceof java.util.concurrent.CompletionException
@@ -390,9 +396,20 @@ public abstract class BundleDownloader {
         }
         return;
       }
+      OptionalLong contentLength = response.headers().firstValueAsLong("Content-Length");
+      byte[] body;
+      try {
+        body = readBodyWithLimit(response.body(), contentLength);
+      } catch (Exception e) {
+        manager.getLogger().error("Bundle '%s': Download error: %s", name, e.getMessage());
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(e);
+        }
+        return;
+      }
       response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
       try {
-        activateBundle(response.body());
+        activateBundle(body);
       } catch (Exception e) {
         manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
         if (!initialActivation.isDone()) {
@@ -425,101 +442,51 @@ public abstract class BundleDownloader {
   }
 
   /**
-   * Returns a BodyHandler that rejects over-sized responses.
+   * Reads the response body into memory, enforcing {@code maxSizeBytes} both upfront (via
+   * Content-Length) and as the bytes arrive.
    *
-   * <p>If Content-Length is present and already exceeds the limit, the body is rejected upfront
-   * without reading it. Otherwise, a {@link SizeLimitedByteArraySubscriber} streams the body and
-   * aborts the moment the cumulative byte count exceeds the limit — so a server that omits
-   * Content-Length (or uses chunked encoding) cannot force the client to buffer an unbounded body.
-   *
+   * <p>The limit is capped at {@link Integer#MAX_VALUE} because the body is materialized into a
+   * {@code byte[]}, whose maximum length is ~2 GB.
    */
-  private static HttpResponse.BodyHandler<byte[]> sizeLimitedBodyHandler(long maxBytes) {
-    long cappedMax = Math.min(maxBytes, Integer.MAX_VALUE);
-    return responseInfo -> {
-      OptionalLong contentLength = responseInfo.headers().firstValueAsLong("Content-Length");
-      if (contentLength.isPresent() && contentLength.getAsLong() > cappedMax) {
-        return new SizeLimitedByteArraySubscriber(
-            cappedMax,
-            "Content-Length "
-                + contentLength.getAsLong()
-                + " exceeds limit of "
-                + cappedMax
-                + " bytes");
-      }
-      return new SizeLimitedByteArraySubscriber(cappedMax);
-    };
+  private byte[] readBodyWithLimit(InputStream body, OptionalLong contentLength)
+      throws IOException {
+    long limit = Math.min(maxSizeBytes, Integer.MAX_VALUE);
+    try (InputStream in = body) {
+      rejectIfContentLengthExceedsLimit(contentLength, limit);
+      return readUpTo(in, limit);
+    }
   }
 
   /**
-   * Accumulates the response body while enforcing a size limit as bytes arrive. The instant the cumulative byte
-   * count exceeds {@code limit}, it cancels the subscription.
+   * Rejects a response whose advertised Content-Length already exceeds the limit, so an oversized
+   * body is never read at all. Servers are turned away before a single byte is transferred.
    */
-  private static final class SizeLimitedByteArraySubscriber
-      implements HttpResponse.BodySubscriber<byte[]> {
-    private final long limit;
-    private final String rejectImmediatelyMessage;
-    private final CompletableFuture<byte[]> result = new CompletableFuture<>();
-    private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    private long total = 0;
-    private Flow.Subscription subscription;
-
-    SizeLimitedByteArraySubscriber(long limit) {
-      this(limit, null);
+  private static void rejectIfContentLengthExceedsLimit(OptionalLong contentLength, long limit) {
+    if (contentLength.isPresent() && contentLength.getAsLong() > limit) {
+      throw new BundleSizeLimitException(
+          "Content-Length " + contentLength.getAsLong() + " exceeds limit of " + limit + " bytes");
     }
+  }
 
-    SizeLimitedByteArraySubscriber(long limit, String rejectImmediatelyMessage) {
-      this.limit = limit;
-      this.rejectImmediatelyMessage = rejectImmediatelyMessage;
-    }
-
-    @Override
-    public CompletionStage<byte[]> getBody() {
-      return result;
-    }
-
-    @Override
-    public void onSubscribe(Flow.Subscription subscription) {
-      this.subscription = subscription;
-      if (rejectImmediatelyMessage != null) {
-        subscription.cancel();
-        result.completeExceptionally(new BundleSizeLimitException(rejectImmediatelyMessage));
-        return;
-      }
-      subscription.request(Long.MAX_VALUE);
-    }
-
-    @Override
-    public void onNext(List<ByteBuffer> items) {
-      if (result.isDone()) {
-        return;
-      }
-      for (ByteBuffer item : items) {
-        total += item.remaining();
-      }
+  /**
+   * Reads the stream into a byte array, aborting the moment the cumulative size exceeds the limit.
+   * A server that omits Content-Length (or uses chunked encoding) therefore cannot force the client
+   * to buffer an unbounded body: the read stops mid-stream and the caller closes the stream, which
+   * cancels the exchange so the remaining bytes are never transferred.
+   */
+  private static byte[] readUpTo(InputStream in, long limit) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    byte[] chunk = new byte[READ_BUFFER_BYTES];
+    long total = 0;
+    int read;
+    while ((read = in.read(chunk)) != -1) {
+      total += read;
       if (total > limit) {
-        subscription.cancel();
-        result.completeExceptionally(
-            new BundleSizeLimitException("Response body exceeds limit of " + limit + " bytes"));
-        return;
+        throw new BundleSizeLimitException("Response body exceeds limit of " + limit + " bytes");
       }
-      for (ByteBuffer item : items) {
-        byte[] chunk = new byte[item.remaining()];
-        item.get(chunk);
-        buffer.write(chunk, 0, chunk.length);
-      }
+      buffer.write(chunk, 0, read);
     }
-
-    @Override
-    public void onError(Throwable throwable) {
-      result.completeExceptionally(throwable);
-    }
-
-    @Override
-    public void onComplete() {
-      if (!result.isDone()) {
-        result.complete(buffer.toByteArray());
-      }
-    }
+    return buffer.toByteArray();
   }
 
   static class BundleSizeLimitException extends RuntimeException {
