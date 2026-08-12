@@ -50,8 +50,8 @@ public abstract class BundleDownloader {
   protected String service;
   protected String resource;
   protected Config.PollingConfig polling;
-  protected String etag;
-  protected long lastModifiedTime = 0;
+  protected volatile String etag;
+  protected volatile long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
 
   // Fallback when no service config is available; matches the response_header_timeout_seconds
@@ -349,14 +349,10 @@ public abstract class BundleDownloader {
 
     HttpRequest request = requestBuilder.build();
 
-    CompletableFuture<HttpResponse<InputStream>> exchange =
-        httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream());
-    return exchange
+    return httpClient
+        .sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
         .handle(
             (response, throwable) -> {
-              if (throwable != null) {
-                exchange.cancel(true);
-              }
               handleHttpResponse(response, throwable);
               return null;
             });
@@ -378,54 +374,60 @@ public abstract class BundleDownloader {
       return;
     }
 
-    if (response.statusCode() == 304) {
-      manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
-      if (!initialActivation.isDone()) {
-        initialActivation.complete(null);
+    try (InputStream bodyStream = response.body()) {
+      if (response.statusCode() == 304) {
+        manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
+        if (!initialActivation.isDone()) {
+          initialActivation.complete(null);
+        }
+        return;
       }
-      return;
-    }
 
-    if (response.statusCode() == 200) {
-      String contentType = response.headers().firstValue("Content-Type").orElse("");
-      if (!isAcceptableContentType(contentType)) {
-        String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
+      if (response.statusCode() == 200) {
+        String contentType = response.headers().firstValue("Content-Type").orElse("");
+        if (!isAcceptableContentType(contentType)) {
+          String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
+          manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+          if (!initialActivation.isDone()) {
+            initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+          }
+          return;
+        }
+        OptionalLong contentLength = response.headers().firstValueAsLong("Content-Length");
+        byte[] body;
+        try {
+          body = readBodyWithLimit(bodyStream, contentLength);
+        } catch (Exception e) {
+          manager.getLogger().error("Bundle '%s': Download error: %s", name, e.getMessage());
+          if (!initialActivation.isDone()) {
+            initialActivation.completeExceptionally(e);
+          }
+          return;
+        }
+        response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
+        try {
+          activateBundle(body);
+        } catch (Exception e) {
+          manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
+          if (!initialActivation.isDone()) {
+            initialActivation.completeExceptionally(e);
+          }
+          return;
+        }
+        if (!initialActivation.isDone()) {
+          initialActivation.complete(null);
+        }
+      } else {
+        String errorMsg = "Download failed with status " + response.statusCode();
         manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
         if (!initialActivation.isDone()) {
           initialActivation.completeExceptionally(new RuntimeException(errorMsg));
         }
-        return;
       }
-      OptionalLong contentLength = response.headers().firstValueAsLong("Content-Length");
-      byte[] body;
-      try {
-        body = readBodyWithLimit(response.body(), contentLength);
-      } catch (Exception e) {
-        manager.getLogger().error("Bundle '%s': Download error: %s", name, e.getMessage());
-        if (!initialActivation.isDone()) {
-          initialActivation.completeExceptionally(e);
-        }
-        return;
-      }
-      response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
-      try {
-        activateBundle(body);
-      } catch (Exception e) {
-        manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
-        if (!initialActivation.isDone()) {
-          initialActivation.completeExceptionally(e);
-        }
-        return;
-      }
-      if (!initialActivation.isDone()) {
-        initialActivation.complete(null);
-      }
-    } else {
-      String errorMsg = "Download failed with status " + response.statusCode();
-      manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
-      if (!initialActivation.isDone()) {
-        initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-      }
+    } catch (IOException e) {
+      manager
+          .getLogger()
+          .debug("Bundle '%s': Error closing response body: %s", name, e.getMessage());
     }
   }
 
@@ -451,11 +453,9 @@ public abstract class BundleDownloader {
   private byte[] readBodyWithLimit(InputStream body, OptionalLong contentLength)
       throws IOException {
     long limit = Math.min(maxSizeBytes, Integer.MAX_VALUE);
-    try (InputStream in = body) {
-      rejectIfContentLengthExceedsLimit(contentLength, limit);
-      return readUpTo(in, limit);
+    rejectIfContentLengthExceedsLimit(contentLength, limit);
+      return readUpTo(body, limit);
     }
-  }
 
   /**
    * Rejects a response whose advertised Content-Length already exceeds the limit, so an oversized
