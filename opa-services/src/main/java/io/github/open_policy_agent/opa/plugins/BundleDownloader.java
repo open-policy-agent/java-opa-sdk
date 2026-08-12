@@ -374,60 +374,54 @@ public abstract class BundleDownloader {
       return;
     }
 
-    try (InputStream bodyStream = response.body()) {
-      if (response.statusCode() == 304) {
-        manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
-        if (!initialActivation.isDone()) {
-          initialActivation.complete(null);
-        }
-        return;
+    if (response.statusCode() == 304) {
+      manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
+      if (!initialActivation.isDone()) {
+        initialActivation.complete(null);
       }
+      return;
+    }
 
-      if (response.statusCode() == 200) {
-        String contentType = response.headers().firstValue("Content-Type").orElse("");
-        if (!isAcceptableContentType(contentType)) {
-          String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
-          manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
-          if (!initialActivation.isDone()) {
-            initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-          }
-          return;
-        }
-        OptionalLong contentLength = response.headers().firstValueAsLong("Content-Length");
-        byte[] body;
-        try {
-          body = readBodyWithLimit(bodyStream, contentLength);
-        } catch (Exception e) {
-          manager.getLogger().error("Bundle '%s': Download error: %s", name, e.getMessage());
-          if (!initialActivation.isDone()) {
-            initialActivation.completeExceptionally(e);
-          }
-          return;
-        }
-        response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
-        try {
-          activateBundle(body);
-        } catch (Exception e) {
-          manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
-          if (!initialActivation.isDone()) {
-            initialActivation.completeExceptionally(e);
-          }
-          return;
-        }
-        if (!initialActivation.isDone()) {
-          initialActivation.complete(null);
-        }
-      } else {
-        String errorMsg = "Download failed with status " + response.statusCode();
+    if (response.statusCode() == 200) {
+      String contentType = response.headers().firstValue("Content-Type").orElse("");
+      if (!isAcceptableContentType(contentType)) {
+        String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
         manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
         if (!initialActivation.isDone()) {
           initialActivation.completeExceptionally(new RuntimeException(errorMsg));
         }
+        return;
       }
-    } catch (IOException e) {
-      manager
-          .getLogger()
-          .debug("Bundle '%s': Error closing response body: %s", name, e.getMessage());
+      OptionalLong contentLength = response.headers().firstValueAsLong("Content-Length");
+      byte[] body;
+      try {
+        body = readBodyWithLimit(response.body(), contentLength);
+      } catch (Exception e) {
+        manager.getLogger().error("Bundle '%s': Download error: %s", name, e.getMessage());
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(e);
+        }
+        return;
+      }
+      response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
+      try {
+        activateBundle(body);
+      } catch (Exception e) {
+        manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(e);
+        }
+        return;
+      }
+      if (!initialActivation.isDone()) {
+        initialActivation.complete(null);
+      }
+    } else {
+      String errorMsg = "Download failed with status " + response.statusCode();
+      manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+      if (!initialActivation.isDone()) {
+        initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+      }
     }
   }
 
@@ -453,9 +447,11 @@ public abstract class BundleDownloader {
   private byte[] readBodyWithLimit(InputStream body, OptionalLong contentLength)
       throws IOException {
     long limit = Math.min(maxSizeBytes, Integer.MAX_VALUE);
-    rejectIfContentLengthExceedsLimit(contentLength, limit);
-      return readUpTo(body, limit);
+    try (InputStream in = body) {
+      rejectIfContentLengthExceedsLimit(contentLength, limit);
+      return readUpTo(in, limit);
     }
+  }
 
   /**
    * Rejects a response whose advertised Content-Length already exceeds the limit, so an oversized
