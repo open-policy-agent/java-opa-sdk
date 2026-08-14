@@ -94,6 +94,8 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | `net.cidr_contains`, `net.cidr_contains_matches` | Yes |
 | `net.cidr_intersects`, `net.cidr_expand`, `net.cidr_merge` | Yes |
 | `net.cidr_is_valid`, `net.lookup_ip_addr` | Yes |
+| **Graphs** (opa-evaluator) | |
+| `graph.reachable`, `graph.reachable_paths` | Yes |
 | **Semantic Versions** (opa-builtins-semver) | |
 | `semver.compare`, `semver.is_valid` | Yes |
 | **Providers** (opa-builtins-providers-aws) | |
@@ -103,7 +105,7 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | **Comparison** | |
 | `equal`, `neq`, `lt`, `lte`, `gt`, `gte` | Yes |
 | **Not Yet Implemented** | |
-| `bits.*`, `graph.*`, `units.*`, `http.send` | No |
+| `bits.*`, `units.*`, `http.send` | No |
 | `uuid.*`, `graphql.*`, `rego.*` | No |
 
 ## Adding Custom Builtins

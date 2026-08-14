@@ -10,6 +10,8 @@ import io.github.open_policy_agent.opa.ast.types.RegoSet;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -53,6 +55,25 @@ class GraphBuiltinsTest {
 
     assertEquals(
         setOf(new RegoArray(List.of(a, b)), new RegoArray(List.of(a))), result);
+  }
+
+  @Test
+  void reachablePathsHandlesDeepGraphsWithoutRecursion() {
+    int nodeCount = 10_000;
+    List<RegoValue> nodes = new ArrayList<>(nodeCount);
+    Map<RegoValue, RegoValue> graph = new LinkedHashMap<>();
+
+    for (int index = 0; index < nodeCount; index++) {
+      nodes.add(new RegoString("node-" + index));
+    }
+    for (int index = 0; index < nodeCount - 1; index++) {
+      graph.put(nodes.get(index), new RegoArray(List.of(nodes.get(index + 1))));
+    }
+    graph.put(nodes.get(nodeCount - 1), setOf());
+
+    RegoValue result = call("graph.reachable_paths", new RegoObject(graph), setOf(nodes.get(0)));
+
+    assertEquals(setOf(new RegoArray(nodes)), result);
   }
 
   private static RegoValue call(String name, RegoValue... args) {

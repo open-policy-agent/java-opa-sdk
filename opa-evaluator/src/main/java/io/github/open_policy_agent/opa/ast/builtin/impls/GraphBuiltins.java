@@ -103,28 +103,9 @@ public class GraphBuiltins {
     RegoCollection initial = getArg(args, 1, RegoCollection.class);
     RegoSet paths = new RegoSet(false);
 
-    initial
-        .valueStream()
-        .forEach(
-            node -> {
-              RegoValue edges = graph.getProperty(node);
-              if (edges == null) {
-                return;
-              }
-              List<RegoValue> neighbors = collectionValues(edges);
-              if (neighbors.isEmpty()) {
-                paths.addValue(new RegoArray(List.of(node)));
-                return;
-              }
-              for (RegoValue neighbor : neighbors) {
-                buildPaths(
-                    graph,
-                    neighbor,
-                    new ArrayList<>(List.of(node)),
-                    paths,
-                    new HashSet<>(Set.of(node)));
-              }
-            });
+    for (RegoValue node : initial.valueStream().toList()) {
+      collectPaths(graph, node, paths);
+    }
 
     if (!ctx.sortSets) {
       return paths;
@@ -134,38 +115,71 @@ public class GraphBuiltins {
     return new RegoSet(false, new LinkedHashSet<>(sortedPaths));
   }
 
-  private static void buildPaths(
-      RegoObject graph,
-      RegoValue root,
-      List<RegoValue> path,
-      RegoSet paths,
-      Set<RegoValue> reached) {
-    RegoValue edges = graph.getProperty(root);
+  private static void collectPaths(RegoObject graph, RegoValue initial, RegoSet paths) {
+    RegoValue edges = graph.getProperty(initial);
     if (edges == null) {
-      paths.addValue(new RegoArray(path));
       return;
     }
 
-    path.add(root);
     List<RegoValue> neighbors = collectionValues(edges);
     if (neighbors.isEmpty()) {
-      paths.addValue(new RegoArray(path));
+      addPath(paths, List.of(initial));
       return;
     }
 
-    Set<RegoValue> nextReached = new HashSet<>(reached);
-    nextReached.add(root);
-    for (RegoValue neighbor : neighbors) {
-      if (nextReached.contains(neighbor)) {
-        paths.addValue(new RegoArray(path));
-      } else {
-        buildPaths(
-            graph,
-            neighbor,
-            new ArrayList<>(path),
-            paths,
-            new HashSet<>(nextReached));
+    List<RegoValue> path = new ArrayList<>(List.of(initial));
+    Set<RegoValue> reached = new HashSet<>(Set.of(initial));
+    Deque<PathFrame> pending = new ArrayDeque<>();
+    pending.addLast(new PathFrame(null, neighbors));
+
+    while (!pending.isEmpty()) {
+      PathFrame frame = pending.peekLast();
+      if (frame.nextNeighborIndex == frame.neighbors.size()) {
+        pending.removeLast();
+        if (frame.node != null) {
+          path.remove(path.size() - 1);
+          reached.remove(frame.node);
+        }
+        continue;
       }
+
+      RegoValue neighbor = frame.neighbors.get(frame.nextNeighborIndex++);
+      if (reached.contains(neighbor)) {
+        addPath(paths, path);
+        continue;
+      }
+
+      RegoValue neighborEdges = graph.getProperty(neighbor);
+      if (neighborEdges == null) {
+        addPath(paths, path);
+        continue;
+      }
+
+      path.add(neighbor);
+      reached.add(neighbor);
+      List<RegoValue> neighborValues = collectionValues(neighborEdges);
+      if (neighborValues.isEmpty()) {
+        addPath(paths, path);
+        path.remove(path.size() - 1);
+        reached.remove(neighbor);
+        continue;
+      }
+      pending.addLast(new PathFrame(neighbor, neighborValues));
+    }
+  }
+
+  private static void addPath(RegoSet paths, List<RegoValue> path) {
+    paths.addValue(new RegoArray(new ArrayList<>(path)));
+  }
+
+  private static final class PathFrame {
+    private final RegoValue node;
+    private final List<RegoValue> neighbors;
+    private int nextNeighborIndex;
+
+    private PathFrame(RegoValue node, List<RegoValue> neighbors) {
+      this.node = node;
+      this.neighbors = neighbors;
     }
   }
 
