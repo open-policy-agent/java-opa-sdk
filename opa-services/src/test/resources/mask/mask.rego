@@ -1,6 +1,7 @@
 # Mask policies for DecisionLogPluginMaskTest. Regenerate plan.json with:
 #
 #   opa build -t plan -e system/log/mask -e test/log/mask_invalid \
+#     -e test/log/mask_conflict -e test/log/mask_order \
 #     -o bundle.tar.gz mask.rego testmask.rego && tar xzf bundle.tar.gz -O /plan.json > plan.json
 package system.log
 

@@ -306,6 +306,21 @@ decision's input, its result, and the non-deterministic builtin cache, as they a
 Removed paths are recorded in the event's `erased` array, upserted paths in `masked`. Paths that are
 undefined in the event are skipped.
 
+Rules are applied in the order the policy returns them, so when two of them touch the same path the
+last one decides what the event ends up holding — a `remove` followed by an `upsert` leaves the field
+in place with the masked value, while the reverse order drops it. Both rules still record themselves,
+so the path can appear in `erased` and `masked` at once. A `mask contains ...` rule builds a set, and
+a set has no authored order: OPA orders its elements by type and then value, which puts the shorthand
+string form ahead of the structured object form. Return an array from a complete rule
+(`mask := [...]`) when the order has to be explicit.
+
+Removing an element of an array shortens that array, and removing a whole event field (`/input`)
+takes the field off the event entirely. One case diverges from OPA's Go implementation: removing an
+element of an array-valued event field — `/input/1` where the decision's input is itself an array —
+shortens the array here, where Go skips the rule, because Go cannot write the shortened slice back
+through the event's field pointer. Mask a nested path or the whole field to stay on behavior both
+implementations share.
+
 Because this SDK evaluates compiled IR plans, **the mask policy has to be built as an entrypoint**:
 
 ```bash

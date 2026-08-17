@@ -289,6 +289,40 @@ class DecisionLogPluginMaskTest {
   }
 
   @Test
+  void logDecision_conflictingRulesFromASet_lastRuleWins() throws IOException {
+    // test/log/mask_conflict returns both "/input/password" and an upsert of the same path, with
+    // the remove coming first, so the upsert is the rule that survives.
+    loadMaskPolicies();
+    DecisionLogPlugin plugin = startPlugin("test/log/mask_conflict");
+
+    logDecision(plugin, input(), result());
+
+    JsonNode event = loggedEvent();
+    assertEquals("**REDACTED**", event.get("input").get("password").asText());
+    assertEquals("alice", event.get("input").get("user").asText());
+    assertEquals("[\"/input/password\"]", event.get("erased").toString());
+    assertEquals("[\"/input/password\"]", event.get("masked").toString());
+    verify(mockLogger, never()).error(anyString(), any());
+  }
+
+  @Test
+  void logDecision_conflictingRulesFromAnArray_appliesThemInPolicyOrder() throws IOException {
+    // test/log/mask_order returns an array, which pins the order: the upsert of "/result/token"
+    // comes first and the remove that follows drops the field again.
+    loadMaskPolicies();
+    DecisionLogPlugin plugin = startPlugin("test/log/mask_order");
+
+    logDecision(plugin, input(), result());
+
+    JsonNode event = loggedEvent();
+    assertFalse(event.get("result").has("token"), "the trailing remove should win");
+    assertTrue(event.get("result").get("allow").asBoolean());
+    assertEquals("[\"/result/token\"]", event.get("masked").toString());
+    assertEquals("[\"/result/token\"]", event.get("erased").toString());
+    verify(mockLogger, never()).error(anyString(), any());
+  }
+
+  @Test
   void logDecision_doesNotMutateCallerNodes() throws IOException {
     loadMaskPolicies();
     DecisionLogPlugin plugin = startPlugin("system/log/mask");

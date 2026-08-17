@@ -188,6 +188,47 @@ class MaskRuleSetTest {
   }
 
   @Test
+  void apply_conflictingRulesOnOnePath_lastRuleWins() throws Exception {
+    // Rules are applied in the order the policy returns them, so a remove followed by an upsert
+    // leaves the field in place, redacted. Both rules still record themselves.
+    assertMasked(
+        "[\"/input/password\","
+            + " {\"op\": \"upsert\", \"path\": \"/input/password\", \"value\": \"**REDACTED**\"}]",
+        "{\"input\": {\"user\": \"alice\", \"password\": \"secret\"}}",
+        "{\"input\": {\"user\": \"alice\", \"password\": \"**REDACTED**\"},"
+            + " \"erased\": [\"/input/password\"], \"masked\": [\"/input/password\"]}");
+
+    // The same pair the other way round: the upsert is undone by the remove.
+    assertMasked(
+        "[{\"op\": \"upsert\", \"path\": \"/input/password\", \"value\": \"**REDACTED**\"},"
+            + " \"/input/password\"]",
+        "{\"input\": {\"user\": \"alice\", \"password\": \"secret\"}}",
+        "{\"input\": {\"user\": \"alice\"},"
+            + " \"masked\": [\"/input/password\"], \"erased\": [\"/input/password\"]}");
+  }
+
+  @Test
+  void apply_ruleAfterWholeFieldRemove_isSkipped() throws Exception {
+    // The first rule takes the field off the event, so the second has nothing to descend into --
+    // Go's nil Input pointer -- and records nothing.
+    assertMasked(
+        "[\"/input\", {\"op\": \"upsert\", \"path\": \"/input/password\", \"value\": \"x\"}]",
+        "{\"input\": {\"password\": \"secret\"}, \"result\": true}",
+        "{\"result\": true, \"erased\": [\"/input\"]}");
+  }
+
+  @Test
+  void apply_ruleAfterWholeFieldUpsert_appliesToTheNewValue() throws Exception {
+    // The whole-field upsert replaces input, so the remove that follows looks for its path in the
+    // replacement, where it is undefined.
+    assertMasked(
+        "[{\"op\": \"upsert\", \"path\": \"/input\", \"value\": {\"user\": \"alice\"}},"
+            + " \"/input/password\"]",
+        "{\"input\": {\"user\": \"alice\", \"password\": \"secret\"}}",
+        "{\"input\": {\"user\": \"alice\"}, \"masked\": [\"/input\"]}");
+  }
+
+  @Test
   void apply_doesNotMutateOriginalNodes() throws Exception {
     ObjectNode input = MAPPER.createObjectNode().put("password", "secret");
     ObjectNode result = MAPPER.createObjectNode().put("token", "t");
