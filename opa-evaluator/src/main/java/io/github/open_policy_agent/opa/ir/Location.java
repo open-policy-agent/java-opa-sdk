@@ -13,10 +13,21 @@ public class Location implements LocationStmt {
 
   private int row; // row in the source file where this statement originated
 
+  private int endCol; // column one past the last rune of this statement's source text
+
+  private int endRow; // row of the last rune of this statement's source text
+
   public Location(int file, int col, int row) {
+    // For callers that do not have end location data.
+    this(file, col, row, col, row);
+  }
+
+  public Location(int file, int col, int row, int endCol, int endRow) {
     this.file = file;
     this.col = col;
     this.row = row;
+    this.endCol = endCol;
+    this.endRow = endRow;
   }
 
   public Location() {}
@@ -48,12 +59,21 @@ public class Location implements LocationStmt {
     return this;
   }
 
+  public int getEndCol() {
+    return endCol;
+  }
+
+  public int getEndRow() {
+    return endRow;
+  }
+
   @Override
-  public Location setLocation(int file, int row, int col) {
+  public void setLocation(int file, int row, int col, int endRow, int endCol) {
     this.file = file;
     this.col = col;
     this.row = row;
-    return this;
+    this.endCol = endCol;
+    this.endRow = endRow;
   }
 
   @Override

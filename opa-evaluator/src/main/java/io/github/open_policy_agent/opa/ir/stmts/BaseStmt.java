@@ -8,32 +8,36 @@ public abstract class BaseStmt implements Stmt {
     private int file; // index of source filename
     private int col; // column in the source file
     private int row; // row in the source file
+    private int endCol; // column one past the last rune of the source text
+    private int endRow; // row of the last rune of the source text
     private Location cachedLocation;
 
     protected BaseStmt(int file, int col, int row) {
         this.file = file;
         this.col = col;
         this.row = row;
+        this.endCol = col;
+        this.endRow = row;
     }
 
     protected BaseStmt() {
     }
 
     @Override
-    public Location setLocation(int file, int row, int col) {
+    public void setLocation(int file, int row, int col, int endRow, int endCol) {
         this.file = file;
         this.col = col;
         this.row = row;
-        Location loc = new Location(file, col, row);
-        this.cachedLocation = loc;
-        return loc;
+        this.endCol = endCol;
+        this.endRow = endRow;
+        this.cachedLocation = new Location(file, col, row, endCol, endRow);;
     }
 
     @Override
     public Location getLocation() {
         Location loc = cachedLocation;
         if (loc == null) {
-            loc = new Location(file, col, row);
+            loc = new Location(file, col, row, endCol, endRow);
             cachedLocation = loc;
         }
         return loc;
