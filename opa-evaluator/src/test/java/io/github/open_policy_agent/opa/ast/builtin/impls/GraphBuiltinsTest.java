@@ -58,6 +58,22 @@ class GraphBuiltinsTest {
   }
 
   @Test
+  void reachablePathsIncludesInitialSelfLoopOnce() {
+    RegoString a = new RegoString("a");
+    RegoString b = new RegoString("b");
+    RegoObject graph = new RegoObject(Map.of(a, setOf(a, b), b, setOf()));
+
+    RegoValue result = call("graph.reachable_paths", graph, setOf(a));
+
+    assertEquals(
+        setOf(
+            new RegoArray(List.of(a, a)),
+            new RegoArray(List.of(a, a, b)),
+            new RegoArray(List.of(a, b))),
+        result);
+  }
+
+  @Test
   void reachablePathsHandlesDeepGraphsWithoutRecursion() {
     int nodeCount = 10_000;
     List<RegoValue> nodes = new ArrayList<>(nodeCount);

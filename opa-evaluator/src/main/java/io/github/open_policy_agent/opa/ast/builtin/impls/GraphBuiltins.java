@@ -15,11 +15,10 @@ import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BiFunction;
 
 public class GraphBuiltins {
@@ -128,7 +127,8 @@ public class GraphBuiltins {
     }
 
     List<RegoValue> path = new ArrayList<>(List.of(initial));
-    Set<RegoValue> reached = new HashSet<>(Set.of(initial));
+    Map<RegoValue, Integer> reached = new HashMap<>();
+    reached.put(initial, 1);
     Deque<PathFrame> pending = new ArrayDeque<>();
     pending.addLast(new PathFrame(null, neighbors));
 
@@ -138,13 +138,18 @@ public class GraphBuiltins {
         pending.removeLast();
         if (frame.node != null) {
           path.remove(path.size() - 1);
-          reached.remove(frame.node);
+          reached.compute(
+              frame.node,
+              (node, visits) -> visits == null || visits == 1 ? null : visits - 1);
         }
         continue;
       }
 
       RegoValue neighbor = frame.neighbors.get(frame.nextNeighborIndex++);
-      if (reached.contains(neighbor)) {
+      // OPA includes a direct self-loop from the initial node, but stops cycles after
+      // entering a child frame. Keep a visit count so unwinding that self-loop does not
+      // remove the initial node from the active path.
+      if (frame.node != null && reached.containsKey(neighbor)) {
         addPath(paths, path);
         continue;
       }
@@ -156,12 +161,13 @@ public class GraphBuiltins {
       }
 
       path.add(neighbor);
-      reached.add(neighbor);
+      reached.merge(neighbor, 1, Integer::sum);
       List<RegoValue> neighborValues = collectionValues(neighborEdges);
       if (neighborValues.isEmpty()) {
         addPath(paths, path);
         path.remove(path.size() - 1);
-        reached.remove(neighbor);
+        reached.compute(
+            neighbor, (node, visits) -> visits == null || visits == 1 ? null : visits - 1);
         continue;
       }
       pending.addLast(new PathFrame(neighbor, neighborValues));
