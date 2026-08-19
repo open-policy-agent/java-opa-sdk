@@ -272,11 +272,16 @@ final class PlanMapper {
       default -> throw new IllegalArgumentException("unsupported statement kind: " + s.getKindCase());
     }
 
-    // The source-location triple lives on the proto Stmt envelope; the SDK carries it on BaseStmt.
+    // The proto envelope carries the source location. end_col/end_row are 0 for plans built before
+    // https://github.com/open-policy-agent/opa/pull/9007, so fall back to (row, col) there to keep
+    // the range a point rather than inverting it.
     if (out instanceof BaseStmt base) {
-      base.setFile(s.getFile());
-      base.setCol(s.getCol());
-      base.setRow(s.getRow());
+      base.setLocation(
+          s.getFile(),
+          s.getRow(),
+          s.getCol(),
+          s.getEndRow() != 0 ? s.getEndRow() : s.getRow(),
+          s.getEndCol() != 0 ? s.getEndCol() : s.getCol());
     }
     return out;
   }
