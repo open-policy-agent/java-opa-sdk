@@ -75,8 +75,8 @@ public final class OpaCoverageReport {
     sorted.sort(Range::compareTo);
     for (Range range : sorted) {
       ObjectNode rangeNode = array.addObject();
-      writePosition(rangeNode.putObject("start"), range.getStart());
-      writePosition(rangeNode.putObject("end"), range.getEnd());
+      writePosition(rangeNode.putObject("start"), range.start());
+      writePosition(rangeNode.putObject("end"), range.end());
     }
   }
 

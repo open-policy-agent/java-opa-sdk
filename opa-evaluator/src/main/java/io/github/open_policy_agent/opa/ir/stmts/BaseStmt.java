@@ -95,7 +95,13 @@ public abstract class BaseStmt implements Stmt {
         if (col != baseStmt.col) {
             return false;
         }
-        return row == baseStmt.row;
+        if (row != baseStmt.row) {
+            return false;
+        }
+        if (endCol != baseStmt.endCol) {
+            return false;
+        }
+        return endRow == baseStmt.endRow;
     }
 
     @Override
@@ -103,6 +109,8 @@ public abstract class BaseStmt implements Stmt {
         int result = file;
         result = 31 * result + col;
         result = 31 * result + row;
+        result = 31 * result + endCol;
+        result = 31 * result + endRow;
         return result;
     }
 }

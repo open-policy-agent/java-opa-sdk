@@ -12,10 +12,10 @@ class RangeTest {
     Location loc = new Location(0, 2, 5, 14, 5); // file, col, row, endCol, endRow
     Range range = Range.of(loc);
 
-    assertEquals(5, range.getStart().getRow());
-    assertEquals(2, range.getStart().getCol());
-    assertEquals(5, range.getEnd().getRow());
-    assertEquals(14, range.getEnd().getCol());
+    assertEquals(5, range.start().getRow());
+    assertEquals(2, range.start().getCol());
+    assertEquals(5, range.end().getRow());
+    assertEquals(14, range.end().getCol());
   }
 
   @Test

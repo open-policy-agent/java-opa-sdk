@@ -56,7 +56,7 @@ public class CoverageProfiler implements Profiler {
     for (Map.Entry<Integer, Set<Range>> entry : hitsByFile.entrySet()) {
       Set<Integer> rows = new TreeSet<>();
       for (Range range : entry.getValue()) {
-        for (int row = range.getStart().getRow(); row <= range.getEnd().getRow(); row++) {
+        for (int row = range.start().getRow(); row <= range.end().getRow(); row++) {
           rows.add(row);
         }
       }
