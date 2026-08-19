@@ -62,12 +62,35 @@ public abstract class BundleDownloader {
 
   private static final Set<String> ALLOWED_CONTENT_TYPES =
       Set.of(
+          "application/vnd.openpolicyagent.bundle.ir.v1+gzip",
           "application/vnd.openpolicyagent.bundles",
           "application/gzip",
           "application/x-gzip",
           "application/octet-stream",
           "binary/octet-stream",
           "application/x-tar");
+
+  /**
+   * Default {@code Accept} for bundle requests: the media types this SDK can consume, in preference
+   * order, weighted with q-factors.
+   *
+   * <p>This SDK evaluates the IR ("plan") bundle format, so IR is requested first. The remaining
+   * entries keep the request working against servers that don't negotiate — a plain OPA bundle, any
+   * gzip, and finally a {@code &#42;/&#42;} catch-all for servers that ignore {@code Accept}
+   * entirely and just serve a tarball. Because the weights are only relative, a server that
+   * understands none of the named types can still respond rather than returning {@code 406 Not
+   * Acceptable}.
+   *
+   * <p>Applied <em>before</em> the service config's {@code headers} are merged in, so an operator
+   * can override it per service — see {@link ServicePlugin.Service#applyHeaders}.
+   */
+  static final String DEFAULT_ACCEPT_HEADER =
+      String.join(
+          ", ",
+          "application/vnd.openpolicyagent.bundle.ir.v1+gzip;q=1.0",
+          "application/vnd.openpolicyagent.bundles;q=0.9",
+          "application/gzip;q=0.8",
+          "*/*;q=0.1");
 
   /**
    * Construct a BundleDownloader.
@@ -335,7 +358,7 @@ public abstract class BundleDownloader {
         HttpRequest.newBuilder()
             .uri(uri)
             .timeout(requestTimeout())
-            .header("Accept", "application/vnd.openpolicyagent.bundles")
+            .header("Accept", DEFAULT_ACCEPT_HEADER)
             .GET();
 
     if (etag != null) {
@@ -344,6 +367,7 @@ public abstract class BundleDownloader {
 
     if (authService != null) {
       requestBuilder = authService.applyCredentials(requestBuilder);
+      // Applied last, and with setHeader, so a service-config header wins over the defaults above.
       requestBuilder = authService.applyHeaders(requestBuilder);
     }
 
