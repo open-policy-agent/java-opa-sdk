@@ -71,7 +71,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -84,7 +86,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -93,7 +97,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -110,7 +116,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -119,7 +127,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										}
 									]
@@ -146,7 +156,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 2,
+												"end_row": 3
 											}
 										},
 										{
@@ -163,7 +175,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 15,
+												"end_row": 4
 											}
 										},
 										{
@@ -184,7 +198,9 @@
 																"target": 7,
 																"file": 0,
 																"col": 2,
-																"row": 4
+																"row": 4,
+																"end_col": 15,
+																"end_row": 4
 															}
 														},
 														{
@@ -205,7 +221,9 @@
 																										"index": 1,
 																										"file": 0,
 																										"col": 2,
-																										"row": 4
+																										"row": 4,
+																										"end_col": 15,
+																										"end_row": 4
 																									}
 																								}
 																							]
@@ -213,7 +231,9 @@
 																					],
 																					"file": 0,
 																					"col": 2,
-																					"row": 4
+																					"row": 4,
+																					"end_col": 15,
+																					"end_row": 4
 																				}
 																			},
 																			{
@@ -222,7 +242,9 @@
 																					"index": 1,
 																					"file": 0,
 																					"col": 2,
-																					"row": 4
+																					"row": 4,
+																					"end_col": 15,
+																					"end_row": 4
 																				}
 																			}
 																		]
@@ -230,7 +252,9 @@
 																],
 																"file": 0,
 																"col": 2,
-																"row": 4
+																"row": 4,
+																"end_col": 15,
+																"end_row": 4
 															}
 														},
 														{
@@ -239,6 +263,8 @@
 																"file": 0,
 																"col": 2,
 																"row": 4,
+																"end_col": 15,
+																"end_row": 4,
 																"index": 2,
 																"Index": 2,
 																"target": 10
@@ -257,7 +283,9 @@
 																},
 																"file": 0,
 																"col": 2,
-																"row": 4
+																"row": 4,
+																"end_col": 15,
+																"end_row": 4
 															}
 														},
 														{
@@ -266,6 +294,8 @@
 																"file": 0,
 																"col": 2,
 																"row": 5,
+																"end_col": 7,
+																"end_row": 5,
 																"index": 3,
 																"Index": 3,
 																"target": 11
@@ -281,7 +311,9 @@
 																"target": 12,
 																"file": 0,
 																"col": 2,
-																"row": 5
+																"row": 5,
+																"end_col": 7,
+																"end_row": 5
 															}
 														},
 														{
@@ -294,14 +326,18 @@
 																"target": 3,
 																"file": 0,
 																"col": 1,
-																"row": 3
+																"row": 3,
+																"end_col": 2,
+																"end_row": 3
 															}
 														}
 													]
 												},
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 15,
+												"end_row": 4
 											}
 										}
 									]
@@ -314,7 +350,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 2,
+												"end_row": 3
 											}
 										},
 										{
@@ -327,7 +365,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 2,
+												"end_row": 3
 											}
 										}
 									]
@@ -340,7 +380,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 2,
+												"end_row": 3
 											}
 										}
 									]
@@ -361,7 +403,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CjAKAwoBeAoDCgFhCgMKATQKAwoBMxoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SfAp6CgRldmFsEnIKKwgBEAEYAVojChNnMC5kYXRhLmdlbmVyYXRlZC5wEgQKAhAAEgQKAhABGAIKEAgBEAEYAToICgQKAhACEAMKCwgBEAEYAcIBAggEChcIARABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAEQARgBigICCAQatwIKtAIKE2cwLmRhdGEuZ2VuZXJhdGVkLnASAgABGAIi1QEKCwgAEAEYA4ICAggDChYIABACGARiDgoECgIQARIECgIYARgECq0BCAAQAhgEmgKjAQgEEAUYBiKaAQoQCAAQAhgEOggKBAoCEAUQBwouCAAQAhgEQiYKJAoWCAAQAhgEQg4KDAoKCAAQAhgESgIIAQoKCAAQAhgESgIIAQoNCAAQAhgEugEECAIQCgoUCAAQAhgEagwKBAoCEAYSBAoCEAoKDQgAEAIYBboBBAgDEAsKEAgAEAIYBToICgQKAhALEAwKEAgAEAEYAzIICgQKAggBEAMiHgoKCAAQARgDegIIAwoQCAAQARgDMggKBAoCEAMQAiINCgsIABABGAOSAgIIAioCZzAqCWdlbmVyYXRlZCoBcA=="
+			"plan_proto": "CjAKAwoBeAoDCgFhCgMKATQKAwoBMxoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SnAEKmQEKBGV2YWwSkAEKMQgBEAEYAbACFbgCAVojChNnMC5kYXRhLmdlbmVyYXRlZC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACFbgCAToICgQKAhACEAMKEQgBEAEYAbACFbgCAcIBAggECh0IARABGAGwAhW4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIVuAIBigICCAQalwMKlAMKE2cwLmRhdGEuZ2VuZXJhdGVkLnASAgABGAIiowIKEQgAEAEYA7ACArgCA4ICAggDChwIABACGASwAg+4AgRiDgoECgIQARIECgIYARgECu8BCAAQAhgEsAIPuAIEmgLfAQgEEAUYBiLWAQoWCAAQAhgEsAIPuAIEOggKBAoCEAUQBwpGCAAQAhgEsAIPuAIEQjgKNgoiCAAQAhgEsAIPuAIEQhQKEgoQCAAQAhgEsAIPuAIESgIIAQoQCAAQAhgEsAIPuAIESgIIAQoTCAAQAhgEsAIPuAIEugEECAIQCgoaCAAQAhgEsAIPuAIEagwKBAoCEAYSBAoCEAoKEwgAEAIYBbACB7gCBboBBAgDEAsKFggAEAIYBbACB7gCBToICgQKAhALEAwKFggAEAEYA7ACArgCAzIICgQKAggBEAMiKgoQCAAQARgDsAICuAIDegIIAwoWCAAQARgDsAICuAIDMggKBAoCEAMQAiITChEIABABGAOwAgK4AgOSAgIIAioCZzAqCWdlbmVyYXRlZCoBcA=="
 		}
 	]
 }

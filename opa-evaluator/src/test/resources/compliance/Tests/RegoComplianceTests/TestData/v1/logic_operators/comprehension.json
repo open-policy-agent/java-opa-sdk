@@ -119,7 +119,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -132,7 +134,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -141,7 +145,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -158,7 +164,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -167,7 +175,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										}
 									]
@@ -194,7 +204,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -204,7 +216,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -227,7 +241,9 @@
 																	"target": 5,
 																	"file": 0,
 																	"col": 3,
-																	"row": 6
+																	"row": 6,
+																	"end_col": 19,
+																	"end_row": 6
 																}
 															},
 															{
@@ -248,7 +264,9 @@
 																					"target": 8,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -261,7 +279,9 @@
 																					"target": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -270,7 +290,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -285,6 +307,8 @@
 																										"file": 0,
 																										"col": 3,
 																										"row": 7,
+																										"end_col": 8,
+																										"end_row": 7,
 																										"index": 2,
 																										"Index": 2,
 																										"target": 11
@@ -307,7 +331,9 @@
 																										"result": 12,
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 8,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -323,7 +349,9 @@
 																										},
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 8,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -336,7 +364,9 @@
 																										"target": 10,
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								}
 																							]
@@ -344,7 +374,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -353,7 +385,9 @@
 																					"source": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -362,7 +396,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -377,6 +413,8 @@
 																										"file": 0,
 																										"col": 13,
 																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7,
 																										"index": 3,
 																										"Index": 3,
 																										"target": 13
@@ -399,7 +437,9 @@
 																										"result": 14,
 																										"file": 0,
 																										"col": 13,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -415,7 +455,9 @@
 																										},
 																										"file": 0,
 																										"col": 13,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -428,7 +470,9 @@
 																										"target": 10,
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								}
 																							]
@@ -436,7 +480,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -445,7 +491,9 @@
 																					"source": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -458,14 +506,18 @@
 																					"array": 4,
 																					"file": 0,
 																					"col": 6,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 2,
+																					"end_row": 8
 																				}
 																			}
 																		]
 																	},
 																	"file": 0,
 																	"col": 3,
-																	"row": 6
+																	"row": 6,
+																	"end_col": 19,
+																	"end_row": 6
 																}
 															}
 														]
@@ -473,7 +525,9 @@
 												],
 												"file": 0,
 												"col": 6,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -486,7 +540,9 @@
 												"target": 15,
 												"file": 0,
 												"col": 6,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -499,7 +555,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										}
 									]
@@ -512,7 +570,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -525,7 +585,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										}
 									]
@@ -538,7 +600,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										}
 									]
@@ -562,7 +626,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "Cj4KAwoBeAoECgJ4cwoDCgEwCgQKAjEwEgQKAmd0EgQKAmx0Gg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhJ3CnUKBGV2YWwSbQomCAEQARgBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKEAgBEAEYAToICgQKAhACEAMKCwgBEAEYAcIBAggEChcIARABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAEQARgBigICCAQa/QMK+gMKDmcwLmRhdGEudGVzdC5wEgIAARgCIqUDCgsIABABGAWCAgIIAwoNCAAQBhgFogEECAAQBAriAggAEAYYBULZAgrWAgoWCAAQAxgGYg4KBAoCEAASBAoCGAEYBQq7AggAEAMYBpoCsQIIBRAGGAciqAIKEAgAEAMYBjoICgQKAhAGEAgKEAgAEAMYBjoICgQKAhAHEAkKCwgAEAMYB4ICAggKCl4IABADGAdCVgpUCg0IABADGAe6AQQIAhALChoIABADGAdaEgoCZ3QSBAoCEAkSBAoCEAsYDAoVCAAQAxgH2gEMCgQKAhAMEgQKAggAChAIABADGAc6CAoECgIIARAKCgoIABADGAd6AggKCgsIABADGAeCAgIICgpeCAAQAxgHQlYKVAoNCAAQDRgHugEECAMQDQoaCAAQDRgHWhIKAmx0EgQKAhAJEgQKAhANGA4KFQgAEA0YB9oBDAoECgIQDhIECgIIAAoQCAAQAxgHOggKBAoCCAEQCgoKCAAQAxgHegIICgoQCAAQBhgFIggKBAoCEAkQBAoQCAAQBhgFOggKBAoCEAQQDwoQCAAQARgFMggKBAoCEA8QAyIeCgoIABABGAV6AggDChAIABABGAUyCAoECgIQAxACIg0KCwgAEAEYBZICAggCKgJnMCoEdGVzdCoBcA=="
+			"plan_proto": "Cj4KAwoBeAoECgJ4cwoDCgEwCgQKAjEwEgQKAmd0EgQKAmx0Gg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQanwUKnAUKDmcwLmRhdGEudGVzdC5wEgIAARgCIrUEChEIABABGAWwAgK4AgiCAgIIAwoTCAAQBhgFsAICuAIIogEECAAQBAraAwgAEAYYBbACArgCCELLAwrIAwocCAAQAxgGsAITuAIGYg4KBAoCEAASBAoCGAEYBQqnAwgAEAMYBrACE7gCBpoClwMIBRAGGAcijgMKFggAEAMYBrACE7gCBjoICgQKAhAGEAgKFggAEAMYBrACE7gCBjoICgQKAhAHEAkKEQgAEAMYB7ACE7gCB4ICAggKCnwIABADGAewAhO4AgdCbgpsChMIABADGAewAgi4Age6AQQIAhALCiAIABADGAewAgi4AgdaEgoCZ3QSBAoCEAkSBAoCEAsYDAobCAAQAxgHsAIIuAIH2gEMCgQKAhAMEgQKAggAChYIABADGAewAhO4Agc6CAoECgIIARAKChAIABADGAewAhO4Agd6AggKChEIABADGAewAhO4AgeCAgIICgp8CAAQAxgHsAITuAIHQm4KbAoTCAAQDRgHsAITuAIHugEECAMQDQogCAAQDRgHsAITuAIHWhIKAmx0EgQKAhAJEgQKAhANGA4KGwgAEA0YB7ACE7gCB9oBDAoECgIQDhIECgIIAAoWCAAQAxgHsAITuAIHOggKBAoCCAEQCgoQCAAQAxgHsAITuAIHegIICgoWCAAQBhgFsAICuAIIIggKBAoCEAkQBAoWCAAQBhgFsAICuAIIOggKBAoCEAQQDwoWCAAQARgFsAICuAIIMggKBAoCEA8QAyIqChAIABABGAWwAgK4Agh6AggDChYIABABGAWwAgK4AggyCAoECgIQAxACIhMKEQgAEAEYBbACArgCCJICAggCKgJnMCoEdGVzdCoBcA=="
 		},
 		{
 			"note": "logic_op/comprehension: array, or as filter",
@@ -683,7 +747,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -696,7 +762,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -705,7 +773,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -722,7 +792,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -731,7 +803,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										}
 									]
@@ -758,7 +832,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -768,7 +844,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -791,7 +869,9 @@
 																	"target": 5,
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 19,
+																	"end_row": 5
 																}
 															},
 															{
@@ -812,7 +892,9 @@
 																					"target": 8,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 19,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -825,7 +907,9 @@
 																					"target": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 19,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -834,7 +918,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 18,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -849,6 +935,8 @@
 																										"file": 0,
 																										"col": 3,
 																										"row": 6,
+																										"end_col": 8,
+																										"end_row": 6,
 																										"index": 2,
 																										"Index": 2,
 																										"target": 11
@@ -871,7 +959,9 @@
 																										"result": 12,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 8,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -887,7 +977,9 @@
 																										},
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 8,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -900,7 +992,9 @@
 																										"target": 10,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 18,
+																										"end_row": 6
 																									}
 																								}
 																							]
@@ -908,7 +1002,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 18,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -929,7 +1025,9 @@
 																															"source": 10,
 																															"file": 0,
 																															"col": 0,
-																															"row": 0
+																															"row": 0,
+																															"end_col": 0,
+																															"end_row": 0
 																														}
 																													},
 																													{
@@ -938,7 +1036,9 @@
 																															"index": 1,
 																															"file": 0,
 																															"col": 0,
-																															"row": 0
+																															"row": 0,
+																															"end_col": 0,
+																															"end_row": 0
 																														}
 																													}
 																												]
@@ -946,7 +1046,9 @@
 																										],
 																										"file": 0,
 																										"col": 0,
-																										"row": 0
+																										"row": 0,
+																										"end_col": 0,
+																										"end_row": 0
 																									}
 																								},
 																								{
@@ -961,6 +1063,8 @@
 																															"file": 0,
 																															"col": 12,
 																															"row": 6,
+																															"end_col": 18,
+																															"end_row": 6,
 																															"index": 3,
 																															"Index": 3,
 																															"target": 13
@@ -983,7 +1087,9 @@
 																															"result": 14,
 																															"file": 0,
 																															"col": 12,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 18,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -999,7 +1105,9 @@
 																															},
 																															"file": 0,
 																															"col": 12,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 18,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -1012,7 +1120,9 @@
 																															"target": 10,
 																															"file": 0,
 																															"col": 3,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 18,
+																															"end_row": 6
 																														}
 																													}
 																												]
@@ -1020,7 +1130,9 @@
 																										],
 																										"file": 0,
 																										"col": 0,
-																										"row": 0
+																										"row": 0,
+																										"end_col": 0,
+																										"end_row": 0
 																									}
 																								}
 																							]
@@ -1028,7 +1140,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 18,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -1037,7 +1151,9 @@
 																					"source": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 18,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -1050,14 +1166,18 @@
 																					"array": 4,
 																					"file": 0,
 																					"col": 6,
-																					"row": 4
+																					"row": 4,
+																					"end_col": 2,
+																					"end_row": 7
 																				}
 																			}
 																		]
 																	},
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 19,
+																	"end_row": 5
 																}
 															}
 														]
@@ -1065,7 +1185,9 @@
 												],
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -1078,7 +1200,9 @@
 												"target": 15,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -1091,7 +1215,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -1104,7 +1230,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -1117,7 +1245,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -1130,7 +1260,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -1154,7 +1286,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "Cj4KAwoBeAoECgJ4cwoDCgEwCgQKAjEwEgQKAmd0EgQKAmx0Gg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhJ3CnUKBGV2YWwSbQomCAEQARgBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKEAgBEAEYAToICgQKAhACEAMKCwgBEAEYAcIBAggEChcIARABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAEQARgBigICCAQalwQKlAQKDmcwLmRhdGEudGVzdC5wEgIAARgCIr8DCgsIABABGASCAgIIAwoNCAAQBhgEogEECAAQBAr8AggAEAYYBELzAgrwAgoWCAAQAxgFYg4KBAoCEAASBAoCGAEYBQrVAggAEAMYBZoCywIIBRAGGAciwgIKEAgAEAMYBToICgQKAhAGEAgKEAgAEAMYBToICgQKAhAHEAkKCwgAEAMYBoICAggKCl4IABADGAZCVgpUCg0IABADGAa6AQQIAhALChoIABADGAZaEgoCbHQSBAoCEAkSBAoCEAsYDAoVCAAQAxgG2gEMCgQKAhAMEgQKAggAChAIABADGAY6CAoECgIIARAKCpABCAAQAxgGQocBCoQBCiIIABAAGABCGgoYCgoIABAAGAB6AggKCgoIABAAGABKAggBCl4IABAAGABCVgpUCg0IABAMGAa6AQQIAxANChoIABAMGAZaEgoCZ3QSBAoCEAkSBAoCEA0YDgoVCAAQDBgG2gEMCgQKAhAOEgQKAggAChAIABADGAY6CAoECgIIARAKCgoIABADGAZ6AggKChAIABAGGAQiCAoECgIQCRAEChAIABAGGAQ6CAoECgIQBBAPChAIABABGAQyCAoECgIQDxADIh4KCggAEAEYBHoCCAMKEAgAEAEYBDIICgQKAhADEAIiDQoLCAAQARgEkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "Cj4KAwoBeAoECgJ4cwoDCgEwCgQKAjEwEgQKAmd0EgQKAmx0Gg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQaxQUKwgUKDmcwLmRhdGEudGVzdC5wEgIAARgCItsEChEIABABGASwAgK4AgeCAgIIAwoTCAAQBhgEsAICuAIHogEECAAQBAqABAgAEAYYBLACArgCB0LxAwruAwocCAAQAxgFsAITuAIFYg4KBAoCEAASBAoCGAEYBQrNAwgAEAMYBbACE7gCBZoCvQMIBRAGGAcitAMKFggAEAMYBbACE7gCBToICgQKAhAGEAgKFggAEAMYBbACE7gCBToICgQKAhAHEAkKEQgAEAMYBrACErgCBoICAggKCnwIABADGAawAhK4AgZCbgpsChMIABADGAawAgi4Aga6AQQIAhALCiAIABADGAawAgi4AgZaEgoCbHQSBAoCEAkSBAoCEAsYDAobCAAQAxgGsAIIuAIG2gEMCgQKAhAMEgQKAggAChYIABADGAawAhK4AgY6CAoECgIIARAKCsYBCAAQAxgGsAISuAIGQrcBCrQBCjQIABAAGACwAgC4AgBCJgokChAIABAAGACwAgC4AgB6AggKChAIABAAGACwAgC4AgBKAggBCnwIABAAGACwAgC4AgBCbgpsChMIABAMGAawAhK4Aga6AQQIAxANCiAIABAMGAawAhK4AgZaEgoCZ3QSBAoCEAkSBAoCEA0YDgobCAAQDBgGsAISuAIG2gEMCgQKAhAOEgQKAggAChYIABADGAawAhK4AgY6CAoECgIIARAKChAIABADGAawAhK4AgZ6AggKChYIABAGGASwAgK4AgciCAoECgIQCRAEChYIABAGGASwAgK4Agc6CAoECgIQBBAPChYIABABGASwAgK4AgcyCAoECgIQDxADIioKEAgAEAEYBLACArgCB3oCCAMKFggAEAEYBLACArgCBzIICgQKAhADEAIiEwoRCAAQARgEsAICuAIHkgICCAIqAmcwKgR0ZXN0KgFw"
 		},
 		{
 			"note": "logic_op/comprehension: set with and (dedup)",
@@ -1279,7 +1411,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1292,7 +1426,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1301,7 +1437,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1318,7 +1456,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1327,7 +1467,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										}
 									]
@@ -1354,7 +1496,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -1363,7 +1507,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -1386,7 +1532,9 @@
 																	"target": 5,
 																	"file": 0,
 																	"col": 3,
-																	"row": 6
+																	"row": 6,
+																	"end_col": 19,
+																	"end_row": 6
 																}
 															},
 															{
@@ -1407,7 +1555,9 @@
 																					"target": 8,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -1420,7 +1570,9 @@
 																					"target": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -1429,7 +1581,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -1444,6 +1598,8 @@
 																										"file": 0,
 																										"col": 3,
 																										"row": 7,
+																										"end_col": 8,
+																										"end_row": 7,
 																										"index": 2,
 																										"Index": 2,
 																										"target": 11
@@ -1466,7 +1622,9 @@
 																										"result": 12,
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 8,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -1482,7 +1640,9 @@
 																										},
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 8,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -1495,7 +1655,9 @@
 																										"target": 10,
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								}
 																							]
@@ -1503,7 +1665,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -1512,7 +1676,9 @@
 																					"source": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -1521,7 +1687,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -1536,6 +1704,8 @@
 																										"file": 0,
 																										"col": 13,
 																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7,
 																										"index": 3,
 																										"Index": 3,
 																										"target": 13
@@ -1558,7 +1728,9 @@
 																										"result": 14,
 																										"file": 0,
 																										"col": 13,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -1574,7 +1746,9 @@
 																										},
 																										"file": 0,
 																										"col": 13,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								},
 																								{
@@ -1587,7 +1761,9 @@
 																										"target": 10,
 																										"file": 0,
 																										"col": 3,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 19,
+																										"end_row": 7
 																									}
 																								}
 																							]
@@ -1595,7 +1771,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -1604,7 +1782,9 @@
 																					"source": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 7
+																					"row": 7,
+																					"end_col": 19,
+																					"end_row": 7
 																				}
 																			},
 																			{
@@ -1617,14 +1797,18 @@
 																					"set": 4,
 																					"file": 0,
 																					"col": 6,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 2,
+																					"end_row": 8
 																				}
 																			}
 																		]
 																	},
 																	"file": 0,
 																	"col": 3,
-																	"row": 6
+																	"row": 6,
+																	"end_col": 19,
+																	"end_row": 6
 																}
 															}
 														]
@@ -1632,7 +1816,9 @@
 												],
 												"file": 0,
 												"col": 6,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -1645,7 +1831,9 @@
 												"target": 15,
 												"file": 0,
 												"col": 6,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -1658,7 +1846,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										}
 									]
@@ -1671,7 +1861,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										},
 										{
@@ -1684,7 +1876,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										}
 									]
@@ -1697,7 +1891,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 5
+												"row": 5,
+												"end_col": 2,
+												"end_row": 8
 											}
 										}
 									]
@@ -1722,7 +1918,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "Cj4KAwoBeAoECgJ4cwoDCgEwCgQKAjEwEgQKAmd0EgQKAmx0Gg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhJ3CnUKBGV2YWwSbQomCAEQARgBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKEAgBEAEYAToICgQKAhACEAMKCwgBEAEYAcIBAggEChcIARABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAEQARgBigICCAQa/AMK+QMKDmcwLmRhdGEudGVzdC5wEgIAARgCIqQDCgsIABABGAWCAgIIAwoLCAAQBhgFygECCAQK4wIIABAGGAVC2gIK1wIKFggAEAMYBmIOCgQKAhAAEgQKAhgBGAUKvAIIABADGAaaArICCAUQBhgHIqkCChAIABADGAY6CAoECgIQBhAIChAIABADGAY6CAoECgIQBxAJCgsIABADGAeCAgIICgpeCAAQAxgHQlYKVAoNCAAQAxgHugEECAIQCwoaCAAQAxgHWhIKAmd0EgQKAhAJEgQKAhALGAwKFQgAEAMYB9oBDAoECgIQDBIECgIIAAoQCAAQAxgHOggKBAoCCAEQCgoKCAAQAxgHegIICgoLCAAQAxgHggICCAoKXggAEAMYB0JWClQKDQgAEA0YB7oBBAgDEA0KGggAEA0YB1oSCgJsdBIECgIQCRIECgIQDRgOChUIABANGAfaAQwKBAoCEA4SBAoCCAAKEAgAEAMYBzoICgQKAggBEAoKCggAEAMYB3oCCAoKEQgAEAYYBaICCAoECgIQCRAEChAIABAGGAU6CAoECgIQBBAPChAIABABGAUyCAoECgIQDxADIh4KCggAEAEYBXoCCAMKEAgAEAEYBTIICgQKAhADEAIiDQoLCAAQARgFkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "Cj4KAwoBeAoECgJ4cwoDCgEwCgQKAjEwEgQKAmd0EgQKAmx0Gg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQangUKmwUKDmcwLmRhdGEudGVzdC5wEgIAARgCIrQEChEIABABGAWwAgK4AgiCAgIIAwoRCAAQBhgFsAICuAIIygECCAQK2wMIABAGGAWwAgK4AghCzAMKyQMKHAgAEAMYBrACE7gCBmIOCgQKAhAAEgQKAhgBGAUKqAMIABADGAawAhO4AgaaApgDCAUQBhgHIo8DChYIABADGAawAhO4AgY6CAoECgIQBhAIChYIABADGAawAhO4AgY6CAoECgIQBxAJChEIABADGAewAhO4AgeCAgIICgp8CAAQAxgHsAITuAIHQm4KbAoTCAAQAxgHsAIIuAIHugEECAIQCwogCAAQAxgHsAIIuAIHWhIKAmd0EgQKAhAJEgQKAhALGAwKGwgAEAMYB7ACCLgCB9oBDAoECgIQDBIECgIIAAoWCAAQAxgHsAITuAIHOggKBAoCCAEQCgoQCAAQAxgHsAITuAIHegIICgoRCAAQAxgHsAITuAIHggICCAoKfAgAEAMYB7ACE7gCB0JuCmwKEwgAEA0YB7ACE7gCB7oBBAgDEA0KIAgAEA0YB7ACE7gCB1oSCgJsdBIECgIQCRIECgIQDRgOChsIABANGAewAhO4AgfaAQwKBAoCEA4SBAoCCAAKFggAEAMYB7ACE7gCBzoICgQKAggBEAoKEAgAEAMYB7ACE7gCB3oCCAoKFwgAEAYYBbACArgCCKICCAoECgIQCRAEChYIABAGGAWwAgK4Agg6CAoECgIQBBAPChYIABABGAWwAgK4AggyCAoECgIQDxADIioKEAgAEAEYBbACArgCCHoCCAMKFggAEAEYBbACArgCCDIICgQKAhADEAIiEwoRCAAQARgFsAICuAIIkgICCAIqAmcwKgR0ZXN0KgFw"
 		},
 		{
 			"note": "logic_op/comprehension: object with or",
@@ -1838,7 +2034,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1851,7 +2049,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1860,7 +2060,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1877,7 +2079,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -1886,7 +2090,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										}
 									]
@@ -1913,7 +2119,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -1922,7 +2130,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -1949,7 +2159,9 @@
 																					"target": 7,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 16,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -1962,7 +2174,9 @@
 																					"target": 8,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 16,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -1971,7 +2185,9 @@
 																					"target": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -1986,6 +2202,8 @@
 																										"file": 0,
 																										"col": 3,
 																										"row": 6,
+																										"end_col": 8,
+																										"end_row": 6,
 																										"index": 1,
 																										"Index": 1,
 																										"target": 10
@@ -2008,7 +2226,9 @@
 																										"result": 11,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 8,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -2024,7 +2244,9 @@
 																										},
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 8,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -2037,7 +2259,9 @@
 																										"target": 9,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 19,
+																										"end_row": 6
 																									}
 																								}
 																							]
@@ -2045,7 +2269,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -2066,7 +2292,9 @@
 																															"source": 9,
 																															"file": 0,
 																															"col": 0,
-																															"row": 0
+																															"row": 0,
+																															"end_col": 0,
+																															"end_row": 0
 																														}
 																													},
 																													{
@@ -2075,7 +2303,9 @@
 																															"index": 1,
 																															"file": 0,
 																															"col": 0,
-																															"row": 0
+																															"row": 0,
+																															"end_col": 0,
+																															"end_row": 0
 																														}
 																													}
 																												]
@@ -2083,7 +2313,9 @@
 																										],
 																										"file": 0,
 																										"col": 0,
-																										"row": 0
+																										"row": 0,
+																										"end_col": 0,
+																										"end_row": 0
 																									}
 																								},
 																								{
@@ -2098,6 +2330,8 @@
 																															"file": 0,
 																															"col": 12,
 																															"row": 6,
+																															"end_col": 19,
+																															"end_row": 6,
 																															"index": 2,
 																															"Index": 2,
 																															"target": 12
@@ -2120,7 +2354,9 @@
 																															"result": 13,
 																															"file": 0,
 																															"col": 12,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 19,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -2136,7 +2372,9 @@
 																															},
 																															"file": 0,
 																															"col": 12,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 19,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -2149,7 +2387,9 @@
 																															"target": 9,
 																															"file": 0,
 																															"col": 3,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 19,
+																															"end_row": 6
 																														}
 																													}
 																												]
@@ -2157,7 +2397,9 @@
 																										],
 																										"file": 0,
 																										"col": 0,
-																										"row": 0
+																										"row": 0,
+																										"end_col": 0,
+																										"end_row": 0
 																									}
 																								}
 																							]
@@ -2165,7 +2407,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -2174,7 +2418,9 @@
 																					"source": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 19,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -2191,14 +2437,18 @@
 																					"object": 4,
 																					"file": 0,
 																					"col": 6,
-																					"row": 4
+																					"row": 4,
+																					"end_col": 2,
+																					"end_row": 7
 																				}
 																			}
 																		]
 																	},
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 16,
+																	"end_row": 5
 																}
 															}
 														]
@@ -2206,7 +2456,9 @@
 												],
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -2219,7 +2471,9 @@
 												"target": 14,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -2232,7 +2486,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -2245,7 +2501,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -2258,7 +2516,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -2271,7 +2531,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -2295,7 +2557,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CjkKAwoBeAoDCgEwCgUKAy0xMBIECgJndBIECgJsdBoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4Sdwp1CgRldmFsEm0KJggBEAEYAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChAIARABGAE6CAoECgIQAhADCgsIARABGAHCAQIIBAoXCAEQARgB8gEOCgQKAhgAEgQKAhADGAQKCwgBEAEYAYoCAggEGoQECoEECg5nMC5kYXRhLnRlc3QucBICAAEYAiKsAwoLCAAQARgEggICCAMKCwgAEAYYBMIBAggECusCCAAQBhgEQuICCt8CCtwCCAAQAxgFmgLSAggAEAUYBiLJAgoQCAAQAxgFOggKBAoCEAUQBwoQCAAQAxgFOggKBAoCEAYQCAoLCAAQAxgGggICCAkKXggAEAMYBkJWClQKDQgAEAMYBroBBAgBEAoKGggAEAMYBloSCgJndBIECgIQCBIECgIQChgLChUIABADGAbaAQwKBAoCEAsSBAoCCAAKEAgAEAMYBjoICgQKAggBEAkKkAEIABADGAZChwEKhAEKIggAEAAYAEIaChgKCggAEAAYAHoCCAkKCggAEAAYAEoCCAEKXggAEAAYAEJWClQKDQgAEAwYBroBBAgCEAwKGggAEAwYBloSCgJsdBIECgIQCBIECgIQDBgNChUIABAMGAbaAQwKBAoCEA0SBAoCCAAKEAgAEAMYBjoICgQKAggBEAkKCggAEAMYBnoCCAkKFwgAEAYYBOoBDgoECgIQBxIECgIQCBgEChAIABAGGAQ6CAoECgIQBBAOChAIABABGAQyCAoECgIQDhADIh4KCggAEAEYBHoCCAMKEAgAEAEYBDIICgQKAhADEAIiDQoLCAAQARgEkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "CjkKAwoBeAoDCgEwCgUKAy0xMBIECgJndBIECgJsdBoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGqwFCqkFCg5nMC5kYXRhLnRlc3QucBICAAEYAiLCBAoRCAAQARgEsAICuAIHggICCAMKEQgAEAYYBLACArgCB8IBAggECukDCAAQBhgEsAICuAIHQtoDCtcDCtQDCAAQAxgFsAIQuAIFmgLEAwgAEAUYBiK7AwoWCAAQAxgFsAIQuAIFOggKBAoCEAUQBwoWCAAQAxgFsAIQuAIFOggKBAoCEAYQCAoRCAAQAxgGsAITuAIGggICCAkKfAgAEAMYBrACE7gCBkJuCmwKEwgAEAMYBrACCLgCBroBBAgBEAoKIAgAEAMYBrACCLgCBloSCgJndBIECgIQCBIECgIQChgLChsIABADGAawAgi4AgbaAQwKBAoCEAsSBAoCCAAKFggAEAMYBrACE7gCBjoICgQKAggBEAkKxgEIABADGAawAhO4AgZCtwEKtAEKNAgAEAAYALACALgCAEImCiQKEAgAEAAYALACALgCAHoCCAkKEAgAEAAYALACALgCAEoCCAEKfAgAEAAYALACALgCAEJuCmwKEwgAEAwYBrACE7gCBroBBAgCEAwKIAgAEAwYBrACE7gCBloSCgJsdBIECgIQCBIECgIQDBgNChsIABAMGAawAhO4AgbaAQwKBAoCEA0SBAoCCAAKFggAEAMYBrACE7gCBjoICgQKAggBEAkKEAgAEAMYBrACE7gCBnoCCAkKHQgAEAYYBLACArgCB+oBDgoECgIQBxIECgIQCBgEChYIABAGGASwAgK4Agc6CAoECgIQBBAOChYIABABGASwAgK4AgcyCAoECgIQDhADIioKEAgAEAEYBLACArgCB3oCCAMKFggAEAEYBLACArgCBzIICgQKAhADEAIiEwoRCAAQARgEsAICuAIHkgICCAIqAmcwKgR0ZXN0KgFw"
 		},
 		{
 			"note": "logic_op/comprehension: nested comprehension with and",
@@ -2427,7 +2689,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -2440,7 +2704,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -2449,7 +2715,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -2466,7 +2734,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -2475,7 +2745,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										}
 									]
@@ -2502,7 +2774,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										},
 										{
@@ -2512,7 +2786,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										},
 										{
@@ -2535,7 +2811,9 @@
 																	"target": 5,
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 24,
+																	"end_row": 5
 																}
 															},
 															{
@@ -2556,7 +2834,9 @@
 																					"target": 8,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 24,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -2569,7 +2849,9 @@
 																					"target": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 24,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -2579,7 +2861,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 8,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 4,
+																					"end_row": 9
 																				}
 																			},
 																			{
@@ -2606,7 +2890,9 @@
 																														"target": 13,
 																														"file": 0,
 																														"col": 5,
-																														"row": 7
+																														"row": 7,
+																														"end_col": 15,
+																														"end_row": 7
 																													}
 																												},
 																												{
@@ -2619,7 +2905,9 @@
 																														"target": 14,
 																														"file": 0,
 																														"col": 5,
-																														"row": 7
+																														"row": 7,
+																														"end_col": 15,
+																														"end_row": 7
 																													}
 																												},
 																												{
@@ -2628,7 +2916,9 @@
 																														"target": 15,
 																														"file": 0,
 																														"col": 5,
-																														"row": 8
+																														"row": 8,
+																														"end_col": 21,
+																														"end_row": 8
 																													}
 																												},
 																												{
@@ -2643,6 +2933,8 @@
 																																			"file": 0,
 																																			"col": 5,
 																																			"row": 8,
+																																			"end_col": 10,
+																																			"end_row": 8,
 																																			"index": 2,
 																																			"Index": 2,
 																																			"target": 16
@@ -2665,7 +2957,9 @@
 																																			"result": 17,
 																																			"file": 0,
 																																			"col": 5,
-																																			"row": 8
+																																			"row": 8,
+																																			"end_col": 10,
+																																			"end_row": 8
 																																		}
 																																	},
 																																	{
@@ -2681,7 +2975,9 @@
 																																			},
 																																			"file": 0,
 																																			"col": 5,
-																																			"row": 8
+																																			"row": 8,
+																																			"end_col": 10,
+																																			"end_row": 8
 																																		}
 																																	},
 																																	{
@@ -2694,7 +2990,9 @@
 																																			"target": 15,
 																																			"file": 0,
 																																			"col": 5,
-																																			"row": 8
+																																			"row": 8,
+																																			"end_col": 21,
+																																			"end_row": 8
 																																		}
 																																	}
 																																]
@@ -2702,7 +3000,9 @@
 																														],
 																														"file": 0,
 																														"col": 5,
-																														"row": 8
+																														"row": 8,
+																														"end_col": 21,
+																														"end_row": 8
 																													}
 																												},
 																												{
@@ -2711,7 +3011,9 @@
 																														"source": 15,
 																														"file": 0,
 																														"col": 5,
-																														"row": 8
+																														"row": 8,
+																														"end_col": 21,
+																														"end_row": 8
 																													}
 																												},
 																												{
@@ -2720,7 +3022,9 @@
 																														"target": 15,
 																														"file": 0,
 																														"col": 5,
-																														"row": 8
+																														"row": 8,
+																														"end_col": 21,
+																														"end_row": 8
 																													}
 																												},
 																												{
@@ -2735,6 +3039,8 @@
 																																			"file": 0,
 																																			"col": 15,
 																																			"row": 8,
+																																			"end_col": 21,
+																																			"end_row": 8,
 																																			"index": 3,
 																																			"Index": 3,
 																																			"target": 18
@@ -2757,7 +3063,9 @@
 																																			"result": 19,
 																																			"file": 0,
 																																			"col": 15,
-																																			"row": 8
+																																			"row": 8,
+																																			"end_col": 21,
+																																			"end_row": 8
 																																		}
 																																	},
 																																	{
@@ -2773,7 +3081,9 @@
 																																			},
 																																			"file": 0,
 																																			"col": 15,
-																																			"row": 8
+																																			"row": 8,
+																																			"end_col": 21,
+																																			"end_row": 8
 																																		}
 																																	},
 																																	{
@@ -2786,7 +3096,9 @@
 																																			"target": 15,
 																																			"file": 0,
 																																			"col": 5,
-																																			"row": 8
+																																			"row": 8,
+																																			"end_col": 21,
+																																			"end_row": 8
 																																		}
 																																	}
 																																]
@@ -2794,7 +3106,9 @@
 																														],
 																														"file": 0,
 																														"col": 5,
-																														"row": 8
+																														"row": 8,
+																														"end_col": 21,
+																														"end_row": 8
 																													}
 																												},
 																												{
@@ -2803,7 +3117,9 @@
 																														"source": 15,
 																														"file": 0,
 																														"col": 5,
-																														"row": 8
+																														"row": 8,
+																														"end_col": 21,
+																														"end_row": 8
 																													}
 																												},
 																												{
@@ -2816,14 +3132,18 @@
 																														"array": 10,
 																														"file": 0,
 																														"col": 8,
-																														"row": 6
+																														"row": 6,
+																														"end_col": 4,
+																														"end_row": 9
 																													}
 																												}
 																											]
 																										},
 																										"file": 0,
 																										"col": 5,
-																										"row": 7
+																										"row": 7,
+																										"end_col": 15,
+																										"end_row": 7
 																									}
 																								}
 																							]
@@ -2831,7 +3151,9 @@
 																					],
 																					"file": 0,
 																					"col": 8,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 4,
+																					"end_row": 9
 																				}
 																			},
 																			{
@@ -2844,7 +3166,9 @@
 																					"target": 20,
 																					"file": 0,
 																					"col": 8,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 4,
+																					"end_row": 9
 																				}
 																			},
 																			{
@@ -2857,14 +3181,18 @@
 																					"array": 4,
 																					"file": 0,
 																					"col": 6,
-																					"row": 4
+																					"row": 4,
+																					"end_col": 2,
+																					"end_row": 10
 																				}
 																			}
 																		]
 																	},
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 24,
+																	"end_row": 5
 																}
 															}
 														]
@@ -2872,7 +3200,9 @@
 												],
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										},
 										{
@@ -2885,7 +3215,9 @@
 												"target": 21,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										},
 										{
@@ -2898,7 +3230,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										}
 									]
@@ -2911,7 +3245,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										},
 										{
@@ -2924,7 +3260,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										}
 									]
@@ -2937,7 +3275,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 10
 											}
 										}
 									]
@@ -2966,7 +3306,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CkIKAwoBeAoICgZtYXRyaXgKAwoBMAoECgIxMBIECgJndBIECgJsdBoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4Sdwp1CgRldmFsEm0KJggBEAEYAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChAIARABGAE6CAoECgIQAhADCgsIARABGAHCAQIIBAoXCAEQARgB8gEOCgQKAhgAEgQKAhADGAQKCwgBEAEYAYoCAggEGvkECvYECg5nMC5kYXRhLnRlc3QucBICAAEYAiKhBAoLCAAQARgEggICCAMKDQgAEAYYBKIBBAgAEAQK3gMIABAGGARC1QMK0gMKFggAEAMYBWIOCgQKAhAAEgQKAhgBGAUKtwMIABADGAWaAq0DCAUQBhgHIqQDChAIABADGAU6CAoECgIQBhAIChAIABADGAU6CAoECgIQBxAJCg0IABAIGAaiAQQIABAKCsoCCAAQCBgGQsECCr4CCrsCCAAQBRgHmgKxAggJEAsYDCKoAgoQCAAQBRgHOggKBAoCEAsQDQoQCAAQBRgHOggKBAoCEAwQDgoLCAAQBRgIggICCA8KXggAEAUYCEJWClQKDQgAEAUYCLoBBAgCEBAKGggAEAUYCFoSCgJndBIECgIQDhIECgIQEBgRChUIABAFGAjaAQwKBAoCEBESBAoCCAAKEAgAEAUYCDoICgQKAggBEA8KCggAEAUYCHoCCA8KCwgAEAUYCIICAggPCl4IABAFGAhCVgpUCg0IABAPGAi6AQQIAxASChoIABAPGAhaEgoCbHQSBAoCEA4SBAoCEBIYEwoVCAAQDxgI2gEMCgQKAhATEgQKAggAChAIABAFGAg6CAoECgIIARAPCgoIABAFGAh6AggPChAIABAIGAYiCAoECgIQDhAKChAIABAIGAY6CAoECgIQChAUChAIABAGGAQiCAoECgIQFBAEChAIABAGGAQ6CAoECgIQBBAVChAIABABGAQyCAoECgIQFRADIh4KCggAEAEYBHoCCAMKEAgAEAEYBDIICgQKAhADEAIiDQoLCAAQARgEkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "CkIKAwoBeAoICgZtYXRyaXgKAwoBMAoECgIxMBIECgJndBIECgJsdBoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGsUGCsIGCg5nMC5kYXRhLnRlc3QucBICAAEYAiLbBQoRCAAQARgEsAICuAIKggICCAMKEwgAEAYYBLACArgCCqIBBAgAEAQKgAUIABAGGASwAgK4AgpC8QQK7gQKHAgAEAMYBbACGLgCBWIOCgQKAhAAEgQKAhgBGAUKzQQIABADGAWwAhi4AgWaAr0ECAUQBhgHIrQEChYIABADGAWwAhi4AgU6CAoECgIQBhAIChYIABADGAWwAhi4AgU6CAoECgIQBxAJChMIABAIGAawAgS4AgmiAQQIABAKCrwDCAAQCBgGsAIEuAIJQq0DCqoDCqcDCAAQBRgHsAIPuAIHmgKXAwgJEAsYDCKOAwoWCAAQBRgHsAIPuAIHOggKBAoCEAsQDQoWCAAQBRgHsAIPuAIHOggKBAoCEAwQDgoRCAAQBRgIsAIVuAIIggICCA8KfAgAEAUYCLACFbgCCEJuCmwKEwgAEAUYCLACCrgCCLoBBAgCEBAKIAgAEAUYCLACCrgCCFoSCgJndBIECgIQDhIECgIQEBgRChsIABAFGAiwAgq4AgjaAQwKBAoCEBESBAoCCAAKFggAEAUYCLACFbgCCDoICgQKAggBEA8KEAgAEAUYCLACFbgCCHoCCA8KEQgAEAUYCLACFbgCCIICAggPCnwIABAFGAiwAhW4AghCbgpsChMIABAPGAiwAhW4Agi6AQQIAxASCiAIABAPGAiwAhW4AghaEgoCbHQSBAoCEA4SBAoCEBIYEwobCAAQDxgIsAIVuAII2gEMCgQKAhATEgQKAggAChYIABAFGAiwAhW4Agg6CAoECgIIARAPChAIABAFGAiwAhW4Agh6AggPChYIABAIGAawAgS4AgkiCAoECgIQDhAKChYIABAIGAawAgS4Agk6CAoECgIQChAUChYIABAGGASwAgK4AgoiCAoECgIQFBAEChYIABAGGASwAgK4Ago6CAoECgIQBBAVChYIABABGASwAgK4AgoyCAoECgIQFRADIioKEAgAEAEYBLACArgCCnoCCAMKFggAEAEYBLACArgCCjIICgQKAhADEAIiEwoRCAAQARgEsAICuAIKkgICCAIqAmcwKgR0ZXN0KgFw"
 		},
 		{
 			"note": "logic_op/comprehension: walk-bound iteration with and as filter",
@@ -3154,7 +3494,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -3167,7 +3509,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -3176,7 +3520,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -3193,7 +3539,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -3202,7 +3550,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										}
 									]
@@ -3229,7 +3579,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -3239,7 +3591,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -3254,7 +3608,9 @@
 																	"source": 0,
 																	"file": 0,
 																	"col": 8,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 13,
+																	"end_row": 5
 																}
 															},
 															{
@@ -3267,7 +3623,9 @@
 																	"target": 5,
 																	"file": 0,
 																	"col": 8,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 13,
+																	"end_row": 5
 																}
 															},
 															{
@@ -3283,7 +3641,9 @@
 																	"result": 6,
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 22,
+																	"end_row": 5
 																}
 															},
 															{
@@ -3303,7 +3663,9 @@
 																					},
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3316,7 +3678,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3326,7 +3690,9 @@
 																					"target": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3342,7 +3708,9 @@
 																					},
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3352,7 +3720,9 @@
 																					"target": 11,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3362,7 +3732,9 @@
 																					"target": 11,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3379,7 +3751,9 @@
 																					"target": 12,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3392,7 +3766,9 @@
 																					"target": 13,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3402,7 +3778,9 @@
 																					"target": 11,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3419,7 +3797,9 @@
 																					"target": 12,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3432,7 +3812,9 @@
 																					"target": 14,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -3441,7 +3823,9 @@
 																					"target": 15,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 32,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -3463,7 +3847,9 @@
 																										"result": 16,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 15,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -3479,7 +3865,9 @@
 																										},
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 15,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -3492,7 +3880,9 @@
 																										"target": 15,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 32,
+																										"end_row": 6
 																									}
 																								}
 																							]
@@ -3500,7 +3890,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 32,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -3509,7 +3901,9 @@
 																					"source": 15,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 32,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -3518,7 +3912,9 @@
 																					"target": 15,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 32,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -3540,7 +3936,9 @@
 																										"result": 17,
 																										"file": 0,
 																										"col": 20,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 28,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -3553,7 +3951,9 @@
 																										"target": 18,
 																										"file": 0,
 																										"col": 20,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 28,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -3562,6 +3962,8 @@
 																										"file": 0,
 																										"col": 20,
 																										"row": 6,
+																										"end_col": 32,
+																										"end_row": 6,
 																										"index": 1,
 																										"Index": 1,
 																										"target": 19
@@ -3584,7 +3986,9 @@
 																										"result": 20,
 																										"file": 0,
 																										"col": 20,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 32,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -3600,7 +4004,9 @@
 																										},
 																										"file": 0,
 																										"col": 20,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 32,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -3613,7 +4019,9 @@
 																										"target": 15,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 32,
+																										"end_row": 6
 																									}
 																								}
 																							]
@@ -3621,7 +4029,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 32,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -3630,7 +4040,9 @@
 																					"source": 15,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 32,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -3643,14 +4055,18 @@
 																					"array": 4,
 																					"file": 0,
 																					"col": 6,
-																					"row": 4
+																					"row": 4,
+																					"end_col": 2,
+																					"end_row": 7
 																				}
 																			}
 																		]
 																	},
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 22,
+																	"end_row": 5
 																}
 															}
 														]
@@ -3658,7 +4074,9 @@
 												],
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -3671,7 +4089,9 @@
 												"target": 21,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -3684,7 +4104,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -3697,7 +4119,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -3710,7 +4134,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -3723,7 +4149,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -3747,7 +4175,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CkoKAwoBeAoDCgEwEgcKBWNvdW50EgQKAmd0EgsKCWlzX3N0cmluZxIGCgR3YWxrGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhJ3CnUKBGV2YWwSbQomCAEQARgBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKEAgBEAEYAToICgQKAhACEAMKCwgBEAEYAcIBAggEChcIARABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAEQARgBigICCAQa3QUK2gUKDmcwLmRhdGEudGVzdC5wEgIAARgCIoUFCgsIABABGASCAgIIAwoNCAAQBhgEogEECAAQBArCBAgAEAYYBEK5BAq2BAoKCAAQCBgFegIIAAoQCAAQCBgFOggKBAoCEAAQBQoWCAAQAxgFWg4KBHdhbGsSBAoCEAUYBgr9AwgAEAMYBZoC8wMIBhAHGAgi6gMKDggAEAMYBXIGCgQKAhAIChEIABADGAWaAQgKBAoCEAgQCgoNCAAQAxgFsgEECAIQCQoUCAAQAxgFagwKBAoCEAoSBAoCEAkKDQgAEAMYBbIBBAgAEAsKDAgAEAMYBSoECAAQCwoWCAAQAxgFYg4KBAoCEAgSBAoCEAsYDAoQCAAQAxgFOggKBAoCEAwQDQoMCAAQAxgFKgQIARALChYIABADGAViDgoECgIQCBIECgIQCxgMChAIABADGAU6CAoECgIQDBAOCgsIABADGAaCAgIIDwpQCAAQAxgGQkgKRgobCAAQAxgGWhMKCWlzX3N0cmluZxIECgIQDhgQChUIABADGAbaAQwKBAoCEBASBAoCCAAKEAgAEAMYBjoICgQKAggBEA8KCggAEAMYBnoCCA8KCwgAEAMYBoICAggPCooBCAAQAxgGQoEBCn8KFwgAEBQYBloPCgVjb3VudBIECgIQDhgRChAIABAUGAY6CAoECgIQERASCg0IABAUGAa6AQQIARATChoIABAUGAZaEgoCZ3QSBAoCEBISBAoCEBMYFAoVCAAQFBgG2gEMCgQKAhAUEgQKAggAChAIABADGAY6CAoECgIIARAPCgoIABADGAZ6AggPChAIABAGGAQiCAoECgIQDhAEChAIABAGGAQ6CAoECgIQBBAVChAIABABGAQyCAoECgIQFRADIh4KCggAEAEYBHoCCAMKEAgAEAEYBDIICgQKAhADEAIiDQoLCAAQARgEkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "CkoKAwoBeAoDCgEwEgcKBWNvdW50EgQKAmd0EgsKCWlzX3N0cmluZxIGCgR3YWxrGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQayAcKxQcKDmcwLmRhdGEudGVzdC5wEgIAARgCIt4GChEIABABGASwAgK4AgeCAgIIAwoTCAAQBhgEsAICuAIHogEECAAQBAqDBggAEAYYBLACArgCB0L0BQrxBQoQCAAQCBgFsAINuAIFegIIAAoWCAAQCBgFsAINuAIFOggKBAoCEAAQBQocCAAQAxgFsAIWuAIFWg4KBHdhbGsSBAoCEAUYBgqmBQgAEAMYBbACFrgCBZoClgUIBhAHGAgijQUKFAgAEAMYBbACFrgCBXIGCgQKAhAIChcIABADGAWwAha4AgWaAQgKBAoCEAgQCgoTCAAQAxgFsAIWuAIFsgEECAIQCQoaCAAQAxgFsAIWuAIFagwKBAoCEAoSBAoCEAkKEwgAEAMYBbACFrgCBbIBBAgAEAsKEggAEAMYBbACFrgCBSoECAAQCwocCAAQAxgFsAIWuAIFYg4KBAoCEAgSBAoCEAsYDAoWCAAQAxgFsAIWuAIFOggKBAoCEAwQDQoSCAAQAxgFsAIWuAIFKgQIARALChwIABADGAWwAha4AgViDgoECgIQCBIECgIQCxgMChYIABADGAWwAha4AgU6CAoECgIQDBAOChEIABADGAawAiC4AgaCAgIIDwpoCAAQAxgGsAIguAIGQloKWAohCAAQAxgGsAIPuAIGWhMKCWlzX3N0cmluZxIECgIQDhgQChsIABADGAawAg+4AgbaAQwKBAoCEBASBAoCCAAKFggAEAMYBrACILgCBjoICgQKAggBEA8KEAgAEAMYBrACILgCBnoCCA8KEQgAEAMYBrACILgCBoICAggPCrUBCAAQAxgGsAIguAIGQqYBCqMBCh0IABAUGAawAhy4AgZaDwoFY291bnQSBAoCEA4YEQoWCAAQFBgGsAIcuAIGOggKBAoCEBEQEgoTCAAQFBgGsAIguAIGugEECAEQEwogCAAQFBgGsAIguAIGWhIKAmd0EgQKAhASEgQKAhATGBQKGwgAEBQYBrACILgCBtoBDAoECgIQFBIECgIIAAoWCAAQAxgGsAIguAIGOggKBAoCCAEQDwoQCAAQAxgGsAIguAIGegIIDwoWCAAQBhgEsAICuAIHIggKBAoCEA4QBAoWCAAQBhgEsAICuAIHOggKBAoCEAQQFQoWCAAQARgEsAICuAIHMggKBAoCEBUQAyIqChAIABABGASwAgK4Agd6AggDChYIABABGASwAgK4AgcyCAoECgIQAxACIhMKEQgAEAEYBLACArgCB5ICAggCKgJnMCoEdGVzdCoBcA=="
 		},
 		{
 			"note": "logic_op/comprehension: walk-bound iteration with or as filter",
@@ -3965,7 +4393,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -3978,7 +4408,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -3987,7 +4419,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -4004,7 +4438,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										},
 										{
@@ -4013,7 +4449,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
 											}
 										}
 									]
@@ -4040,7 +4478,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -4050,7 +4490,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -4065,7 +4507,9 @@
 																	"source": 0,
 																	"file": 0,
 																	"col": 8,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 13,
+																	"end_row": 5
 																}
 															},
 															{
@@ -4078,7 +4522,9 @@
 																	"target": 5,
 																	"file": 0,
 																	"col": 8,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 13,
+																	"end_row": 5
 																}
 															},
 															{
@@ -4094,7 +4540,9 @@
 																	"result": 6,
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 22,
+																	"end_row": 5
 																}
 															},
 															{
@@ -4114,7 +4562,9 @@
 																					},
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4127,7 +4577,9 @@
 																					"target": 10,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4137,7 +4589,9 @@
 																					"target": 9,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4153,7 +4607,9 @@
 																					},
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4163,7 +4619,9 @@
 																					"target": 11,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4173,7 +4631,9 @@
 																					"target": 11,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4190,7 +4650,9 @@
 																					"target": 12,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4203,7 +4665,9 @@
 																					"target": 13,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4213,7 +4677,9 @@
 																					"target": 11,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4230,7 +4696,9 @@
 																					"target": 12,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4243,7 +4711,9 @@
 																					"target": 14,
 																					"file": 0,
 																					"col": 3,
-																					"row": 5
+																					"row": 5,
+																					"end_col": 22,
+																					"end_row": 5
 																				}
 																			},
 																			{
@@ -4252,7 +4722,9 @@
 																					"target": 15,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 48,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -4274,7 +4746,9 @@
 																										"result": 16,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 15,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -4290,7 +4764,9 @@
 																										},
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 15,
+																										"end_row": 6
 																									}
 																								},
 																								{
@@ -4303,7 +4779,9 @@
 																										"target": 15,
 																										"file": 0,
 																										"col": 3,
-																										"row": 6
+																										"row": 6,
+																										"end_col": 48,
+																										"end_row": 6
 																									}
 																								}
 																							]
@@ -4311,7 +4789,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 48,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -4332,7 +4812,9 @@
 																															"source": 15,
 																															"file": 0,
 																															"col": 0,
-																															"row": 0
+																															"row": 0,
+																															"end_col": 0,
+																															"end_row": 0
 																														}
 																													},
 																													{
@@ -4341,7 +4823,9 @@
 																															"index": 1,
 																															"file": 0,
 																															"col": 0,
-																															"row": 0
+																															"row": 0,
+																															"end_col": 0,
+																															"end_row": 0
 																														}
 																													}
 																												]
@@ -4349,7 +4833,9 @@
 																										],
 																										"file": 0,
 																										"col": 0,
-																										"row": 0
+																										"row": 0,
+																										"end_col": 0,
+																										"end_row": 0
 																									}
 																								},
 																								{
@@ -4371,7 +4857,9 @@
 																															"result": 17,
 																															"file": 0,
 																															"col": 21,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 32,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -4387,7 +4875,9 @@
 																															},
 																															"file": 0,
 																															"col": 21,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 32,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -4403,7 +4893,9 @@
 																															"result": 18,
 																															"file": 0,
 																															"col": 34,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 42,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -4416,7 +4908,9 @@
 																															"target": 19,
 																															"file": 0,
 																															"col": 34,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 42,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -4425,6 +4919,8 @@
 																															"file": 0,
 																															"col": 34,
 																															"row": 6,
+																															"end_col": 46,
+																															"end_row": 6,
 																															"index": 1,
 																															"Index": 1,
 																															"target": 20
@@ -4447,7 +4943,9 @@
 																															"result": 21,
 																															"file": 0,
 																															"col": 34,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 46,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -4463,7 +4961,9 @@
 																															},
 																															"file": 0,
 																															"col": 34,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 46,
+																															"end_row": 6
 																														}
 																													},
 																													{
@@ -4476,7 +4976,9 @@
 																															"target": 15,
 																															"file": 0,
 																															"col": 3,
-																															"row": 6
+																															"row": 6,
+																															"end_col": 48,
+																															"end_row": 6
 																														}
 																													}
 																												]
@@ -4484,7 +4986,9 @@
 																										],
 																										"file": 0,
 																										"col": 0,
-																										"row": 0
+																										"row": 0,
+																										"end_col": 0,
+																										"end_row": 0
 																									}
 																								}
 																							]
@@ -4492,7 +4996,9 @@
 																					],
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 48,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -4501,7 +5007,9 @@
 																					"source": 15,
 																					"file": 0,
 																					"col": 3,
-																					"row": 6
+																					"row": 6,
+																					"end_col": 48,
+																					"end_row": 6
 																				}
 																			},
 																			{
@@ -4514,14 +5022,18 @@
 																					"array": 4,
 																					"file": 0,
 																					"col": 6,
-																					"row": 4
+																					"row": 4,
+																					"end_col": 2,
+																					"end_row": 7
 																				}
 																			}
 																		]
 																	},
 																	"file": 0,
 																	"col": 3,
-																	"row": 5
+																	"row": 5,
+																	"end_col": 22,
+																	"end_row": 5
 																}
 															}
 														]
@@ -4529,7 +5041,9 @@
 												],
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -4542,7 +5056,9 @@
 												"target": 22,
 												"file": 0,
 												"col": 6,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -4555,7 +5071,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -4568,7 +5086,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										},
 										{
@@ -4581,7 +5101,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -4594,7 +5116,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 4
+												"row": 4,
+												"end_col": 2,
+												"end_row": 7
 											}
 										}
 									]
@@ -4626,7 +5150,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "ClYKAwoBeAoDCgExEgcKBWNvdW50EgQKAmd0EgoKCGlzX2FycmF5EgsKCWlzX251bWJlchIGCgR3YWxrGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhJ3CnUKBGV2YWwSbQomCAEQARgBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKEAgBEAEYAToICgQKAhACEAMKCwgBEAEYAcIBAggEChcIARABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAEQARgBigICCAQaqwYKqAYKDmcwLmRhdGEudGVzdC5wEgIAARgCItMFCgsIABABGASCAgIIAwoNCAAQBhgEogEECAAQBAqQBQgAEAYYBEKHBQqEBQoKCAAQCBgFegIIAAoQCAAQCBgFOggKBAoCEAAQBQoWCAAQAxgFWg4KBHdhbGsSBAoCEAUYBgrLBAgAEAMYBZoCwQQIBhAHGAgiuAQKDggAEAMYBXIGCgQKAhAIChEIABADGAWaAQgKBAoCEAgQCgoNCAAQAxgFsgEECAIQCQoUCAAQAxgFagwKBAoCEAoSBAoCEAkKDQgAEAMYBbIBBAgAEAsKDAgAEAMYBSoECAAQCwoWCAAQAxgFYg4KBAoCEAgSBAoCEAsYDAoQCAAQAxgFOggKBAoCEAwQDQoMCAAQAxgFKgQIARALChYIABADGAViDgoECgIQCBIECgIQCxgMChAIABADGAU6CAoECgIQDBAOCgsIABADGAaCAgIIDwpQCAAQAxgGQkgKRgobCAAQAxgGWhMKCWlzX251bWJlchIECgIQDhgQChUIABADGAbaAQwKBAoCEBASBAoCCAAKEAgAEAMYBjoICgQKAggBEA8K8QEIABADGAZC6AEK5QEKIggAEAAYAEIaChgKCggAEAAYAHoCCA8KCggAEAAYAEoCCAEKvgEIABAAGABCtQEKsgEKGggAEBUYBloSCghpc19hcnJheRIECgIQDhgRChUIABAVGAbaAQwKBAoCEBESBAoCCAAKFwgAECIYBloPCgVjb3VudBIECgIQDhgSChAIABAiGAY6CAoECgIQEhATCg0IABAiGAa6AQQIARAUChoIABAiGAZaEgoCZ3QSBAoCEBMSBAoCEBQYFQoVCAAQIhgG2gEMCgQKAhAVEgQKAggAChAIABADGAY6CAoECgIIARAPCgoIABADGAZ6AggPChAIABAGGAQiCAoECgIQDhAEChAIABAGGAQ6CAoECgIQBBAWChAIABABGAQyCAoECgIQFhADIh4KCggAEAEYBHoCCAMKEAgAEAEYBDIICgQKAhADEAIiDQoLCAAQARgEkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "ClYKAwoBeAoDCgExEgcKBWNvdW50EgQKAmd0EgoKCGlzX2FycmF5EgsKCWlzX251bWJlchIGCgR3YWxrGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQarQgKqggKDmcwLmRhdGEudGVzdC5wEgIAARgCIsMHChEIABABGASwAgK4AgeCAgIIAwoTCAAQBhgEsAICuAIHogEECAAQBAroBggAEAYYBLACArgCB0LZBgrWBgoQCAAQCBgFsAINuAIFegIIAAoWCAAQCBgFsAINuAIFOggKBAoCEAAQBQocCAAQAxgFsAIWuAIFWg4KBHdhbGsSBAoCEAUYBgqLBggAEAMYBbACFrgCBZoC+wUIBhAHGAgi8gUKFAgAEAMYBbACFrgCBXIGCgQKAhAIChcIABADGAWwAha4AgWaAQgKBAoCEAgQCgoTCAAQAxgFsAIWuAIFsgEECAIQCQoaCAAQAxgFsAIWuAIFagwKBAoCEAoSBAoCEAkKEwgAEAMYBbACFrgCBbIBBAgAEAsKEggAEAMYBbACFrgCBSoECAAQCwocCAAQAxgFsAIWuAIFYg4KBAoCEAgSBAoCEAsYDAoWCAAQAxgFsAIWuAIFOggKBAoCEAwQDQoSCAAQAxgFsAIWuAIFKgQIARALChwIABADGAWwAha4AgViDgoECgIQCBIECgIQCxgMChYIABADGAWwAha4AgU6CAoECgIQDBAOChEIABADGAawAjC4AgaCAgIIDwpoCAAQAxgGsAIwuAIGQloKWAohCAAQAxgGsAIPuAIGWhMKCWlzX251bWJlchIECgIQDhgQChsIABADGAawAg+4AgbaAQwKBAoCEBASBAoCCAAKFggAEAMYBrACMLgCBjoICgQKAggBEA8KvwIIABADGAawAjC4AgZCsAIKrQIKNAgAEAAYALACALgCAEImCiQKEAgAEAAYALACALgCAHoCCA8KEAgAEAAYALACALgCAEoCCAEK9AEIABAAGACwAgC4AgBC5QEK4gEKIAgAEBUYBrACILgCBloSCghpc19hcnJheRIECgIQDhgRChsIABAVGAawAiC4AgbaAQwKBAoCEBESBAoCCAAKHQgAECIYBrACKrgCBloPCgVjb3VudBIECgIQDhgSChYIABAiGAawAiq4AgY6CAoECgIQEhATChMIABAiGAawAi64Aga6AQQIARAUCiAIABAiGAawAi64AgZaEgoCZ3QSBAoCEBMSBAoCEBQYFQobCAAQIhgGsAIuuAIG2gEMCgQKAhAVEgQKAggAChYIABADGAawAjC4AgY6CAoECgIIARAPChAIABADGAawAjC4AgZ6AggPChYIABAGGASwAgK4AgciCAoECgIQDhAEChYIABAGGASwAgK4Agc6CAoECgIQBBAWChYIABABGASwAgK4AgcyCAoECgIQFhADIioKEAgAEAEYBLACArgCB3oCCAMKFggAEAEYBLACArgCBzIICgQKAhADEAIiEwoRCAAQARgEsAICuAIHkgICCAIqAmcwKgR0ZXN0KgFw"
 		}
 	]
 }

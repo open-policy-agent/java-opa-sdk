@@ -95,7 +95,9 @@
 												"result": 2,
 												"file": 2,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 22,
+												"end_row": 1
 											}
 										},
 										{
@@ -108,7 +110,9 @@
 												"target": 3,
 												"file": 2,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 22,
+												"end_row": 1
 											}
 										},
 										{
@@ -117,7 +121,9 @@
 												"target": 4,
 												"file": 2,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 22,
+												"end_row": 1
 											}
 										},
 										{
@@ -134,7 +140,9 @@
 												"object": 4,
 												"file": 2,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 22,
+												"end_row": 1
 											}
 										},
 										{
@@ -143,7 +151,9 @@
 												"value": 4,
 												"file": 2,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 22,
+												"end_row": 1
 											}
 										}
 									]
@@ -171,7 +181,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 23,
+												"end_row": 3
 											}
 										},
 										{
@@ -184,7 +196,9 @@
 												"target": 5,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 23,
+												"end_row": 3
 											}
 										},
 										{
@@ -204,7 +218,9 @@
 												"result": 6,
 												"file": 1,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 30,
+												"end_row": 4
 											}
 										},
 										{
@@ -217,7 +233,9 @@
 												"target": 7,
 												"file": 1,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 30,
+												"end_row": 4
 											}
 										},
 										{
@@ -230,7 +248,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 23,
+												"end_row": 3
 											}
 										}
 									]
@@ -243,7 +263,9 @@
 												"source": 4,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 23,
+												"end_row": 3
 											}
 										},
 										{
@@ -256,7 +278,9 @@
 												"target": 2,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 23,
+												"end_row": 3
 											}
 										}
 									]
@@ -269,7 +293,9 @@
 												"source": 2,
 												"file": 1,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 23,
+												"end_row": 3
 											}
 										}
 									]
@@ -297,7 +323,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										},
 										{
@@ -321,7 +349,9 @@
 												"result": 4,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 36,
+												"end_row": 4
 											}
 										},
 										{
@@ -334,7 +364,9 @@
 												"target": 5,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 36,
+												"end_row": 4
 											}
 										},
 										{
@@ -347,7 +379,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										}
 									]
@@ -360,7 +394,9 @@
 												"source": 3,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										},
 										{
@@ -373,7 +409,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										}
 									]
@@ -386,7 +424,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										}
 									]
@@ -407,7 +447,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "ClMKAwoBeAoFCgNoIG8KEAoOaG93IGRvIHlvdSBkbz8SBgoEdHJpbRoPCg1tb2R1bGUtMi5yZWdvGg8KDW1vZHVsZS0xLnJlZ28aCQoHPHF1ZXJ5PhJ9CnsKBGV2YWwScwosCAIQARgBWiQKFGcwLmRhdGEudGVzdC5zYW1lcGtnEgQKAhAAEgQKAhABGAIKEAgCEAEYAToICgQKAhACEAMKCwgCEAEYAcIBAggEChcIAhABGAHyAQ4KBAoCGAASBAoCEAMYBAoLCAIQARgBigICCAQagQMKugEKEGcwLmRhdGEudGVzdC5mb28SAwABAxgCImEKCwgBEAEYA4ICAggEChAIARABGAM6CAoECgIQAxAFChwIARACGARaFAoEdHJpbRIECgIQBRIECgIYARgGChAIARACGAQ6CAoECgIQBhAHChAIARABGAMyCAoECgIQBxAEIh4KCggBEAEYA3oCCAQKEAgBEAEYAzIICgQKAhAEEAIiDQoLCAEQARgDkgICCAIqAmcwKgR0ZXN0KgNmb28KwQEKFGcwLmRhdGEudGVzdC5zYW1lcGtnEgIAARgCImEKCwgAEAEYA4ICAggDCi4IABACGARaJgoQZzAuZGF0YS50ZXN0LmZvbxIECgIQABIECgIQARIECgIYAhgEChAIABACGAQ6CAoECgIQBBAFChAIABABGAMyCAoECgIQBRADIh4KCggAEAEYA3oCCAMKEAgAEAEYAzIICgQKAhADEAIiDQoLCAAQARgDkgICCAIqAmcwKgR0ZXN0KgdzYW1lcGtn"
+			"plan_proto": "ClMKAwoBeAoFCgNoIG8KEAoOaG93IGRvIHlvdSBkbz8SBgoEdHJpbRoPCg1tb2R1bGUtMi5yZWdvGg8KDW1vZHVsZS0xLnJlZ28aCQoHPHF1ZXJ5PhKdAQqaAQoEZXZhbBKRAQoyCAIQARgBsAIWuAIBWiQKFGcwLmRhdGEudGVzdC5zYW1lcGtnEgQKAhAAEgQKAhABGAIKFggCEAEYAbACFrgCAToICgQKAhACEAMKEQgCEAEYAbACFrgCAcIBAggECh0IAhABGAGwAha4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAIQARgBsAIWuAIBigICCAQa2wMK6gEKEGcwLmRhdGEudGVzdC5mb28SAwABAxgCIn8KEQgBEAEYA7ACF7gCA4ICAggEChYIARABGAOwAhe4AgM6CAoECgIQAxAFCiIIARACGASwAh64AgRaFAoEdHJpbRIECgIQBRIECgIYARgGChYIARACGASwAh64AgQ6CAoECgIQBhAHChYIARABGAOwAhe4AgMyCAoECgIQBxAEIioKEAgBEAEYA7ACF7gCA3oCCAQKFggBEAEYA7ACF7gCAzIICgQKAhAEEAIiEwoRCAEQARgDsAIXuAIDkgICCAIqAmcwKgR0ZXN0KgNmb28K6wEKFGcwLmRhdGEudGVzdC5zYW1lcGtnEgIAARgCInkKEQgAEAEYA7ACDbgCA4ICAggDCjQIABACGASwAiS4AgRaJgoQZzAuZGF0YS50ZXN0LmZvbxIECgIQABIECgIQARIECgIYAhgEChYIABACGASwAiS4AgQ6CAoECgIQBBAFChYIABABGAOwAg24AgMyCAoECgIQBRADIioKEAgAEAEYA7ACDbgCA3oCCAMKFggAEAEYA7ACDbgCAzIICgQKAhADEAIiEwoRCAAQARgDsAINuAIDkgICCAIqAmcwKgR0ZXN0KgdzYW1lcGtn"
 		}
 	]
 }
