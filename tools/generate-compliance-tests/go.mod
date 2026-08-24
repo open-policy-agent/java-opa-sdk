@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/open-policy-agent/opa v1.19.1-0.20260819104931-703b30c6fc34
-	google.golang.org/protobuf v1.36.11
+	google.golang.org/protobuf v1.36.12
 )
 
 require (
