@@ -90,7 +90,10 @@ public class ComplianceTest {
           "eval_type_error: strings.any_suffix_match: eval_type_error: operand 2 must be one of {string, set, array} but got number",
           "operand 0 must be array of strings but got array containing number"
       ),
-        "strings/any_prefix_match/type_error_strict", List.of("eval_type_error: strings.any_prefix_match: operand 0 must be array of strings but got array containing number")
+        "strings/any_prefix_match/type_error_strict", List.of("eval_type_error: strings.any_prefix_match: operand 0 must be array of strings but got array containing number"),
+        // SnakeYAML phrases the unterminated-flow-sequence diagnostic differently from Go's
+        // yaml.v2 ("did not find expected ',' or ']'"). The line number and shape match.
+        "jsonbuiltins/yaml unmarshal error", List.of("yaml: line 1: expected ',' or ']', but got <stream end>")
   );
 
   static {
@@ -283,12 +286,14 @@ public class ComplianceTest {
 
   /**
    * Converts Rego set syntax to array syntax for JSON parsing. Transforms {{1}} to [[1]], {1, 2} to
-   * [1, 2], etc. Leaves JSON objects with key:value pairs unchanged.
+   * [1, 2], and set() to []. Leaves JSON objects unchanged and removes Rego-compatible trailing
+   * commas before JSON parsing.
    */
   private static String convertRegoSetsToArrays(String regoStr) {
     StringBuilder result = new StringBuilder();
     boolean inString = false;
     char prevChar = '\0';
+    int charactersToSkip = 0;
 
     // Track brace positions and their content to determine if they're sets or objects
     Stack<Integer> braceStarts = new Stack<>();
@@ -297,21 +302,33 @@ public class ComplianceTest {
     for (int i = 0; i < regoStr.length(); i++) {
       char c = regoStr.charAt(i);
 
+      if (charactersToSkip > 0) {
+        charactersToSkip--;
+        prevChar = c;
+        continue;
+      }
+
       // Track if we're inside a string
       if (c == '"' && prevChar != '\\') {
         inString = !inString;
       }
 
       if (!inString) {
-        if (c == '{') {
+        if (regoStr.startsWith("set()", i)
+            && (i == 0 || !Character.isJavaIdentifierPart(regoStr.charAt(i - 1)))) {
+          result.append("[]");
+          charactersToSkip = 4;
+        } else if (c == '{') {
           braceStarts.push(result.length());
           isObject.push(false); // Assume set until we find a ':'
           result.append('['); // Tentatively convert to array
         } else if (c == '}') {
           if (!braceStarts.isEmpty()) {
+            removeTrailingComma(result);
             boolean wasObject = isObject.pop();
             int startPos = braceStarts.pop();
-            if (wasObject) {
+            boolean wasEmpty = result.substring(startPos + 1).trim().isEmpty();
+            if (wasObject || wasEmpty) {
               // This was actually an object, convert back
               result.setCharAt(startPos, '{');
               result.append('}');
@@ -322,6 +339,9 @@ public class ComplianceTest {
           } else {
             result.append(c);
           }
+        } else if (c == ']') {
+          removeTrailingComma(result);
+          result.append(c);
         } else if (c == ':' && !isObject.isEmpty()) {
           // Found a colon, mark current brace level as object
           isObject.set(isObject.size() - 1, true);
@@ -337,6 +357,19 @@ public class ComplianceTest {
     }
 
     return result.toString();
+  }
+
+  private static void removeTrailingComma(StringBuilder value) {
+    for (int i = value.length() - 1; i >= 0; i--) {
+      char c = value.charAt(i);
+      if (c == ',') {
+        value.deleteCharAt(i);
+        return;
+      }
+      if (!Character.isWhitespace(c)) {
+        return;
+      }
+    }
   }
 
   private static RegoValue jsonNodeToRegoValue(JsonNode node, ObjectMapper mapper)

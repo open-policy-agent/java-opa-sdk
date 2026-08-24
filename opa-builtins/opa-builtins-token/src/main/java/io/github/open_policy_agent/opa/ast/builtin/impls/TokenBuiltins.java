@@ -16,9 +16,11 @@ import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.jwk.Curve;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.OctetKeyPair;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
@@ -30,11 +32,13 @@ import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import java.io.IOException;
 import java.io.StringReader;
+import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Security;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -90,6 +94,7 @@ public class TokenBuiltins implements BuiltinProvider {
         Map.entry("io.jwt.verify_es256", instance::verifyES256),
         Map.entry("io.jwt.verify_es384", instance::verifyES384),
         Map.entry("io.jwt.verify_es512", instance::verifyES512),
+        Map.entry("io.jwt.verify_eddsa", instance::verifyEdDSA),
         Map.entry("io.jwt.encode_sign", instance::encodeSign),
         Map.entry("io.jwt.encode_sign_raw", instance::encodeSignRaw));
   }
@@ -296,6 +301,28 @@ public class TokenBuiltins implements BuiltinProvider {
       return ((RSAKey) jwk).toPublicKey();
     } else if (jwk instanceof ECKey) {
       return ((ECKey) jwk).toPublicKey();
+    } else if (jwk instanceof OctetKeyPair) {
+      // Nimbus OctetKeyPair.toPublicKey() is unsupported in this library version;
+      // build a JCA Ed25519 PublicKey from the raw OKP "x" coordinate via SPKI DER.
+      OctetKeyPair okp = (OctetKeyPair) jwk;
+      if (!Curve.Ed25519.equals(okp.getCurve())) {
+        throw new BuiltinError("Unsupported JWK key type: " + jwk.getKeyType());
+      }
+      byte[] raw = okp.getDecodedX();
+      // Ed25519 SubjectPublicKeyInfo prefix (12 bytes) + 32-byte public key = 44 bytes total
+      byte[] spkiPrefix =
+          new byte[] {
+            0x30, 0x2a, 0x30, 0x05, 0x06, 0x03, 0x2b, 0x65, 0x70, 0x03, 0x21, 0x00
+          };
+      byte[] encoded = new byte[spkiPrefix.length + raw.length];
+      System.arraycopy(spkiPrefix, 0, encoded, 0, spkiPrefix.length);
+      System.arraycopy(raw, 0, encoded, spkiPrefix.length, raw.length);
+      try {
+        return KeyFactory.getInstance("Ed25519", "BC")
+            .generatePublic(new X509EncodedKeySpec(encoded));
+      } catch (java.security.GeneralSecurityException e) {
+        throw new BuiltinError("failed to convert Ed25519 JWK to PublicKey: " + e.getMessage());
+      }
     } else {
       throw new BuiltinError("Unsupported JWK key type: " + jwk.getKeyType());
     }
@@ -868,6 +895,31 @@ public class TokenBuiltins implements BuiltinProvider {
     RegoString jwt = getArg(args, 0, RegoString.class);
     RegoString cert = getArg(args, 1, RegoString.class);
     return _verifyECDSA(jwt.getValue(), cert.getValue(), ctx.isStrictBuiltinErrors(), "ES512");
+  }
+
+  @OpaBuiltin(
+      name = "io.jwt.verify_eddsa",
+      description = "Verifies if a EdDSA JWT signature is valid.",
+      args = {
+        @OpaType(
+            type = "string",
+            name = "jwt",
+            description = "JWT token whose signature is to be verified"),
+        @OpaType(
+            type = "string",
+            name = "certificate",
+            description =
+                "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature")
+      },
+      result =
+          @OpaType(
+              type = "boolean",
+              name = "result",
+              description = "`true` if the signature is valid, `false` otherwise"))
+  public RegoBoolean verifyEdDSA(EvaluationContext ctx, RegoValue[] args) {
+    RegoString jwt = getArg(args, 0, RegoString.class);
+    RegoString cert = getArg(args, 1, RegoString.class);
+    return _verifyEdDSA(jwt.getValue(), cert.getValue(), ctx.isStrictBuiltinErrors());
   }
 
   @OpaBuiltin(

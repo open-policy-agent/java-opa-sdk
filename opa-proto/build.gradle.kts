@@ -21,10 +21,10 @@ dependencies {
     api("com.google.protobuf:protobuf-java:$protobufVersion")
 
     testImplementation(project(":opa-jackson"))
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:6.1.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.2")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.2")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.3")
     testImplementation("org.assertj:assertj-core:3.27.7")
 }
 

@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
@@ -21,6 +22,19 @@ import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
 
 public class RegexBuiltins implements BuiltinProvider {
+
+  /**
+   * Compiles `pattern`, reporting a syntax error as a {@link BuiltinError} rather than letting
+   * Java's unchecked {@link PatternSyntaxException} escape. OPA treats an invalid pattern as a
+   * builtin error, so the call is undefined by default and only aborts under strict-builtin-errors.
+   */
+  private static Pattern compile(String pattern) {
+    try {
+      return Pattern.compile(pattern);
+    } catch (PatternSyntaxException e) {
+      throw new BuiltinError("error parsing regexp: " + e.getMessage());
+    }
+  }
 
   @Override
   public Map<String, BiFunction<EvaluationContext, RegoValue[], RegoValue>> builtins() {
@@ -51,7 +65,9 @@ public class RegexBuiltins implements BuiltinProvider {
     String pattern = getArg(args, 0, RegoString.class).getValue();
     String value = getArg(args, 1, RegoString.class).getValue();
 
-    return RegoBoolean.of(Pattern.compile(pattern).matcher(value).matches());
+    // Go's regexp.MatchString searches for a match anywhere in the input, so an unanchored
+    // pattern matches a substring. Matcher.matches() would instead require the whole input.
+    return RegoBoolean.of(compile(pattern).matcher(value).find());
   }
 
   @OpaBuiltin(
@@ -88,7 +104,7 @@ public class RegexBuiltins implements BuiltinProvider {
     String value = getArg(args, 1, RegoString.class).getValue();
 
     RegoArray result = new RegoArray();
-    for (String split : Pattern.compile(pattern).split(value, -1)) {
+    for (String split : compile(pattern).split(value, -1)) {
       result.addValue(new RegoString(split));
     }
     return result;
@@ -115,7 +131,7 @@ public class RegexBuiltins implements BuiltinProvider {
     }
 
     RegoArray result = new RegoArray();
-    Matcher matcher = Pattern.compile(pattern).matcher(value);
+    Matcher matcher = compile(pattern).matcher(value);
     int count = 0;
     while (matcher.find() && count < number) {
       result.addValue(new RegoString(matcher.group()));
@@ -144,7 +160,7 @@ public class RegexBuiltins implements BuiltinProvider {
     }
 
     RegoArray result = new RegoArray();
-    Matcher matcher = Pattern.compile(pattern).matcher(value);
+    Matcher matcher = compile(pattern).matcher(value);
     int count = 0;
     while (matcher.find() && count < number) {
       RegoArray matchGroups = new RegoArray();
@@ -171,7 +187,7 @@ public class RegexBuiltins implements BuiltinProvider {
     String s = getArg(args, 0, RegoString.class).getValue();
     String pattern = getArg(args, 1, RegoString.class).getValue();
     String value = getArg(args, 2, RegoString.class).getValue();
-    return new RegoString(Pattern.compile(pattern).matcher(s).replaceAll(value));
+    return new RegoString(compile(pattern).matcher(s).replaceAll(value));
   }
 
   @OpaBuiltin(
@@ -230,7 +246,7 @@ public class RegexBuiltins implements BuiltinProvider {
 
     // Match value against constructed pattern
     String pattern = patternBuilder.toString();
-    return RegoBoolean.of(Pattern.compile(pattern).matcher(value).matches());
+    return RegoBoolean.of(compile(pattern).matcher(value).matches());
   }
 
   @OpaBuiltin(

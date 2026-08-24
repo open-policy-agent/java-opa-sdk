@@ -3,8 +3,8 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 import inet.ipaddr.AddressStringException;
 import inet.ipaddr.IPAddress;
 import inet.ipaddr.IPAddressString;
+import inet.ipaddr.IPAddressStringParameters;
 import inet.ipaddr.ipv4.IPv4Address;
-import inet.ipaddr.ipv6.IPv6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
@@ -35,6 +35,18 @@ import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.
 
 public class CidrBuiltins implements BuiltinProvider {
 
+  /**
+   * By default the parser accepts the empty string and resolves it to the loopback address, so
+   * net.cidr_contains("", "127.0.0.1") would answer true. Go's net.ParseCIDR/ParseIP reject it.
+   */
+  private static final IPAddressStringParameters ADDRESS_PARAMS =
+      new IPAddressStringParameters.Builder().allowEmpty(false).toParams();
+
+  /** Build a parser for `str` that rejects the inputs Go rejects. */
+  private static IPAddressString addressString(String str) {
+    return new IPAddressString(str, ADDRESS_PARAMS);
+  }
+
   @Override
   public Map<String, BiFunction<EvaluationContext, RegoValue[], RegoValue>> builtins() {
     CidrBuiltins instance = new CidrBuiltins();
@@ -52,13 +64,13 @@ public class CidrBuiltins implements BuiltinProvider {
 
   /** Parse an IP address or CIDR from a string. */
   private IPAddress parseAddress(String str) throws AddressStringException {
-    return new IPAddressString(str).toAddress();
+    return addressString(str).toAddress();
   }
 
   /** Parse an IP address or CIDR, throwing a BuiltinError with the builtin name on failure. */
   private IPAddress parseAddressOrThrow(String str, String builtinName)
       throws AddressStringException {
-    IPAddressString addrStr = new IPAddressString(str);
+    IPAddressString addrStr = addressString(str);
     if (!addrStr.isValid()) {
       throw new BuiltinError(
           builtinName + ": not a valid textual representation of an IP address or CIDR: " + str);
@@ -224,21 +236,21 @@ public class CidrBuiltins implements BuiltinProvider {
         throw new BuiltinError(
             "net.cidr_contains_matches: operand "
                 + operandNum
-                + " element must be string or non-empty array");
+                + ": element must be string or non-empty array");
       }
       RegoValue first = arr.getValue().get(0);
       if (!(first instanceof RegoString)) {
         throw new BuiltinError(
             "net.cidr_contains_matches: operand "
                 + operandNum
-                + " element must be string or non-empty array");
+                + ": element must be string or non-empty array");
       }
       return (RegoString) first;
     } else {
       throw new BuiltinError(
           "net.cidr_contains_matches: operand "
               + operandNum
-              + " element must be string or non-empty array");
+              + ": element must be string or non-empty array");
     }
   }
 
@@ -256,7 +268,12 @@ public class CidrBuiltins implements BuiltinProvider {
   public RegoValue expand(EvaluationContext ctx, RegoValue[] args) {
     try {
       String cidrStr = getArg(args, 0, RegoString.class).getValue();
-      IPAddress addr = parseAddress(cidrStr);
+      IPAddressString addrStr = addressString(cidrStr);
+      if (!addrStr.isValid()) {
+        // Match Go's net.ParseCIDR wording rather than the parser's own diagnostic.
+        throw new BuiltinError("net.cidr_expand: invalid CIDR address: " + cidrStr);
+      }
+      IPAddress addr = addrStr.toAddress();
 
       // Normalize to the network block (like Go's ip.Mask(ipNet.Mask))
       IPAddress network = addr.toPrefixBlock();
@@ -288,13 +305,18 @@ public class CidrBuiltins implements BuiltinProvider {
   public RegoValue isValid(EvaluationContext ctx, RegoValue[] args) {
     try {
       String cidrStr = getArg(args, 0, RegoString.class).getValue();
-      IPAddressString addrStr = new IPAddressString(cidrStr);
+      IPAddressString addrStr = addressString(cidrStr);
 
       if (!addrStr.isValid()) {
         return RegoBoolean.FALSE;
       }
 
-      // Must be a valid CIDR (has a prefix or is a complete address)
+      // Go's net.ParseCIDR requires the prefix, so a bare address such as "192.168.1.2" is not
+      // valid CIDR notation even though it parses as an IP.
+      if (addrStr.getNetworkPrefixLength() == null) {
+        return RegoBoolean.FALSE;
+      }
+
       addrStr.toAddress();
       return RegoBoolean.TRUE;
 
@@ -340,17 +362,23 @@ public class CidrBuiltins implements BuiltinProvider {
         return new RegoSet(ctx.sortSets, new HashSet<>());
       }
 
-      // Merge the addresses using the IPAddress library's merge functionality
-      List<IPAddress> sortedAddresses = new ArrayList<>(addresses);
-      sortedAddresses.sort(Comparator.naturalOrder());
-
-      // Use merging from the first address's type
-      IPAddress[] merged =
-          sortedAddresses.get(0).mergeToPrefixBlocks(sortedAddresses.toArray(new IPAddress[0]));
-
+      // mergeToPrefixBlocks cannot mix address versions, so merge each version separately and
+      // union the results. Go's implementation likewise merges v4 and v6 independently.
       Set<RegoValue> resultSet = new HashSet<>();
-      for (IPAddress addr : merged) {
-        resultSet.add(new RegoString(addr.toCanonicalString()));
+      for (boolean ipv6 : new boolean[] {false, true}) {
+        List<IPAddress> versionAddresses =
+            addresses.stream().filter(a -> a.isIPv6() == ipv6).collect(Collectors.toList());
+        if (versionAddresses.isEmpty()) {
+          continue;
+        }
+        versionAddresses.sort(Comparator.naturalOrder());
+        IPAddress[] merged =
+            versionAddresses
+                .get(0)
+                .mergeToPrefixBlocks(versionAddresses.toArray(new IPAddress[0]));
+        for (IPAddress addr : merged) {
+          resultSet.add(new RegoString(addr.toCanonicalString()));
+        }
       }
 
       return new RegoSet(ctx.sortSets, resultSet);
@@ -389,28 +417,36 @@ public class CidrBuiltins implements BuiltinProvider {
   }
 
   private IPAddress parseIPOrCidr(String str) throws AddressStringException {
-    IPAddressString addrStr = new IPAddressString(str);
-
-    // Try to parse as CIDR first
-    if (addrStr.isValid()) {
-      return addrStr.toAddress();
-    }
-
-    // Try as plain IP
-    addrStr = new IPAddressString(str);
+    IPAddressString addrStr = addressString(str);
     IPAddress addr = addrStr.toAddress();
 
-    // If it's an IPv4 address without prefix, add default mask
-    if (addr instanceof IPv4Address && addr.getNetworkPrefixLength() == null) {
-      return addr.setPrefixLength(32, false);
+    if (addr.getNetworkPrefixLength() != null) {
+      return addr.toPrefixBlock();
     }
 
-    // IPv6 addresses require a prefix length
-    if (addr instanceof IPv6Address && addr.getNetworkPrefixLength() == null) {
-      throw new AddressStringException(str, "IPv6 invalid: needs prefix length");
+    // A bare address carries no prefix. Go applies net.IP.DefaultMask(), the classful default,
+    // so 192.0.2.112 widens to 192.0.2.0/24 rather than a /32. DefaultMask is undefined for
+    // IPv6, which is why a bare IPv6 address is an error instead.
+    if (addr.isIPv6()) {
+      // Thrown directly rather than as an AddressStringException, whose message would be
+      // decorated with the address and an "IP Address error" prefix. The evaluator prepends the
+      // builtin name, so it is not repeated here.
+      throw new BuiltinError("IPv6 invalid: needs prefix length");
     }
 
-    return addr;
+    return addr.setPrefixLength(defaultClassfulPrefix(addr.toIPv4()), false).toPrefixBlock();
+  }
+
+  /** Go's net.IP.DefaultMask: /8 for class A, /16 for class B, /24 otherwise. */
+  private int defaultClassfulPrefix(IPv4Address addr) {
+    int firstOctet = addr.getSegment(0).getSegmentValue();
+    if (firstOctet < 0x80) {
+      return 8;
+    }
+    if (firstOctet < 0xC0) {
+      return 16;
+    }
+    return 24;
   }
 
   @OpaBuiltin(
@@ -429,7 +465,7 @@ public class CidrBuiltins implements BuiltinProvider {
       String hostname = getArg(args, 0, RegoString.class).getValue();
 
       // Check if it's already an IP address
-      IPAddressString addrStr = new IPAddressString(hostname);
+      IPAddressString addrStr = addressString(hostname);
       if (addrStr.isIPAddress()) {
         // If it's an IP, just return it as-is
         Set<RegoValue> resultSet = new HashSet<>();
@@ -442,7 +478,10 @@ public class CidrBuiltins implements BuiltinProvider {
       Set<RegoValue> resultSet = new HashSet<>();
 
       for (InetAddress addr : addresses) {
-        resultSet.add(new RegoString(addr.getHostAddress()));
+        // InetAddress.getHostAddress renders IPv6 uncompressed (0:0:0:0:0:0:0:1); Go returns the
+        // canonical RFC 5952 form (::1), which is what policies compare against.
+        resultSet.add(
+            new RegoString(addressString(addr.getHostAddress()).getAddress().toCanonicalString()));
       }
 
       return new RegoSet(ctx.sortSets, resultSet);

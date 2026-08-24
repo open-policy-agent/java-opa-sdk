@@ -89,7 +89,9 @@ public class TimeBuiltins implements BuiltinProvider {
             x = getZonedDateTime(args[0]);
         }
 
-        String formatted = DateTimeFormatter.ofPattern(format).format(x);
+        // Go's layouts use fixed English month/day/AM-PM names regardless of the
+        // JVM's default locale, so pin the formatter locale rather than inheriting it.
+        String formatted = DateTimeFormatter.ofPattern(format, Locale.ENGLISH).format(x);
 
         return new RegoString(formatted);
     }
@@ -380,7 +382,9 @@ public class TimeBuiltins implements BuiltinProvider {
         TemporalAccessor parsed = null;
         for (String pattern : javaPattern) {
             try {
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                // Go's layouts use fixed English month/day/AM-PM names regardless of the
+                // JVM's default locale, so pin the formatter locale rather than inheriting it.
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH);
                 parsed = formatter.parse(value);
                 break;
             } catch (DateTimeParseException ignored) {

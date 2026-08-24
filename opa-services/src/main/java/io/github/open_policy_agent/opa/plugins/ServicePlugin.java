@@ -374,7 +374,8 @@ public final class ServicePlugin implements Plugin {
     /**
      * Apply this service's user-supplied {@code headers} to a request. Uses {@code setHeader}
      * (replace, not append) so user-supplied entries override built-in headers like
-     * {@code Authorization} rather than producing duplicates.
+     * {@code Authorization} or the bundle {@code Accept} default rather than producing duplicates.
+     * Header names match case-insensitively, so {@code accept} overrides {@code Accept}.
      */
     public HttpRequest.Builder applyHeaders(HttpRequest.Builder request) {
       if (headers != null) {

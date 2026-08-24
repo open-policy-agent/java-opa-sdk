@@ -84,7 +84,9 @@
 												"result": 2,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -97,7 +99,9 @@
 												"target": 3,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -106,7 +110,9 @@
 												"target": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -123,7 +129,9 @@
 												"object": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										},
 										{
@@ -132,7 +140,9 @@
 												"value": 4,
 												"file": 1,
 												"col": 1,
-												"row": 1
+												"row": 1,
+												"end_col": 21,
+												"end_row": 1
 											}
 										}
 									]
@@ -159,7 +169,9 @@
 												"target": 2,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										}
 									]
@@ -172,7 +184,9 @@
 												"target": 3,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										},
 										{
@@ -182,7 +196,9 @@
 												"target": 4,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 15,
+												"end_row": 4
 											}
 										},
 										{
@@ -191,6 +207,8 @@
 												"file": 0,
 												"col": 2,
 												"row": 4,
+												"end_col": 15,
+												"end_row": 4,
 												"index": 1,
 												"Index": 1,
 												"target": 5
@@ -206,7 +224,9 @@
 												"array": 4,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 15,
+												"end_row": 4
 											}
 										},
 										{
@@ -215,6 +235,8 @@
 												"file": 0,
 												"col": 2,
 												"row": 4,
+												"end_col": 15,
+												"end_row": 4,
 												"index": 2,
 												"Index": 2,
 												"target": 6
@@ -230,7 +252,9 @@
 												"array": 4,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 15,
+												"end_row": 4
 											}
 										},
 										{
@@ -239,6 +263,8 @@
 												"file": 0,
 												"col": 2,
 												"row": 4,
+												"end_col": 15,
+												"end_row": 4,
 												"index": 3,
 												"Index": 3,
 												"target": 7
@@ -254,7 +280,9 @@
 												"array": 4,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 15,
+												"end_row": 4
 											}
 										},
 										{
@@ -267,7 +295,9 @@
 												"target": 8,
 												"file": 0,
 												"col": 2,
-												"row": 4
+												"row": 4,
+												"end_col": 15,
+												"end_row": 4
 											}
 										},
 										{
@@ -288,7 +318,9 @@
 																"target": 11,
 																"file": 0,
 																"col": 2,
-																"row": 5
+																"row": 5,
+																"end_col": 19,
+																"end_row": 5
 															}
 														},
 														{
@@ -301,7 +333,9 @@
 																"target": 12,
 																"file": 0,
 																"col": 2,
-																"row": 5
+																"row": 5,
+																"end_col": 19,
+																"end_row": 5
 															}
 														},
 														{
@@ -311,7 +345,9 @@
 																"target": 13,
 																"file": 0,
 																"col": 2,
-																"row": 6
+																"row": 6,
+																"end_col": 25,
+																"end_row": 6
 															}
 														},
 														{
@@ -320,7 +356,9 @@
 																"target": 14,
 																"file": 0,
 																"col": 2,
-																"row": 6
+																"row": 6,
+																"end_col": 25,
+																"end_row": 6
 															}
 														},
 														{
@@ -337,7 +375,9 @@
 																"object": 14,
 																"file": 0,
 																"col": 2,
-																"row": 6
+																"row": 6,
+																"end_col": 25,
+																"end_row": 6
 															}
 														},
 														{
@@ -350,7 +390,9 @@
 																"array": 13,
 																"file": 0,
 																"col": 2,
-																"row": 6
+																"row": 6,
+																"end_col": 25,
+																"end_row": 6
 															}
 														},
 														{
@@ -363,7 +405,9 @@
 																"target": 15,
 																"file": 0,
 																"col": 2,
-																"row": 6
+																"row": 6,
+																"end_col": 25,
+																"end_row": 6
 															}
 														},
 														{
@@ -376,14 +420,18 @@
 																"set": 2,
 																"file": 0,
 																"col": 1,
-																"row": 3
+																"row": 3,
+																"end_col": 13,
+																"end_row": 3
 															}
 														}
 													]
 												},
 												"file": 0,
 												"col": 2,
-												"row": 5
+												"row": 5,
+												"end_col": 19,
+												"end_row": 5
 											}
 										}
 									]
@@ -396,7 +444,9 @@
 												"source": 2,
 												"file": 0,
 												"col": 1,
-												"row": 3
+												"row": 3,
+												"end_col": 13,
+												"end_row": 3
 											}
 										}
 									]
@@ -433,7 +483,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CjUKAwoBeAoDCgExCgMKATIKAwoBMwoDCgFhGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhJ8CnoKBGV2YWwScgorCAEQARgBWiMKE2cwLmRhdGEuZ2VuZXJhdGVkLnASBAoCEAASBAoCEAEYAgoQCAEQARgBOggKBAoCEAIQAwoLCAEQARgBwgECCAQKFwgBEAEYAfIBDgoECgIYABIECgIQAxgECgsIARABGAGKAgIIBBqIAwqFAwoTZzAuZGF0YS5nZW5lcmF0ZWQucBICAAEYAiINCgsIABABGAPKAQIIAiK3AgoLCAAQARgDggICCAMKDQgAEAIYBKIBBAgDEAQKDQgAEAIYBLoBBAgBEAUKEAgAEAIYBCIICgQKAhAFEAQKDQgAEAIYBLoBBAgCEAYKEAgAEAIYBCIICgQKAhAGEAQKDQgAEAIYBLoBBAgDEAcKEAgAEAIYBCIICgQKAhAHEAQKEAgAEAIYBDoICgQKAhAEEAgKowEIABACGAWaApkBCAgQCRgKIpABChAIABACGAU6CAoECgIQCRALChAIABACGAU6CAoECgIQChAMCg0IABACGAaiAQQIARANCgsIABACGAbCAQIIDgoXCAAQAhgG8gEOCgQKAhgEEgQKAhAMGA4KEAgAEAIYBiIICgQKAhAOEA0KEAgAEAIYBjoICgQKAhANEA8KEQgAEAEYA6ICCAoECgIQDxACIg0KCwgAEAEYA5ICAggCKgJnMCoJZ2VuZXJhdGVkKgFw"
+			"plan_proto": "CjUKAwoBeAoDCgExCgMKATIKAwoBMwoDCgFhGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKcAQqZAQoEZXZhbBKQAQoxCAEQARgBsAIVuAIBWiMKE2cwLmRhdGEuZ2VuZXJhdGVkLnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIVuAIBOggKBAoCEAIQAwoRCAEQARgBsAIVuAIBwgECCAQKHQgBEAEYAbACFbgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhW4AgGKAgIIBBqABAr9AwoTZzAuZGF0YS5nZW5lcmF0ZWQucBICAAEYAiITChEIABABGAOwAg24AgPKAQIIAiKjAwoRCAAQARgDsAINuAIDggICCAMKEwgAEAIYBLACD7gCBKIBBAgDEAQKEwgAEAIYBLACD7gCBLoBBAgBEAUKFggAEAIYBLACD7gCBCIICgQKAhAFEAQKEwgAEAIYBLACD7gCBLoBBAgCEAYKFggAEAIYBLACD7gCBCIICgQKAhAGEAQKEwgAEAIYBLACD7gCBLoBBAgDEAcKFggAEAIYBLACD7gCBCIICgQKAhAHEAQKFggAEAIYBLACD7gCBDoICgQKAhAEEAgK2QEIABACGAWwAhO4AgWaAskBCAgQCRgKIsABChYIABACGAWwAhO4AgU6CAoECgIQCRALChYIABACGAWwAhO4AgU6CAoECgIQChAMChMIABACGAawAhm4AgaiAQQIARANChEIABACGAawAhm4AgbCAQIIDgodCAAQAhgGsAIZuAIG8gEOCgQKAhgEEgQKAhAMGA4KFggAEAIYBrACGbgCBiIICgQKAhAOEA0KFggAEAIYBrACGbgCBjoICgQKAhANEA8KFwgAEAEYA7ACDbgCA6ICCAoECgIQDxACIhMKEQgAEAEYA7ACDbgCA5ICAggCKgJnMCoJZ2VuZXJhdGVkKgFw"
 		}
 	]
 }

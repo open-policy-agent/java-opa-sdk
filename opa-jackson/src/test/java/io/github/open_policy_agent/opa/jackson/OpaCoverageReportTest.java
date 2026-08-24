@@ -4,64 +4,44 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.List;
-import java.util.stream.Stream;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import io.github.open_policy_agent.opa.ir.Location;
 import io.github.open_policy_agent.opa.tracing.CoverageProfiler;
 
 class OpaCoverageReportTest {
 
-  /** A coverage range as it should appear in the OPA JSON output. */
-  private static final class Range {
-    final int start;
-    final int end;
-
-    Range(int start, int end) {
-      this.start = start;
-      this.end = end;
-    }
-  }
-
-  static Stream<Arguments> rangeCases() {
-    return Stream.of(
-        Arguments.of(
-            "single row emits a singleton range",
-            List.of(5),
-            List.of(new Range(5, 5))),
-        Arguments.of(
-            "contiguous rows are coalesced",
-            List.of(5, 6, 7),
-            List.of(new Range(5, 7))),
-        Arguments.of(
-            "disjoint rows emit multiple ranges",
-            List.of(5, 7, 8, 10),
-            List.of(new Range(5, 5), new Range(7, 8), new Range(10, 10))),
-        Arguments.of(
-            "input order does not matter; output is sorted",
-            List.of(10, 5, 7),
-            List.of(new Range(5, 5), new Range(7, 7), new Range(10, 10))));
-  }
-
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("rangeCases")
-  void from_emitsExpectedRangesForSingleFile(
-      String name, List<Integer> rows, List<Range> expected) {
+  @Test
+  void covered_emitsRawRangesWithColumnsSortedNotCoalesced() {
     CoverageProfiler profiler = new CoverageProfiler();
-    rows.forEach(row -> profiler.addEntry(new Location(0, 1, row), 0));
+    profiler.addEntry(new Location(0, 5, 6, 12, 6), 0); // row 6, col 5..12
+    profiler.addEntry(new Location(0, 2, 5, 14, 5), 0); // row 5, col 2..14
 
     ObjectNode report = OpaCoverageReport.from(profiler, List.of("policy.rego"));
 
     JsonNode covered = report.path("files").path("policy.rego").path("covered");
-    assertEquals(expected.size(), covered.size());
-    for (int i = 0; i < expected.size(); i++) {
-      assertEquals(expected.get(i).start, covered.get(i).path("start").path("row").asInt());
-      assertEquals(expected.get(i).end, covered.get(i).path("end").path("row").asInt());
-    }
+    assertEquals(2, covered.size());
+
+    assertEquals(5, covered.get(0).path("start").path("row").asInt());
+    assertEquals(2, covered.get(0).path("start").path("col").asInt());
+    assertEquals(5, covered.get(0).path("end").path("row").asInt());
+    assertEquals(14, covered.get(0).path("end").path("col").asInt());
+
+    assertEquals(6, covered.get(1).path("start").path("row").asInt());
+    assertEquals(5, covered.get(1).path("start").path("col").asInt());
+  }
+
+  @Test
+  void position_omitsColumnWhenZero() {
+    CoverageProfiler profiler = new CoverageProfiler();
+    profiler.addEntry(new Location(0, 0, 5, 0, 5), 0); // col 0 both ends
+
+    ObjectNode report = OpaCoverageReport.from(profiler, List.of("policy.rego"));
+
+    JsonNode start = report.path("files").path("policy.rego").path("covered").get(0).path("start");
+    assertEquals(5, start.path("row").asInt());
+    assertFalse(start.has("col"));
   }
 
   @Test
@@ -76,8 +56,8 @@ class OpaCoverageReportTest {
   @Test
   void multipleFiles_eachAppearWithOwnFilename() {
     CoverageProfiler profiler = new CoverageProfiler();
-    profiler.addEntry(new Location(0, 1, 5), 0);
-    profiler.addEntry(new Location(1, 1, 12), 0);
+    profiler.addEntry(new Location(0, 1, 5, 10, 5), 0);
+    profiler.addEntry(new Location(1, 1, 12, 10, 12), 0);
 
     ObjectNode report = OpaCoverageReport.from(profiler, List.of("a.rego", "b.rego"));
 
@@ -90,8 +70,8 @@ class OpaCoverageReportTest {
   @Test
   void unknownFileIndex_isSkipped() {
     CoverageProfiler profiler = new CoverageProfiler();
-    profiler.addEntry(new Location(0, 1, 5), 0);
-    profiler.addEntry(new Location(7, 1, 9), 0); // file index 7 has no filename mapping
+    profiler.addEntry(new Location(0, 1, 5, 10, 5), 0);
+    profiler.addEntry(new Location(7, 1, 9, 10, 9), 0); // file index 7 has no name
 
     ObjectNode report = OpaCoverageReport.from(profiler, List.of("policy.rego"));
 

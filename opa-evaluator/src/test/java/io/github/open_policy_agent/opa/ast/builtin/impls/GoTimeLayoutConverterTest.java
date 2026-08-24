@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
+import java.util.Locale;
 import org.junit.jupiter.api.Test;
 import io.github.open_policy_agent.opa.ast.builtin.impls.utils.GoTimeLayoutConverter;
 
@@ -538,7 +539,9 @@ public class GoTimeLayoutConverterTest {
     boolean parsed = false;
     for (String pattern : patterns) {
       try {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+        // Go's layouts use fixed English month/day/AM-PM names regardless of the
+        // JVM's default locale, so pin the formatter locale rather than inheriting it.
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH);
         TemporalAccessor result = formatter.parse(value);
         assertNotNull(result);
         parsed = true;

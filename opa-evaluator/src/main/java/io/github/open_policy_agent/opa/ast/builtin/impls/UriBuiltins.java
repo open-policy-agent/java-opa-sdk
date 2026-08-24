@@ -9,7 +9,6 @@ import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +19,8 @@ import java.util.function.BiFunction;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
 
 public class UriBuiltins {
+  private static final char[] HEX = "0123456789ABCDEF".toCharArray();
+
   public static Map<String, BiFunction<EvaluationContext, RegoValue[], RegoValue>> builtins() {
     UriBuiltins instance = new UriBuiltins();
 
@@ -91,7 +92,8 @@ public class UriBuiltins {
 
       return result;
     } catch (URISyntaxException e) {
-      throw new BuiltinError(e.getMessage());
+      // matches go OPA's errors
+      throw new BuiltinError("parse \"" + input + "\": " + e.getReason());
     }
   }
 
@@ -185,9 +187,9 @@ public class UriBuiltins {
     if (!remaining.isEmpty()) {
       path = decodeComponent(remaining, input);
 
-      // Reproduce Go's cmp.Or(parsed.RawPath, parsed.Path) behavior.
-      String defaultRawPath = new URI(null, null, path, null).getRawPath();
-      rawPath = remaining.equals(defaultRawPath) ? path : remaining;
+      // Go OPA keeps RawPath when the input path is not the canonical escaping
+      // of the decoded path.
+      rawPath = remaining.equals(goEscapePath(path)) ? path : remaining;
     }
 
     return new ParsedUri(
@@ -235,7 +237,7 @@ public class UriBuiltins {
     return -1;
   }
 
-  private String decodeComponent(String value, String input) throws URISyntaxException {
+  private static String decodeComponent(String value, String input) throws URISyntaxException {
     try {
       // URLDecoder normally converts '+' to a space. Go path decoding preserves '+'.
       return URLDecoder.decode(value.replace("+", "%2B"), StandardCharsets.UTF_8);
@@ -247,6 +249,11 @@ public class UriBuiltins {
   private ParsedAuthority parseAuthority(String authority, String input)
       throws URISyntaxException {
     int userInfoEnd = authority.lastIndexOf('@');
+
+    if (userInfoEnd != -1 && !validUserinfo(authority.substring(0, userInfoEnd))) {
+      throw new URISyntaxException(input, "net/url: invalid userinfo");
+    }
+
     String hostAndPort =
         userInfoEnd == -1 ? authority : authority.substring(userInfoEnd + 1);
 
@@ -270,10 +277,6 @@ public class UriBuiltins {
         port = remainder.substring(1);
       }
     } else {
-      if (hostAndPort.contains("[") || hostAndPort.contains("]")) {
-        throw new URISyntaxException(input, "invalid bracket in host");
-      }
-
       int portSeparator = hostAndPort.lastIndexOf(':');
       if (portSeparator == -1) {
         hostname = hostAndPort;
@@ -287,15 +290,97 @@ public class UriBuiltins {
       }
     }
 
-    if (port != null
-        && !port.isEmpty()
-        && !port.chars().allMatch(Character::isDigit)) {
-      throw new URISyntaxException(input, "invalid port");
+    // only 0-9 are allowed for ports, not other digits from other char sets
+    if (port != null && !port.isEmpty() && !isAsciiDigits(port)) {
+      throw new URISyntaxException(input, "invalid port \":" + port + "\" after host");
     }
 
-    hostname = decodeComponent(hostname, input);
+    hostname = decodeHost(hostname, input);
 
     return new ParsedAuthority(hostname, port);
+  }
+
+  private static boolean isAsciiDigits(String s) {
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (c < '0' || c > '9') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Mirrors Go's net/url validUserinfo: unreserved characters, sub-delims, ':', '%' and '@'.
+  private static boolean validUserinfo(String s) {
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      boolean alnum = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9');
+      if (!alnum && "-._:~!$&'()*+,;=%@".indexOf(c) == -1) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Decodes a host like Go's unescape(encodeHost): a %XX escape for an ASCII byte is rejected
+  // ("invalid URL escape"), except %25 (% itself); escapes of non-ASCII bytes are decoded normally.
+  private static String decodeHost(String host, String input) throws URISyntaxException {
+    int i = 0;
+    while (i < host.length()) {
+      if (host.charAt(i) != '%') {
+        i++;
+        continue;
+      }
+      boolean validEscape =
+          i + 2 < host.length() && isHex(host.charAt(i + 1)) && isHex(host.charAt(i + 2));
+      if (!validEscape
+          || (unhex(host.charAt(i + 1)) < 8 && !host.regionMatches(i, "%25", 0, 3))) {
+        int end = Math.min(i + 3, host.length());
+        throw new URISyntaxException(input, "invalid URL escape \"" + host.substring(i, end) + "\"");
+      }
+      i += 3;
+    }
+    return decodeComponent(host, input);
+  }
+
+  // Re-escapes a decoded path like Go escape(s, encodePath): only unreserved characters and the
+  // path-reserved delimiters stay literal; everything else is percent-encoded.
+  private static String goEscapePath(String path) {
+    byte[] bytes = path.getBytes(StandardCharsets.UTF_8);
+    StringBuilder sb = new StringBuilder(bytes.length);
+    for (byte b : bytes) {
+      int c = b & 0xff;
+      if (shouldEscapePath(c)) {
+        sb.append('%').append(HEX[c >> 4]).append(HEX[c & 0xf]);
+      } else {
+        sb.append((char) c);
+      }
+    }
+    return sb.toString();
+  }
+
+  private static boolean shouldEscapePath(int c) {
+    if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
+      return false;
+    }
+      return switch (c) {
+          case '-', '_', '.', '~', '$', '&', '+', ',', '/', ':', ';', '=', '@' -> false;
+          default -> true;
+      };
+  }
+
+  private static boolean isHex(char c) {
+    return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
+  }
+
+  private static int unhex(char c) {
+    if (c >= '0' && c <= '9') {
+      return c - '0';
+    }
+    if (c >= 'a' && c <= 'f') {
+      return c - 'a' + 10;
+    }
+    return c - 'A' + 10;
   }
 
   private record ParsedUri(

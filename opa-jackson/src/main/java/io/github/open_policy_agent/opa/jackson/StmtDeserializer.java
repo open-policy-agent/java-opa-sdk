@@ -129,7 +129,17 @@ class StmtDeserializer extends JsonDeserializer<Stmt> {
     JsonNode col = stmtNode.get("col");
 
     if (file != null && row != null && col != null) {
-      stmt.setLocation(file.asInt(), row.asInt(), col.asInt());
+      // end_row/end_col were added to the IR later, in OPA 1.20.0
+      // (https://github.com/open-policy-agent/opa/pull/9007).
+      // In older plans, the 3-arg setLocation collapses the range to a point,
+      // degrading coverage to line granularity.
+      JsonNode endRow = stmtNode.get("end_row");
+      JsonNode endCol = stmtNode.get("end_col");
+      if (endRow != null && endCol != null) {
+        stmt.setLocation(file.asInt(), row.asInt(), col.asInt(), endRow.asInt(), endCol.asInt());
+      } else {
+        stmt.setLocation(file.asInt(), row.asInt(), col.asInt());
+      }
     }
 
     return stmt;

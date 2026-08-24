@@ -2,24 +2,21 @@ package io.github.open_policy_agent.opa.plugins;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.Flow;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -53,18 +50,47 @@ public abstract class BundleDownloader {
   protected String service;
   protected String resource;
   protected Config.PollingConfig polling;
-  protected String etag;
-  protected long lastModifiedTime = 0;
+  protected volatile String etag;
+  protected volatile long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
+
+  // Fallback when no service config is available; matches the response_header_timeout_seconds
+  // default in Config.ServiceConfig.
+  private static final int DEFAULT_RESPONSE_HEADER_TIMEOUT_SECONDS = 10;
+
+  private static final int READ_BUFFER_BYTES = 8192;
 
   private static final Set<String> ALLOWED_CONTENT_TYPES =
       Set.of(
+          "application/vnd.openpolicyagent.bundle.ir.v1+gzip",
           "application/vnd.openpolicyagent.bundles",
           "application/gzip",
           "application/x-gzip",
           "application/octet-stream",
           "binary/octet-stream",
           "application/x-tar");
+
+  /**
+   * Default {@code Accept} for bundle requests: the media types this SDK can consume, in preference
+   * order, weighted with q-factors.
+   *
+   * <p>This SDK evaluates the IR ("plan") bundle format, so IR is requested first. The remaining
+   * entries keep the request working against servers that don't negotiate — a plain OPA bundle, any
+   * gzip, and finally a {@code &#42;/&#42;} catch-all for servers that ignore {@code Accept}
+   * entirely and just serve a tarball. Because the weights are only relative, a server that
+   * understands none of the named types can still respond rather than returning {@code 406 Not
+   * Acceptable}.
+   *
+   * <p>Applied <em>before</em> the service config's {@code headers} are merged in, so an operator
+   * can override it per service — see {@link ServicePlugin.Service#applyHeaders}.
+   */
+  static final String DEFAULT_ACCEPT_HEADER =
+      String.join(
+          ", ",
+          "application/vnd.openpolicyagent.bundle.ir.v1+gzip;q=1.0",
+          "application/vnd.openpolicyagent.bundles;q=0.9",
+          "application/gzip;q=0.8",
+          "*/*;q=0.1");
 
   /**
    * Construct a BundleDownloader.
@@ -189,39 +215,50 @@ public abstract class BundleDownloader {
             ? polling.getMaxDelaySeconds()
             : 120;
 
-    scheduler.schedule(this::downloadBundle, 0, TimeUnit.SECONDS);
-    scheduleNextPoll(scheduler, minDelay, maxDelay);
+    scheduleDownload(scheduler, minDelay, maxDelay, 0);
 
     return initialActivation;
   }
 
-  // Re-schedules the next download with a uniformly random delay in [minDelay, maxDelay],
-  // matching Go-OPA's jittered polling. ScheduledExecutorService has no built-in jitter, so the
-  // task chains itself. RejectedExecutionException after a shutdown breaks the chain cleanly.
-  private void scheduleNextPoll(ScheduledExecutorService scheduler, int minDelay, int maxDelay) {
-    long delay =
-        minDelay >= maxDelay
-            ? minDelay
-            : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
+  // Schedules one download after delaySeconds;
+  // once that download completes, schedules the next poll with a fresh jittered delay in [minDelay, maxDelay].
+  // Because the next poll is chained off the download's completion — not fired on an independent timer —
+  // at most one download is ever in flight, matching Go-OPA's jittered polling.
+  // ScheduledExecutorService has no built-in jitter, so the task chains itself; a
+  // RejectedExecutionException after shutdown ends the chain cleanly.
+  private void scheduleDownload(
+      ScheduledExecutorService scheduler, int minDelay, int maxDelay, long delaySeconds) {
     try {
       scheduler.schedule(
-          () -> {
-            try {
-              downloadBundle();
-            } catch (Exception e) {
-              // downloadBundle() handles its own logging; swallow so the chain keeps polling.
-              // Only Exception is caught here — Errors (OOM, etc.) propagate and let the
-              // executor's uncaught-exception handler tear down the pool, which is the right
-              // outcome for unrecoverable conditions.
-            } finally {
-              scheduleNextPoll(scheduler, minDelay, maxDelay);
-            }
-          },
-          delay,
+          () ->
+              downloadBundle()
+                  .whenComplete(
+                      (result, throwable) ->
+                          scheduleDownload(
+                              scheduler,
+                              minDelay,
+                              maxDelay,
+                              nextDelaySeconds(minDelay, maxDelay))),
+          delaySeconds,
           TimeUnit.SECONDS);
     } catch (RejectedExecutionException stopped) {
       // Scheduler was shut down; let the chain end.
     }
+  }
+
+  private static long nextDelaySeconds(int minDelay, int maxDelay) {
+    return minDelay >= maxDelay
+        ? minDelay
+        : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
+  }
+
+  // Per-request download timeout.
+  private Duration requestTimeout() {
+    int seconds =
+        authService != null
+            ? authService.getResponseHeaderTimeoutSeconds()
+            : DEFAULT_RESPONSE_HEADER_TIMEOUT_SECONDS;
+    return Duration.ofSeconds(seconds > 0 ? seconds : DEFAULT_RESPONSE_HEADER_TIMEOUT_SECONDS);
   }
 
   /**
@@ -229,8 +266,12 @@ public abstract class BundleDownloader {
    *
    * <p>Handles HTTP/HTTPS downloads with ETag caching, file:// URIs, and filesystem paths. Calls
    * {@link #activateBundle(byte[])} when new bundle data is available.
+   *
+   * @return a future that completes when this download attempt — including any asynchronous
+   *     activation — has finished. The poll scheduler awaits it before scheduling the next poll, so
+   *     downloads never overlap.
    */
-  protected void downloadBundle() {
+  protected CompletableFuture<Void> downloadBundle() {
     try {
       Config.ServiceConfig serviceConfig = manager.getConfig().getService(service);
       if (serviceConfig == null) {
@@ -239,7 +280,7 @@ public abstract class BundleDownloader {
           initialActivation.completeExceptionally(
               new RuntimeException("Service '" + service + "' not found"));
         }
-        return;
+        return CompletableFuture.completedFuture(null);
       }
 
       String baseUrl = serviceConfig.getUrl();
@@ -257,16 +298,17 @@ public abstract class BundleDownloader {
         // Handle file:// URIs
         if ("file".equalsIgnoreCase(uri.getScheme())) {
           handleFileDownload(Paths.get(uri));
-          return;
+          return CompletableFuture.completedFuture(null);
         }
 
         // Handle HTTP/HTTPS URIs
-        handleHttpDownload(uri);
+        return handleHttpDownload(uri);
       } else {
         // It's a file path (relative or absolute)
         Path basePath = Paths.get(baseUrl);
         Path filePath = basePath.resolve(resource);
         handleFileDownload(filePath);
+        return CompletableFuture.completedFuture(null);
       }
 
     } catch (Exception e) {
@@ -274,6 +316,7 @@ public abstract class BundleDownloader {
       if (!initialActivation.isDone()) {
         initialActivation.completeExceptionally(e);
       }
+      return CompletableFuture.completedFuture(null);
     }
   }
 
@@ -307,12 +350,15 @@ public abstract class BundleDownloader {
    * Handle downloading from an HTTP/HTTPS URI.
    *
    * @param uri the URI to download from
+   * @return a future that completes when the response has been handled. The actual outcome is
+   *     recorded on {@code initialActivation}.
    */
-  private void handleHttpDownload(URI uri) {
+  private CompletableFuture<Void> handleHttpDownload(URI uri) {
     HttpRequest.Builder requestBuilder =
         HttpRequest.newBuilder()
             .uri(uri)
-            .header("Accept", "application/vnd.openpolicyagent.bundles")
+            .timeout(requestTimeout())
+            .header("Accept", DEFAULT_ACCEPT_HEADER)
             .GET();
 
     if (etag != null) {
@@ -321,65 +367,86 @@ public abstract class BundleDownloader {
 
     if (authService != null) {
       requestBuilder = authService.applyCredentials(requestBuilder);
+      // Applied last, and with setHeader, so a service-config header wins over the defaults above.
       requestBuilder = authService.applyHeaders(requestBuilder);
     }
 
     HttpRequest request = requestBuilder.build();
-    httpClient
-        .sendAsync(request, sizeLimitedBodyHandler(maxSizeBytes))
-        .whenComplete(
+
+    return httpClient
+        .sendAsync(request, HttpResponse.BodyHandlers.ofInputStream())
+        .handle(
             (response, throwable) -> {
-              if (throwable != null) {
-                Throwable cause =
-                    throwable instanceof java.util.concurrent.CompletionException
-                        ? throwable.getCause()
-                        : throwable;
-                manager.getLogger().error("Bundle '%s': Download error: %s", name, cause.getMessage());
-                if (!initialActivation.isDone()) {
-                  initialActivation.completeExceptionally(cause);
-                }
-                return;
-              }
-
-              if (response.statusCode() == 304) {
-                manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
-                if (!initialActivation.isDone()) {
-                  initialActivation.complete(null);
-                }
-                return;
-              }
-
-              if (response.statusCode() == 200) {
-                String contentType = response.headers().firstValue("Content-Type").orElse("");
-                if (!isAcceptableContentType(contentType)) {
-                  String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
-                  manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
-                  if (!initialActivation.isDone()) {
-                    initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-                  }
-                  return;
-                }
-                response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
-                try {
-                  activateBundle(response.body());
-                } catch (Exception e) {
-                  manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
-                  if (!initialActivation.isDone()) {
-                    initialActivation.completeExceptionally(e);
-                  }
-                  return;
-                }
-                if (!initialActivation.isDone()) {
-                  initialActivation.complete(null);
-                }
-              } else {
-                String errorMsg = "Download failed with status " + response.statusCode();
-                manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
-                if (!initialActivation.isDone()) {
-                  initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-                }
-              }
+              handleHttpResponse(response, throwable);
+              return null;
             });
+  }
+
+  // Handles a completed HTTP exchange: records success or failure on initialActivation. Runs on the
+  // HTTP client's executor thread, but the poll chain never starts the next download until the
+  // future returned by handleHttpDownload completes, so activateBundle is never called concurrently.
+  private void handleHttpResponse(HttpResponse<InputStream> response, Throwable throwable) {
+    if (throwable != null) {
+      Throwable cause =
+          throwable instanceof java.util.concurrent.CompletionException
+              ? throwable.getCause()
+              : throwable;
+      manager.getLogger().error("Bundle '%s': Download error: %s", name, cause.getMessage());
+      if (!initialActivation.isDone()) {
+        initialActivation.completeExceptionally(cause);
+      }
+      return;
+    }
+
+    if (response.statusCode() == 304) {
+      manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
+      if (!initialActivation.isDone()) {
+        initialActivation.complete(null);
+      }
+      return;
+    }
+
+    if (response.statusCode() == 200) {
+      String contentType = response.headers().firstValue("Content-Type").orElse("");
+      if (!isAcceptableContentType(contentType)) {
+        String errorMsg = "Unexpected Content-Type: '" + contentType + "'";
+        manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+        }
+        return;
+      }
+      OptionalLong contentLength = response.headers().firstValueAsLong("Content-Length");
+      byte[] body;
+      try {
+        body = readBodyWithLimit(response.body(), contentLength);
+      } catch (Exception e) {
+        manager.getLogger().error("Bundle '%s': Download error: %s", name, e.getMessage());
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(e);
+        }
+        return;
+      }
+      response.headers().firstValue("ETag").ifPresent(newEtag -> this.etag = newEtag);
+      try {
+        activateBundle(body);
+      } catch (Exception e) {
+        manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
+        if (!initialActivation.isDone()) {
+          initialActivation.completeExceptionally(e);
+        }
+        return;
+      }
+      if (!initialActivation.isDone()) {
+        initialActivation.complete(null);
+      }
+    } else {
+      String errorMsg = "Download failed with status " + response.statusCode();
+      manager.getLogger().error("Bundle '%s': %s", name, errorMsg);
+      if (!initialActivation.isDone()) {
+        initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+      }
+    }
   }
 
   /**
@@ -395,101 +462,51 @@ public abstract class BundleDownloader {
   }
 
   /**
-   * Returns a BodyHandler that rejects over-sized responses.
+   * Reads the response body into memory, enforcing {@code maxSizeBytes} both upfront (via
+   * Content-Length) and as the bytes arrive.
    *
-   * <p>If Content-Length is present and already exceeds the limit, the body is rejected upfront
-   * without reading it. Otherwise, a {@link SizeLimitedByteArraySubscriber} streams the body and
-   * aborts the moment the cumulative byte count exceeds the limit — so a server that omits
-   * Content-Length (or uses chunked encoding) cannot force the client to buffer an unbounded body.
-   *
+   * <p>The limit is capped at {@link Integer#MAX_VALUE} because the body is materialized into a
+   * {@code byte[]}, whose maximum length is ~2 GB.
    */
-  private static HttpResponse.BodyHandler<byte[]> sizeLimitedBodyHandler(long maxBytes) {
-    long cappedMax = Math.min(maxBytes, Integer.MAX_VALUE);
-    return responseInfo -> {
-      OptionalLong contentLength = responseInfo.headers().firstValueAsLong("Content-Length");
-      if (contentLength.isPresent() && contentLength.getAsLong() > cappedMax) {
-        return new SizeLimitedByteArraySubscriber(
-            cappedMax,
-            "Content-Length "
-                + contentLength.getAsLong()
-                + " exceeds limit of "
-                + cappedMax
-                + " bytes");
-      }
-      return new SizeLimitedByteArraySubscriber(cappedMax);
-    };
+  private byte[] readBodyWithLimit(InputStream body, OptionalLong contentLength)
+      throws IOException {
+    long limit = Math.min(maxSizeBytes, Integer.MAX_VALUE);
+    try (InputStream in = body) {
+      rejectIfContentLengthExceedsLimit(contentLength, limit);
+      return readUpTo(in, limit);
+    }
   }
 
   /**
-   * Accumulates the response body while enforcing a size limit as bytes arrive. The instant the cumulative byte
-   * count exceeds {@code limit}, it cancels the subscription.
+   * Rejects a response whose advertised Content-Length already exceeds the limit, so an oversized
+   * body is never read at all. Servers are turned away before a single byte is transferred.
    */
-  private static final class SizeLimitedByteArraySubscriber
-      implements HttpResponse.BodySubscriber<byte[]> {
-    private final long limit;
-    private final String rejectImmediatelyMessage;
-    private final CompletableFuture<byte[]> result = new CompletableFuture<>();
-    private final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    private long total = 0;
-    private Flow.Subscription subscription;
-
-    SizeLimitedByteArraySubscriber(long limit) {
-      this(limit, null);
+  private static void rejectIfContentLengthExceedsLimit(OptionalLong contentLength, long limit) {
+    if (contentLength.isPresent() && contentLength.getAsLong() > limit) {
+      throw new BundleSizeLimitException(
+          "Content-Length " + contentLength.getAsLong() + " exceeds limit of " + limit + " bytes");
     }
+  }
 
-    SizeLimitedByteArraySubscriber(long limit, String rejectImmediatelyMessage) {
-      this.limit = limit;
-      this.rejectImmediatelyMessage = rejectImmediatelyMessage;
-    }
-
-    @Override
-    public CompletionStage<byte[]> getBody() {
-      return result;
-    }
-
-    @Override
-    public void onSubscribe(Flow.Subscription subscription) {
-      this.subscription = subscription;
-      if (rejectImmediatelyMessage != null) {
-        subscription.cancel();
-        result.completeExceptionally(new BundleSizeLimitException(rejectImmediatelyMessage));
-        return;
-      }
-      subscription.request(Long.MAX_VALUE);
-    }
-
-    @Override
-    public void onNext(List<ByteBuffer> items) {
-      if (result.isDone()) {
-        return;
-      }
-      for (ByteBuffer item : items) {
-        total += item.remaining();
-      }
+  /**
+   * Reads the stream into a byte array, aborting the moment the cumulative size exceeds the limit.
+   * A server that omits Content-Length (or uses chunked encoding) therefore cannot force the client
+   * to buffer an unbounded body: the read stops mid-stream and the caller closes the stream, which
+   * cancels the exchange so the remaining bytes are never transferred.
+   */
+  private static byte[] readUpTo(InputStream in, long limit) throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    byte[] chunk = new byte[READ_BUFFER_BYTES];
+    long total = 0;
+    int read;
+    while ((read = in.read(chunk)) != -1) {
+      total += read;
       if (total > limit) {
-        subscription.cancel();
-        result.completeExceptionally(
-            new BundleSizeLimitException("Response body exceeds limit of " + limit + " bytes"));
-        return;
+        throw new BundleSizeLimitException("Response body exceeds limit of " + limit + " bytes");
       }
-      for (ByteBuffer item : items) {
-        byte[] chunk = new byte[item.remaining()];
-        item.get(chunk);
-        buffer.write(chunk, 0, chunk.length);
-      }
+      buffer.write(chunk, 0, read);
     }
-
-    @Override
-    public void onError(Throwable throwable) {
-      result.completeExceptionally(throwable);
-    }
-
-    @Override
-    public void onComplete() {
-      if (!result.isDone()) {
-        result.complete(buffer.toByteArray());
-      }
-    }
+    return buffer.toByteArray();
   }
 
   static class BundleSizeLimitException extends RuntimeException {

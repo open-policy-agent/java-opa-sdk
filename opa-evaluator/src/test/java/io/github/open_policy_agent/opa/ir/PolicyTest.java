@@ -131,6 +131,32 @@ class PolicyTest {
   }
 
   @Test
+  public void testPolicyDeserialization_endLocations() throws IOException {
+    // Fixture built by `opa build -t plan` from an OPA carrying IR end locations
+    // (https://github.com/open-policy-agent/opa/pull/9007). The rule `p := 7` is on line 3,
+    // cols 1-7, so end_row/end_col differ from row/col — a swapped end fails these assertions.
+    File jsonFile =
+        new File(
+            Objects.requireNonNull(
+                    getClass()
+                        .getClassLoader()
+                        .getResource("ir/testdata/policy-end-locations.json"))
+                .getFile());
+
+    Policy policy = policyReader.read(Files.newInputStream(jsonFile.toPath()));
+
+    Location loc =
+        policy.getFuncs().getFuncs().get(0).getBlocks().get(0).getStmts().get(0).getLocation();
+
+    assertEquals(3, loc.getRow());
+    assertEquals(1, loc.getCol());
+    assertEquals(3, loc.getEndRow());
+    assertEquals(7, loc.getEndCol());
+    // equals now includes the end, so the whole range round-trips (constructor is file,col,row,...).
+    assertEquals(new Location(0, 1, 3, 7, 3), loc);
+  }
+
+  @Test
   public void testPolicyDeserialization_staticsOnlyStrings() throws IOException {
     File jsonFile =
         new File(

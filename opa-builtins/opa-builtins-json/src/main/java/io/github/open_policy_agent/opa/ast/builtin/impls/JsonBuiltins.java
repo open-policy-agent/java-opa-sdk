@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.MarkedYAMLException;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.JsonPatchException;
@@ -183,34 +184,93 @@ public class JsonBuiltins implements BuiltinProvider {
     RegoValue input = args[0];
     RegoObject options = getArg(args, 1, RegoObject.class);
 
+    // Go's implementation rejects unknown keys before looking at any of them.
+    for (RegoValue key : options.getProperties().keySet()) {
+      String name = key instanceof RegoString ? ((RegoString) key).getValue() : String.valueOf(key);
+      if (!MARSHAL_OPTION_KEYS.contains(name)) {
+        throw new TypeError("object contained unknown key \"" + name + "\"");
+      }
+    }
+
+    RegoValue prettyValue = options.getProperty(new RegoString("pretty"));
+    RegoValue indentValue = options.getProperty(new RegoString("indent"));
+    RegoValue prefixValue = options.getProperty(new RegoString("prefix"));
+
+    String indent = indentValue instanceof RegoString ? ((RegoString) indentValue).getValue() : "\t";
+    String prefix = prefixValue instanceof RegoString ? ((RegoString) prefixValue).getValue() : "";
+
+    // "pretty" is only a default: supplying "indent" or "prefix" implies pretty output, but an
+    // explicit "pretty": false disables it and makes the other two options inert.
+    boolean pretty = indentValue != null || prefixValue != null;
+    if (prettyValue instanceof RegoBoolean) {
+      pretty = ((RegoBoolean) prettyValue).getValue();
+    }
+
     try {
+      if (!pretty) {
+        return new RegoString(JSON_MAPPER.writeValueAsString(input));
+      }
+
+      // Go composes the result as prefix + json.MarshalIndent(v, prefix, indent), so the prefix
+      // leads the document and is repeated at the start of every subsequent line.
       ObjectMapper mapper = JSON_MAPPER.copy();
+      DefaultPrettyPrinter printer = new GoPrettyPrinter(prefix, indent);
+      mapper.setDefaultPrettyPrinter(printer);
+      mapper.enable(SerializationFeature.INDENT_OUTPUT);
 
-      // Check for indent option
-      RegoValue indentValue = options.getProperty(new RegoString("indent"));
-      if (indentValue instanceof RegoString) {
-        String indent = ((RegoString) indentValue).getValue();
-        DefaultPrettyPrinter printer = new DefaultPrettyPrinter();
-        // Use DefaultIndenter which accepts custom indent string
-        DefaultPrettyPrinter.Indenter indenter =
-                new DefaultIndenter(indent, DefaultIndenter.SYS_LF);
-        printer.indentArraysWith(indenter);
-        printer.indentObjectsWith(indenter);
-        mapper.setDefaultPrettyPrinter(printer);
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-      }
-
-      // Check for prefix option (for pretty printing)
-      RegoValue prefixValue = options.getProperty(new RegoString("prefix"));
-      if (prefixValue instanceof RegoString) {
-        // Prefix is typically used with indent for pretty printing
-        mapper.enable(SerializationFeature.INDENT_OUTPUT);
-      }
-
-      String json = mapper.writeValueAsString(input);
-      return new RegoString(json);
+      return new RegoString(prefix + mapper.writer(printer).writeValueAsString(input));
     } catch (JsonProcessingException e) {
       throw new BuiltinError("json.marshal_with_options: " + e.getMessage());
+    }
+  }
+
+  private static final Set<String> MARSHAL_OPTION_KEYS = Set.of("pretty", "indent", "prefix");
+
+  /**
+   * Reproduces Go's json.MarshalIndent layout: newline-separated, each line indented by the
+   * prefix followed by the indent repeated per nesting level, and `": "` between key and value.
+   * Jackson's DefaultPrettyPrinter otherwise emits spaces around the colon and no line prefix.
+   */
+  private static final class GoPrettyPrinter extends DefaultPrettyPrinter {
+    private static final long serialVersionUID = 1L;
+
+    GoPrettyPrinter(String prefix, String indent) {
+      DefaultIndenter indenter = new DefaultIndenter(indent, DefaultIndenter.SYS_LF + prefix);
+      indentArraysWith(indenter);
+      indentObjectsWith(indenter);
+      _objectFieldValueSeparatorWithSpaces = ": ";
+    }
+
+    private GoPrettyPrinter(GoPrettyPrinter base) {
+      super(base);
+      _objectFieldValueSeparatorWithSpaces = base._objectFieldValueSeparatorWithSpaces;
+    }
+
+    @Override
+    public DefaultPrettyPrinter createInstance() {
+      return new GoPrettyPrinter(this);
+    }
+
+    @Override
+    public void writeEndObject(JsonGenerator g, int nrOfEntries) throws java.io.IOException {
+      // Go emits {} for an empty object rather than opening a new indented line. Track the
+      // nesting level down as super would, or the enclosing containers close over-indented.
+      if (nrOfEntries == 0) {
+        --_nesting;
+        g.writeRaw('}');
+        return;
+      }
+      super.writeEndObject(g, nrOfEntries);
+    }
+
+    @Override
+    public void writeEndArray(JsonGenerator g, int nrOfValues) throws java.io.IOException {
+      if (nrOfValues == 0) {
+        --_nesting;
+        g.writeRaw(']');
+        return;
+      }
+      super.writeEndArray(g, nrOfValues);
     }
   }
 
@@ -239,7 +299,11 @@ public class JsonBuiltins implements BuiltinProvider {
           result =
           @OpaType(name = "result", description = "`true` if `x` is valid JSON, `false` otherwise"))
   public RegoBoolean is_valid(EvaluationContext ctx, RegoValue[] args) {
-    String jsonInput = getArg(args, 0, RegoString.class).getValue();
+    // Go returns false for a non-string operand rather than raising a type error.
+    if (!(args[0] instanceof RegoString)) {
+      return RegoBoolean.FALSE;
+    }
+    String jsonInput = ((RegoString) args[0]).getValue();
 
     try {
       JSON_MAPPER.readTree(jsonInput);
@@ -330,6 +394,205 @@ public class JsonBuiltins implements BuiltinProvider {
     }
   }
 
+  /**
+   * Records the JSON Pointer of every set inside `value`. Sets serialize as arrays, so json.patch
+   * has to remember where they were: paths into a set address members by value rather than index,
+   * and the patched result has to be turned back into a set.
+   */
+  private static void collectSetPaths(RegoValue value, String pointer, Set<String> out) {
+    if (value instanceof RegoSet) {
+      out.add(pointer);
+      int i = 0;
+      for (RegoValue member : ((RegoSet) value).getValue()) {
+        collectSetPaths(member, pointer + "/" + i++, out);
+      }
+    } else if (value instanceof RegoArray) {
+      List<RegoValue> values = ((RegoArray) value).getValue();
+      for (int i = 0; i < values.size(); i++) {
+        collectSetPaths(values.get(i), pointer + "/" + i, out);
+      }
+    } else if (value instanceof RegoObject) {
+      for (Map.Entry<RegoValue, RegoValue> e : ((RegoObject) value).getProperties().entrySet()) {
+        if (e.getKey() instanceof RegoString) {
+          String key = ((RegoString) e.getKey()).getValue();
+          collectSetPaths(e.getValue(), pointer + "/" + escapePointerSegment(key), out);
+        }
+      }
+    }
+  }
+
+  private static String escapePointerSegment(String segment) {
+    return segment.replace("~", "~0").replace("/", "~1");
+  }
+
+  /**
+   * Reads a path segment as an array index, returning null when it is not one. Digits that
+   * overflow an int are not a usable index either, so they are rejected rather than allowed to
+   * throw out of the builtin.
+   */
+  private static Integer asArrayIndex(JsonNode segment) {
+    if (segment.isIntegralNumber()) {
+      return segment.canConvertToInt() ? Integer.valueOf(segment.asInt()) : null;
+    }
+    if (segment.isTextual() && segment.asText().matches("-?\\d+")) {
+      try {
+        return Integer.valueOf(segment.asText());
+      } catch (NumberFormatException e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Splits a patch path into segments. A path given as an array can carry non-string segments —
+   * a set member is addressed by its value, which may itself be an array or object — so segments
+   * stay as nodes rather than being flattened to a string up front.
+   */
+  private List<JsonNode> pathSegments(JsonNode pathNode) {
+    List<JsonNode> segments = new ArrayList<>();
+    if (pathNode.isArray()) {
+      for (JsonNode segment : pathNode) {
+        segments.add(segment);
+      }
+      return segments;
+    }
+
+    String path = pathNode.isTextual() ? pathNode.asText() : pathNode.asText();
+    if (path.startsWith("/")) {
+      path = path.substring(1);
+    }
+    if (path.isEmpty()) {
+      return segments;
+    }
+    for (String raw : path.split("/", -1)) {
+      segments.add(JSON_MAPPER.getNodeFactory().textNode(raw.replace("~1", "/").replace("~0", "~")));
+    }
+    return segments;
+  }
+
+  /**
+   * Resolves a patch path against the document, turning value lookups into indices. Arrays already
+   * allow addressing an element by value; a set additionally has no inherent order, so a member is
+   * located by deep equality and a member that is not present resolves to the append token.
+   */
+  private PathResolution resolvePath(JsonNode pathNode, JsonNode document, Set<String> setPaths) {
+    // Documents without sets keep the long-standing resolution untouched: set support only needs
+    // to change how a member is addressed, and this is by far the hotter path.
+    if (setPaths.isEmpty()) {
+      return new PathResolution(normalizeAndResolveJsonPointerPath(pathNode, document), null);
+    }
+
+    StringBuilder resolved = new StringBuilder();
+    String currentPointer = "";
+    JsonNode current = document;
+    JsonNode appendedMember = null;
+
+    for (JsonNode segment : pathSegments(pathNode)) {
+      boolean isSet = setPaths.contains(currentPointer);
+      String literal =
+              segment.isTextual() ? segment.asText() : segment.toString();
+
+      if (current != null && current.isArray()) {
+        int index = -1;
+        if (isSet) {
+          // A set has no order, so a member is addressed by its value.
+          for (int i = 0; i < current.size(); i++) {
+            if (current.get(i).equals(segment)) {
+              index = i;
+              break;
+            }
+          }
+          if (index < 0) {
+            // Absent member: for "add" this means append, which RFC 6902 spells "-".
+            resolved.append("/-");
+            appendedMember = segment;
+            current = null;
+            currentPointer = null;
+            continue;
+          }
+        } else {
+          Integer parsed = asArrayIndex(segment);
+          if (parsed == null) {
+            // Not an index into a plain array. Keep the segment so the patch library reports it.
+            resolved.append('/').append(escapePointerSegment(literal));
+            current = null;
+            currentPointer = null;
+            continue;
+          }
+          index = parsed;
+        }
+
+        resolved.append('/').append(index);
+        current = index >= 0 && index < current.size() ? current.get(index) : null;
+        currentPointer = currentPointer == null ? null : currentPointer + "/" + index;
+      } else if (current != null && current.isObject()) {
+        resolved.append('/').append(escapePointerSegment(literal));
+        current = current.get(literal);
+        currentPointer = currentPointer == null ? null : currentPointer + "/" + escapePointerSegment(literal);
+      } else {
+        resolved.append('/').append(escapePointerSegment(literal));
+        current = null;
+        currentPointer = null;
+      }
+    }
+
+    return new PathResolution(resolved.toString(), appendedMember);
+  }
+
+  /**
+   * A resolved patch path. `appendedSetMember` is the addressed value when the path appends to a
+   * set, which lets `add` check that the value matches: in a set the path segment *is* the member,
+   * so `{"op": "add", "path": "foo/d", "value": "e"}` is incoherent and undefined in OPA.
+   */
+  private static final class PathResolution {
+    private final String path;
+    private final JsonNode appendedSetMember;
+
+    PathResolution(String path, JsonNode appendedSetMember) {
+      this.path = path;
+      this.appendedSetMember = appendedSetMember;
+    }
+  }
+
+  /** Rebuilds a patched document, restoring the sets recorded by {@link #collectSetPaths}. */
+  private RegoValue restoreSets(JsonNode node, String pointer, Set<String> setPaths, boolean sorted) {
+    if (node.isArray() && setPaths.contains(pointer)) {
+      Set<RegoValue> members = sorted ? new LinkedHashSet<>() : new HashSet<>();
+      int i = 0;
+      for (JsonNode element : node) {
+        members.add(restoreSets(element, pointer + "/" + i++, setPaths, sorted));
+      }
+      return new RegoSet(sorted, members);
+    }
+    if (node.isArray()) {
+      RegoArray array = new RegoArray();
+      int i = 0;
+      for (JsonNode element : node) {
+        array.addValue(restoreSets(element, pointer + "/" + i++, setPaths, sorted));
+      }
+      return array;
+    }
+    if (node.isObject()) {
+      RegoObject object = new RegoObject();
+      for (Map.Entry<String, JsonNode> e : node.properties()) {
+        object.setProp(
+                new RegoString(e.getKey()),
+                restoreSets(
+                        e.getValue(),
+                        pointer + "/" + escapePointerSegment(e.getKey()),
+                        setPaths,
+                        sorted));
+      }
+      return object;
+    }
+    try {
+      return convertToRegoValue(JSON_MAPPER.treeToValue(node, Object.class));
+    } catch (JsonProcessingException e) {
+      throw new BuiltinError("json.patch: " + e.getMessage());
+    }
+  }
+
   @OpaBuiltin(
           name = "json.patch",
           description = "Patches object according to RFC 6902 JSON Patch standard.",
@@ -356,6 +619,10 @@ public class JsonBuiltins implements BuiltinProvider {
         throw new BuiltinError("json.patch: failed to serialize patches");
       }
       JsonNode patchesNode = JSON_MAPPER.readTree(patchesJson);
+
+      // Sets serialize as arrays, so remember where they were before the document becomes JSON.
+      Set<String> setPaths = new HashSet<>();
+      collectSetPaths(object, "", setPaths);
 
       // Normalize paths - ensure they start with "/" and convert array paths to strings
       // Also resolve array value lookups to indices
@@ -398,8 +665,15 @@ public class JsonBuiltins implements BuiltinProvider {
                 return RegoUndefined.INSTANCE;
               }
 
-              String normalizedPath = normalizeAndResolveJsonPointerPath(pathNode, objectNode);
-              normalizedOp.put("path", normalizedPath);
+              PathResolution resolvedPath = resolvePath(pathNode, objectNode, setPaths);
+              // Appending to a set means the segment is the member, so an "add" whose value
+              // differs from the segment is incoherent and undefined.
+              if (resolvedPath.appendedSetMember != null
+                      && "add".equals(op)
+                      && !resolvedPath.appendedSetMember.equals(normalizedOp.get("value"))) {
+                return RegoUndefined.INSTANCE;
+              }
+              normalizedOp.put("path", resolvedPath.path);
             }
 
             // Also normalize "from" field for move/copy operations
@@ -411,8 +685,7 @@ public class JsonBuiltins implements BuiltinProvider {
                 return RegoUndefined.INSTANCE;
               }
 
-              String normalizedFrom = normalizeAndResolveJsonPointerPath(fromNode, objectNode);
-              normalizedOp.put("from", normalizedFrom);
+              normalizedOp.put("from", resolvePath(fromNode, objectNode, setPaths).path);
             }
 
             normalizedPatches.add(normalizedOp);
@@ -446,7 +719,10 @@ public class JsonBuiltins implements BuiltinProvider {
         return RegoUndefined.INSTANCE;
       }
 
-      // Convert back to RegoValue
+      // Convert back to RegoValue, restoring any sets the document started with.
+      if (!setPaths.isEmpty()) {
+        return restoreSets(patched, "", setPaths, ctx.sortSets);
+      }
       Object result = JSON_MAPPER.treeToValue(patched, Object.class);
       return convertToRegoValue(result);
     } catch (BuiltinError e) {
@@ -593,6 +869,41 @@ public class JsonBuiltins implements BuiltinProvider {
     }
   }
 
+  /** JSON Schema's primitive type names, in the order Go lists them when rejecting a bad one. */
+  private static final List<String> VALID_SCHEMA_TYPES =
+          List.of("array", "boolean", "integer", "number", "null", "object", "string");
+
+  /**
+   * Walks a schema for `"type"` values that are not JSON Schema primitives. The validator accepts
+   * an unknown type and simply never matches, whereas Go rejects the schema outright, so the check
+   * has to happen before validation. Returns the Go-style complaint, or null when the schema is
+   * fine.
+   */
+  private static String findInvalidSchemaType(JsonNode node) {
+    if (node == null) {
+      return null;
+    }
+    if (node.isObject()) {
+      JsonNode type = node.get("type");
+      if (type != null && type.isTextual() && !VALID_SCHEMA_TYPES.contains(type.asText())) {
+        return "has a primitive type that is NOT VALID -- given: /"
+                + type.asText()
+                + "/ Expected valid values are:["
+                + String.join(" ", VALID_SCHEMA_TYPES)
+                + "]";
+      }
+    }
+    if (node.isObject() || node.isArray()) {
+      for (JsonNode child : node) {
+        String found = findInvalidSchemaType(child);
+        if (found != null) {
+          return found;
+        }
+      }
+    }
+    return null;
+  }
+
   @OpaBuiltin(
           name = "json.match_schema",
           description = "Verifies the input matches the provided JSON schema.",
@@ -632,6 +943,10 @@ public class JsonBuiltins implements BuiltinProvider {
       }
 
       // Validate
+      String invalidType = findInvalidSchemaType(schemaNode);
+      if (invalidType != null) {
+        throw new BuiltinError(invalidType);
+      }
       SchemaRegistry registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
       Schema schema = registry.getSchema(schemaNode);
       List<Error> errors = schema.validate(documentNode);
@@ -645,20 +960,56 @@ public class JsonBuiltins implements BuiltinProvider {
         result.addValue(RegoBoolean.FALSE);
         RegoArray errorArray = new RegoArray();
         for (Error error : errors) {
+          // Go surfaces gojsonschema's ResultError fields: type, field, desc and the combined
+          // "field: desc" as error.
+          String field = instanceLocationToField(error.getInstanceLocation());
+          String desc = goStyleDescription(error);
           RegoObject errorObj = new RegoObject();
-          errorObj.setProp(new RegoString("message"), new RegoString(error.getMessage()));
-          errorObj.setProp(
-                  new RegoString("path"), new RegoString(error.getEvaluationPath().toString()));
-          errorObj.setProp(new RegoString("type"), new RegoString(error.getKeyword()));
+          errorObj.setProp(new RegoString("desc"), new RegoString(desc));
+          errorObj.setProp(new RegoString("error"), new RegoString(field + ": " + desc));
+          errorObj.setProp(new RegoString("field"), new RegoString(field));
+          errorObj.setProp(new RegoString("type"), new RegoString(goStyleType(error.getKeyword())));
           errorArray.addValue(errorObj);
         }
         result.addValue(errorArray);
       }
 
       return result;
+    } catch (BuiltinError e) {
+      throw e;
     } catch (Exception e) {
       throw new BuiltinError("json.match_schema: " + e.getMessage());
     }
+  }
+
+  /** gojsonschema names the root "(root)" and drops the leading slash from a pointer. */
+  private static String instanceLocationToField(Object instanceLocation) {
+    String path = instanceLocation == null ? "" : instanceLocation.toString();
+    if (path.isEmpty() || "/".equals(path)) {
+      return "(root)";
+    }
+    return path.startsWith("/") ? path.substring(1).replace('/', '.') : path;
+  }
+
+  /** gojsonschema reports the keyword as e.g. "invalid_type" for a "type" mismatch. */
+  private static String goStyleType(String keyword) {
+    return "type".equals(keyword) ? "invalid_type" : keyword;
+  }
+
+  /**
+   * networknt phrases a type mismatch as "string found, integer expected"; gojsonschema, which
+   * Go's json.match_schema returns, uses "Invalid type. Expected: integer, given: string".
+   */
+  private static String goStyleDescription(Error error) {
+    String message = error.getMessage();
+    if ("type".equals(error.getKeyword())) {
+      java.util.regex.Matcher m =
+              java.util.regex.Pattern.compile("^(\\S+) found, (\\S+) expected$").matcher(message);
+      if (m.matches()) {
+        return "Invalid type. Expected: " + m.group(2) + ", given: " + m.group(1);
+      }
+    }
+    return message;
   }
 
   @OpaBuiltin(
@@ -687,6 +1038,13 @@ public class JsonBuiltins implements BuiltinProvider {
       }
 
       // Try to create a schema - if it succeeds, it's valid
+      String invalidType = findInvalidSchemaType(schemaNode);
+      if (invalidType != null) {
+        RegoArray invalid = new RegoArray();
+        invalid.addValue(RegoBoolean.FALSE);
+        invalid.addValue(new RegoString("jsonschema: " + invalidType));
+        return invalid;
+      }
       SchemaRegistry registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7);
       registry.getSchema(schemaNode);
 
@@ -760,9 +1118,22 @@ public class JsonBuiltins implements BuiltinProvider {
     try {
       Object parsed = YAML_MAPPER.readValue(yamlInput, Object.class);
       return convertToRegoValueFromYaml(parsed);
+    } catch (MarkedYAMLException e) {
+      // Go's yaml.v2 reports "yaml: line N: <problem>". Jackson's default message is a multi-line
+      // snippet with carets, so rebuild the terse form from the structured fields.
+      throw new BuiltinError("yaml: " + describeYamlError(e));
     } catch (IOException e) {
       throw new BuiltinError("yaml.unmarshal: " + e.getMessage());
     }
+  }
+
+  private static String describeYamlError(MarkedYAMLException e) {
+    String problem = e.getProblem() != null ? e.getProblem() : e.getMessage();
+    if (e.getProblemMark() == null) {
+      return problem;
+    }
+    // SnakeYAML lines are 0-based; Go reports them 1-based.
+    return "line " + (e.getProblemMark().getLine() + 1) + ": " + problem;
   }
 
   /**
