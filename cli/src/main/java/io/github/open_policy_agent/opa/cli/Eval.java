@@ -7,6 +7,7 @@ import io.github.open_policy_agent.opa.bundle.FileSystemBundleLoader;
 import io.github.open_policy_agent.opa.bundle.TarballBundleLoader;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
 import io.github.open_policy_agent.opa.ir.policy.StringConst;
+import io.github.open_policy_agent.opa.jackson.JacksonCapabilities;
 import io.github.open_policy_agent.opa.metrics.Metrics;
 import io.github.open_policy_agent.opa.metrics.NoOpMetrics;
 import io.github.open_policy_agent.opa.metrics.SimpleMetrics;
@@ -134,7 +135,9 @@ public class Eval implements Callable<Integer> {
 
     if (showCapabilities) {
       try {
-        System.out.println(new ObjectMapper().writeValueAsString(BuiltinRegistry.generateCapabilities()));
+        // JacksonCapabilities pretty-prints and drops nulls: this output is checked in as
+        // capabilities.json and diffed in CI, so it needs to stay stable and human-reviewable.
+        System.out.println(JacksonCapabilities.toJson(BuiltinRegistry.generateCapabilities()));
       } catch (IOException e) {
         System.err.println(e.getMessage());
         return 1;

@@ -181,6 +181,32 @@ jobs:
           done
           exit $failed
 
+  capabilities-check:
+    name: Verify capabilities.json is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+      - name: Regenerate capabilities.json
+        run: ./gradlew :cli:generateCapabilities
+      # capabilities.json is a published artifact: it is attached to each GitHub release and
+      # consumed downstream (OPA's builtin docs report which implementations support each
+      # builtin). Adding or changing a builtin must update it in the same PR.
+      - name: Fail if capabilities.json is stale
+        run: |
+          if ! git diff --exit-code -- capabilities.json; then
+            echo "::error::capabilities.json is out of date with the registered builtins."
+            echo "Run ./gradlew :cli:generateCapabilities locally and commit the result."
+            exit 1
+          fi
+          echo "capabilities.json is up to date."
+
   build:
     name: Build All Modules
     runs-on: ubuntu-latest

@@ -23,6 +23,25 @@ When contributing, please consider the following pointers:
   Behavior the upstream fixtures do not cover still needs its own test — and
   consider contributing the missing case to OPA, so every implementation is held
   to it.
+- **Capabilities:** `capabilities.json` at the repository root lists the builtins
+  this SDK implements. It is generated, not hand-edited — run
+  `./gradlew :cli:generateCapabilities` and commit the result whenever you add,
+  remove, or change a builtin's signature. CI fails if it drifts. The file is
+  attached to every GitHub release and consumed downstream (OPA's builtin
+  documentation reports which implementations support each builtin), so treat it
+  as a published artifact.
+
+  `capabilities/<version>.json` keeps one snapshot per release, so downstream
+  tooling can report the release a builtin became available in. Preparing a
+  release means bumping `version` in `gradle.properties` and then running
+  `./gradlew :cli:snapshotCapabilities`. Published snapshots are immutable —
+  they describe what that release exposed, not what the current tree does — and
+  the task refuses to overwrite one.
+
+  Note that a builtin only appears once it is registered: a `BuiltinProvider`
+  commented out in a module's `META-INF/services` file is invisible to
+  `ServiceLoader`, so implementing a builtin without enabling its provider
+  leaves it out of the capabilities entirely.
 - **Public APIs:** This SDK is meant to be embedded, so keep the public surface
   minimal. Prefer package-private types and methods; only make something `public`
   when consumers genuinely need it. A published API is a long-term commitment.
@@ -42,6 +61,8 @@ included wrapper:
 ./gradlew test                  # run all tests
 ./gradlew :opa-services:test    # test a single module
 ./gradlew checkstyleMain pmdMain  # static analysis only
+./gradlew :cli:generateCapabilities  # regenerate capabilities.json
+./gradlew :cli:snapshotCapabilities  # snapshot capabilities/<version>.json (release prep)
 ```
 
 Checkstyle (`config/checkstyle/checkstyle.xml`) and PMD (`config/pmd/ruleset.xml`)

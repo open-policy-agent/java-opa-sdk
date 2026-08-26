@@ -23,6 +23,20 @@ public class CapabilitiesGeneratorTest {
   }
 
   @Test
+  public void testBuiltinsAreSortedByName() {
+    // capabilities.json is checked in and diffed by CI, so generation must be reproducible.
+    List<String> names =
+        BuiltinRegistry.generateCapabilities().builtins.stream()
+            .map(d -> d.name)
+            .collect(Collectors.toList());
+
+    assertEquals(
+        names.stream().sorted().collect(Collectors.toList()),
+        names,
+        "Generated builtins must be sorted by name so capabilities.json is reproducible");
+  }
+
+  @Test
   public void testAnnotatedBuiltinsHaveCompleteMetadata() {
     Capabilities capabilities = BuiltinRegistry.generateCapabilities();
 

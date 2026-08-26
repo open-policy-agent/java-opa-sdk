@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
@@ -25,8 +26,10 @@ public class CapabilitiesGenerator {
     // Build a map of builtin names to their annotations
     Map<String, OpaBuiltin> annotationMap = scanBuiltinAnnotations();
 
-    // For each builtin in the map, try to find its annotation
-    for (String builtinName : builtinMap.keySet()) {
+    // For each builtin in the map, try to find its annotation. Iterate in sorted order so the
+    // generated capabilities are byte-for-byte reproducible: capabilities.json is checked in and
+    // diffed in CI, and builtinMap has no defined iteration order.
+    for (String builtinName : new TreeSet<>(builtinMap.keySet())) {
       OpaBuiltin annotation = annotationMap.get(builtinName);
       if (annotation != null) {
         Descriptor desc = createDescriptorFromAnnotation(annotation);

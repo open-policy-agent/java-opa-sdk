@@ -62,7 +62,11 @@ jobs:
           persist-credentials: false
       - name: Set TAG_NAME
         run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      # capabilities.json is attached to every release so downstream consumers have an immutable,
+      # per-version record of the builtins this SDK implements. OPA's builtin documentation uses
+      # it to report which implementations support each builtin. The file is checked in and
+      # verified against the registered builtins by the capabilities-check job on every PR.
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${TAG_NAME}" --generate-notes
+        run: gh release create "${TAG_NAME}" --generate-notes capabilities.json

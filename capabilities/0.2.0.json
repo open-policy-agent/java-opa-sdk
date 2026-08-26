@@ -1,0 +1,2091 @@
+{
+  "builtins" : [ {
+    "name" : "abs",
+    "description" : "Returns the number without its sign",
+    "categories" : [ "numbers" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the number to take the absolute value of"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "y",
+        "description" : "the absolute value of `x`"
+      }
+    }
+  }, {
+    "name" : "and",
+    "description" : "Returns the intersection of two sets.",
+    "categories" : [ "sets" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "set",
+        "name" : "x",
+        "description" : "the first set",
+        "dynamic" : {
+          "type" : "any"
+        }
+      }, {
+        "type" : "set",
+        "name" : "y",
+        "description" : "the second set",
+        "dynamic" : {
+          "type" : "any"
+        }
+      } ],
+      "result" : {
+        "type" : "set",
+        "name" : "z",
+        "description" : "the intersection of `x` and `y`",
+        "dynamic" : {
+          "type" : "any"
+        }
+      }
+    }
+  }, {
+    "name" : "array.concat"
+  }, {
+    "name" : "array.reverse"
+  }, {
+    "name" : "array.slice"
+  }, {
+    "name" : "base64.decode",
+    "description" : "Deserializes the base64 encoded input string.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string to decode"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "base64 deserialization of `x`"
+      }
+    }
+  }, {
+    "name" : "base64.encode",
+    "description" : "Serializes the input string into base64 encoding.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string to encode"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "base64 serialization of `x`"
+      }
+    }
+  }, {
+    "name" : "base64.is_valid",
+    "description" : "Returns true if the input string is a valid base64 encoded string.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string to check"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is valid base64 encoded value, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "base64url.decode",
+    "description" : "Deserializes the base64url encoded input string.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string to decode"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "base64url deserialization of `x`"
+      }
+    }
+  }, {
+    "name" : "base64url.encode",
+    "description" : "Serializes the input string into base64url encoding.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string to encode"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "base64url serialization of `x`"
+      }
+    }
+  }, {
+    "name" : "base64url.encode_no_pad",
+    "description" : "Serializes the input string into base64url encoding without padding.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string to encode"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "base64url serialization of `x`"
+      }
+    }
+  }, {
+    "name" : "ceil",
+    "description" : "Rounds a number up to the nearest integer",
+    "categories" : [ "numbers" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the number to round"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "y",
+        "description" : "the result of rounding `x` _up_"
+      }
+    }
+  }, {
+    "name" : "concat",
+    "description" : "Concatenates the elements of an array into a string using a delimiter",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "delimiter",
+        "description" : "string to use as a delimiter"
+      }, {
+        "type" : "any",
+        "name" : "collection",
+        "description" : "strings to join"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "the joined string"
+      }
+    }
+  }, {
+    "name" : "contains",
+    "description" : "Returns true if the search string is included in the base string",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "haystack",
+        "description" : "string to search in"
+      }, {
+        "type" : "string",
+        "name" : "needle",
+        "description" : "substring to look for"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "result of the containment check"
+      }
+    }
+  }, {
+    "name" : "count",
+    "description" : "Returns the length of a collection, object, or string",
+    "categories" : [ "aggregates" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "collection",
+        "description" : "collection to count elements of",
+        "of" : [ {
+          "type" : "array[any]"
+        }, {
+          "type" : "set[any]"
+        }, {
+          "type" : "object"
+        }, {
+          "type" : "string"
+        } ]
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "n",
+        "description" : "the count of elements, key/val pairs, or characters, respectively."
+      }
+    }
+  }, {
+    "name" : "div",
+    "description" : "Divides the first number by the second number",
+    "categories" : [ "numbers" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the dividend"
+      }, {
+        "type" : "number",
+        "name" : "y",
+        "description" : "the divisor"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the result of `x` divided by `y`"
+      }
+    },
+    "infix" : "/"
+  }, {
+    "name" : "endswith",
+    "description" : "Returns true if the search string ends with the base string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "search",
+        "description" : "search string"
+      }, {
+        "type" : "string",
+        "name" : "base",
+        "description" : "base string"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "result of the suffix check"
+      }
+    }
+  }, {
+    "name" : "equal",
+    "categories" : [ "comparison" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x"
+      }, {
+        "type" : "any",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "true if `x` is equal to `y`; false otherwise"
+      }
+    },
+    "infix" : "=="
+  }, {
+    "name" : "floor",
+    "description" : "Rounds the number down to the nearest integer",
+    "categories" : [ "numbers" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the number to round"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "y",
+        "description" : "the result of rounding `x` _down_"
+      }
+    }
+  }, {
+    "name" : "format_int",
+    "description" : "Returns the string representation of the number in the given base after rounding it down to an integer value.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "number",
+        "description" : "number to format"
+      }, {
+        "type" : "number",
+        "name" : "base",
+        "description" : "base of number representation to use"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "formatted number"
+      }
+    }
+  }, {
+    "name" : "gt",
+    "categories" : [ "comparison" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x"
+      }, {
+        "type" : "any",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "true if `x` is greater than `y`; false otherwise"
+      }
+    },
+    "infix" : ">"
+  }, {
+    "name" : "gte",
+    "categories" : [ "comparison" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x"
+      }, {
+        "type" : "any",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "true if `x` is greater or equal to `y`; false otherwise"
+      }
+    },
+    "infix" : ">="
+  }, {
+    "name" : "hex.decode",
+    "description" : "Deserializes the hex-encoded input string.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "a hex-encoded string"
+      } ],
+      "result" : {
+        "type" : "any",
+        "name" : "y",
+        "description" : "deserialized from `x`"
+      }
+    }
+  }, {
+    "name" : "hex.encode",
+    "description" : "Serializes the input string using hex-encoding.",
+    "categories" : [ "encoding" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "string to encode"
+      } ],
+      "result" : {
+        "type" : "any",
+        "name" : "y",
+        "description" : "serialization of `x` using hex-encoding"
+      }
+    }
+  }, {
+    "name" : "indexof",
+    "description" : "Returns the index of a substring contained inside a string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "haystack",
+        "description" : "string to search in"
+      }, {
+        "type" : "string",
+        "name" : "needle",
+        "description" : "substring to look for"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "output",
+        "description" : "index of first occurrence, `-1` if not found"
+      }
+    }
+  }, {
+    "name" : "indexof_n",
+    "description" : "Returns a list of all the indexes of a substring contained inside a string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "haystack",
+        "description" : "string to search in"
+      }, {
+        "type" : "string",
+        "name" : "needle",
+        "description" : "substring to look for"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "output",
+        "description" : "all indices at which `needle` occurs in `haystack`, may be empty",
+        "dynamic" : {
+          "type" : "number"
+        }
+      }
+    }
+  }, {
+    "name" : "internal.member_2"
+  }, {
+    "name" : "internal.print",
+    "description" : "Print the operands. Used internally by the compiler when it rewrites print() calls.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "array",
+        "name" : "operands",
+        "description" : "Array of set operands from compiler rewrite",
+        "dynamic" : {
+          "type" : "any"
+        }
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "description" : "Always true"
+      }
+    }
+  }, {
+    "name" : "intersection",
+    "description" : "Returns the intersection of a set of sets.",
+    "categories" : [ "sets" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "set",
+        "name" : "xs",
+        "description" : "set of sets to intersect",
+        "dynamic" : {
+          "type" : "set"
+        }
+      } ],
+      "result" : {
+        "type" : "set",
+        "name" : "y",
+        "description" : "the intersection of all `xs` sets",
+        "dynamic" : {
+          "type" : "any"
+        }
+      }
+    }
+  }, {
+    "name" : "io.jwt.decode",
+    "description" : "Decodes a JSON Web Token and outputs it as an object.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token to decode"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "output",
+        "description" : "`[header, payload, sig]`, where `header` and `payload` are objects; `sig` is the hexadecimal representation of the signature on the token."
+      }
+    }
+  }, {
+    "name" : "io.jwt.decode_verify",
+    "description" : "Verifies a JWT signature under parameterized constraints and decodes the claims if it is valid.\nSupports the following algorithms: HS256, HS384, HS512, RS256, RS384, RS512, ES256, ES384, ES512, PS256, PS384, PS512, and EdDSA.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified and whose claims are to be checked"
+      }, {
+        "type" : "object",
+        "name" : "constraints",
+        "description" : "claim verification constraints"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "output",
+        "description" : "`[valid, header, payload]`:  if the input token is verified and meets the requirements of `constraints` then `valid` is `true`; `header` and `payload` are objects containing the JOSE header and the JWT claim set; otherwise, `valid` is `false`, `header` and `payload` are `{}`"
+      }
+    },
+    "nondeterministic" : true
+  }, {
+    "name" : "io.jwt.encode_sign",
+    "description" : "Encodes and optionally signs a JSON Web Token. Inputs are taken as objects, not encoded strings (see `io.jwt.encode_sign_raw`).",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object",
+        "name" : "headers",
+        "description" : "JWS Protected Header"
+      }, {
+        "type" : "object",
+        "name" : "payload",
+        "description" : "JWS Payload"
+      }, {
+        "type" : "object",
+        "name" : "key",
+        "description" : "JSON Web Key (RFC7517)"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "signed JWT"
+      }
+    },
+    "nondeterministic" : true
+  }, {
+    "name" : "io.jwt.encode_sign_raw",
+    "description" : "Encodes and optionally signs a JSON Web Token.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "headers",
+        "description" : "JWS Protected Header"
+      }, {
+        "type" : "string",
+        "name" : "payload",
+        "description" : "JWS Payload"
+      }, {
+        "type" : "string",
+        "name" : "key",
+        "description" : "JSON Web Key (RFC7517)"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "signed JWT"
+      }
+    },
+    "nondeterministic" : true
+  }, {
+    "name" : "io.jwt.verify_es256",
+    "description" : "Verifies if a ES256 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_es384",
+    "description" : "Verifies if a ES384 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_es512",
+    "description" : "Verifies if a ES512 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_hs256",
+    "description" : "Verifies if a HS256 (HMAC-SHA256) JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "secret",
+        "description" : "plain text secret used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_hs384",
+    "description" : "Verifies if a HS384 (HMAC-SHA384) JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "secret",
+        "description" : "plain text secret used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_hs512",
+    "description" : "Verifies if a HS512 (HMAC-SHA512) JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "secret",
+        "description" : "plain text secret used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_ps256",
+    "description" : "Verifies if a PS256 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_ps384",
+    "description" : "Verifies if a PS384 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_ps512",
+    "description" : "Verifies if a PS512 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_rs256",
+    "description" : "Verifies if a RS256 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_rs384",
+    "description" : "Verifies if a RS384 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "io.jwt.verify_rs512",
+    "description" : "Verifies if a RS512 JWT signature is valid.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "jwt",
+        "description" : "JWT token whose signature is to be verified"
+      }, {
+        "type" : "string",
+        "name" : "certificate",
+        "description" : "PEM encoded certificate, PEM encoded public key, or the JWK key (set) used to verify the signature"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if the signature is valid, `false` otherwise"
+      }
+    }
+  }, {
+    "name" : "is_array",
+    "description" : "Returns `true` if the input value is an array.",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is an array, `false` otherwise."
+      }
+    }
+  }, {
+    "name" : "is_boolean",
+    "description" : "Returns `true` if the input value is a boolean.",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is an boolean, `false` otherwise."
+      }
+    }
+  }, {
+    "name" : "is_null",
+    "description" : "Returns `true` if the input value is null.",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is null, `false` otherwise."
+      }
+    }
+  }, {
+    "name" : "is_number",
+    "description" : "Returns `true` if the input value is a number.",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is a number, `false` otherwise."
+      }
+    }
+  }, {
+    "name" : "is_object",
+    "description" : "Returns true if the input value is an object",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is an object, `false` otherwise."
+      }
+    }
+  }, {
+    "name" : "is_set",
+    "description" : "Returns `true` if the input value is a set.",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is a set, `false` otherwise."
+      }
+    }
+  }, {
+    "name" : "is_string",
+    "description" : "Returns `true` if the input value is a string.",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "`true` if `x` is a string, `false` otherwise."
+      }
+    }
+  }, {
+    "name" : "lower",
+    "description" : "Returns the input string but with all characters in lower-case.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string that is converted to lower-case"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "lower-case of x"
+      }
+    }
+  }, {
+    "name" : "lt",
+    "categories" : [ "comparison" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x"
+      }, {
+        "type" : "any",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "true if `x` is less than `y`; false otherwise"
+      }
+    },
+    "infix" : "<"
+  }, {
+    "name" : "lte",
+    "categories" : [ "comparison" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x"
+      }, {
+        "type" : "any",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "true if `x` is less or equal to `y`; false otherwise"
+      }
+    },
+    "infix" : "<="
+  }, {
+    "name" : "max",
+    "description" : "Returns the maximum value in a collection",
+    "categories" : [ "aggregates" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "collection",
+        "description" : "the set or array to be searched",
+        "of" : [ {
+          "type" : "array[any]"
+        }, {
+          "type" : "set[any]"
+        } ]
+      } ],
+      "result" : {
+        "type" : "any",
+        "description" : "the maximum of all elements"
+      }
+    }
+  }, {
+    "name" : "min",
+    "description" : "Returns the minimum value in a collection",
+    "categories" : [ "aggregates" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "collection",
+        "description" : "the set or array to be searched",
+        "of" : [ {
+          "type" : "array[any]"
+        }, {
+          "type" : "set[any]"
+        } ]
+      } ],
+      "result" : {
+        "type" : "any",
+        "description" : "the minimum of all elements"
+      }
+    }
+  }, {
+    "name" : "minus",
+    "description" : "Subtracts two numbers or computes set difference",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "number to subtract from (or set for set difference)"
+      }, {
+        "type" : "number",
+        "name" : "y",
+        "description" : "number to subtract (or set for set difference)"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the result of `x` minus `y`"
+      }
+    },
+    "infix" : "-"
+  }, {
+    "name" : "mul",
+    "description" : "Multiplies two numbers",
+    "categories" : [ "numbers" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x"
+      }, {
+        "type" : "number",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the result of `x` multiplied by `y`"
+      }
+    },
+    "infix" : "*"
+  }, {
+    "name" : "neq",
+    "categories" : [ "comparison" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x"
+      }, {
+        "type" : "any",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "description" : "true if x is not equal to y; false otherwise"
+      }
+    },
+    "infix" : "!="
+  }, {
+    "name" : "numbers.range",
+    "description" : "Returns an array of numbers from a to b, inclusive",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "a",
+        "description" : "start of range"
+      }, {
+        "type" : "number",
+        "name" : "b",
+        "description" : "end of range"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "range",
+        "description" : "the sequence of integers from `x` to `y` inclusive"
+      }
+    }
+  }, {
+    "name" : "numbers.range_step",
+    "description" : "Returns an array of numbers from a to b, inclusive, with step",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "a",
+        "description" : "start of range"
+      }, {
+        "type" : "number",
+        "name" : "b",
+        "description" : "end of range"
+      }, {
+        "type" : "number",
+        "name" : "step",
+        "description" : "step size of range"
+      } ],
+      "result" : {
+        "type" : "array",
+        "description" : "array of numbers from a to b, inclusive, with step"
+      }
+    }
+  }, {
+    "name" : "object.filter",
+    "description" : "Returns a new object containing only the key/value pairs for which the key is present in the supplied set. If the supplied `keys` is an `array`, then `object.filter` will search through a nested object or array using each key in turn. For example: `object.filter({\"a\": [{ \"b\": true }]}, [\"a\", 0, \"b\"])` results in `{\"a\": [{ \"b\": true }]}`.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object",
+        "name" : "object",
+        "description" : "object to filter keys from",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      }, {
+        "type" : "set|array",
+        "name" : "keys",
+        "description" : "set of keys to filter from `object`",
+        "dynamic" : {
+          "type" : "any"
+        }
+      } ],
+      "result" : {
+        "type" : "object",
+        "name" : "filtered",
+        "description" : "new object containing only the key/value pairs for which the key is present in `keys`",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      }
+    }
+  }, {
+    "name" : "object.get",
+    "description" : "Returns value of an object's key if present, otherwise a default. If the supplied `key` is an `array`, then `object.get` will search through a nested object or array using each key in turn. For example: `object.get({\"a\": [{ \"b\": true }]}, [\"a\", 0, \"b\"], false)` results in `true`.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object",
+        "name" : "object",
+        "description" : "object to get `key` from",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      }, {
+        "type" : "any",
+        "name" : "key",
+        "description" : "key to lookup in `object`"
+      }, {
+        "type" : "any",
+        "name" : "default",
+        "description" : "default to use when lookup fails"
+      } ],
+      "result" : {
+        "type" : "any",
+        "name" : "value",
+        "description" : "`object[key]` if present, otherwise `default`"
+      }
+    }
+  }, {
+    "name" : "object.keys",
+    "description" : "Returns a set of keys in the supplied object.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object",
+        "name" : "object",
+        "description" : "object to get keys from",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      } ],
+      "result" : {
+        "type" : "set",
+        "description" : "set of keys in `object`",
+        "dynamic" : {
+          "type" : "any"
+        }
+      }
+    }
+  }, {
+    "name" : "object.remove",
+    "description" : "Returns a new object containing all key/value pairs except for those for which the key is present in the supplied set. If the supplied `keys` is an `array`, then `object.remove` will search through a nested object or array using each key in turn. For example: `object.remove({\"a\": [{ \"b\": true }]}, [\"a\", 0, \"b\"])` results in `{\"a\": []}`.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object",
+        "name" : "object",
+        "description" : "object to remove keys from",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      }, {
+        "type" : "set|array",
+        "name" : "keys",
+        "description" : "set of keys to remove from `object`",
+        "dynamic" : {
+          "type" : "any"
+        }
+      } ],
+      "result" : {
+        "type" : "object",
+        "name" : "output",
+        "description" : "new object containing all key/value pairs except for those for which the key is present in `keys`",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      }
+    }
+  }, {
+    "name" : "object.subset",
+    "description" : "Determines if an object `sub` is a subset of another object `super`.Object `sub` is a subset of object `super` if and only if every key in `sub` is also in `super`, **and** for all keys which `sub` and `super` share, they have the same value. This function works with objects, sets, arrays and a set of array and set.If both arguments are objects, then the operation is recursive, e.g. `{\"c\": {\"x\": {10, 15, 20}}` is a subset of `{\"a\": \"b\", \"c\": {\"x\": {10, 15, 20, 25}, \"y\": \"z\"}}`. If both arguments are sets, then this function checks if every element of `sub` is a member of `super`, but does not attempt to recurse. If both arguments are arrays, then this function checks if `sub` appears contiguously in order within `super`, and also does not attempt to recurse. If `super` is array and `sub` is set, then this function checks if `super` contains every element of `sub` with no consideration of ordering, and also does not attempt to recurse.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object|set|array",
+        "name" : "super",
+        "description" : "object to check `sub` against",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      }, {
+        "type" : "object|set|array",
+        "name" : "sub",
+        "description" : "object to check `super` against",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "description" : "`true` if `sub` is a subset of `super`, otherwise `false`",
+        "dynamic" : {
+          "type" : "boolean"
+        }
+      }
+    }
+  }, {
+    "name" : "object.union"
+  }, {
+    "name" : "object.union_n",
+    "description" : "Returns a new object containing all key/value pairs from the supplied objects. If the supplied `objects` is an `array`, then `object.union_n` will search through a nested object or array using each key in turn. For example: `object.union_n([{\"a\": 1}, {\"b\": 2}, {\"c\": 3}])` results in `{\"a\": 1, \"b\": 2, \"c\": 3}`.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "array",
+        "name" : "objects",
+        "description" : "array of objects to merge",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      } ],
+      "result" : {
+        "type" : "set",
+        "name" : "output",
+        "description" : "set of keys in `object`",
+        "dynamic" : {
+          "type" : "any"
+        }
+      }
+    }
+  }, {
+    "name" : "or",
+    "description" : "Returns the union of two sets.",
+    "categories" : [ "sets" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "set",
+        "name" : "x",
+        "description" : "the first set",
+        "dynamic" : {
+          "type" : "any"
+        }
+      }, {
+        "type" : "set",
+        "name" : "y",
+        "description" : "the second set",
+        "dynamic" : {
+          "type" : "any"
+        }
+      } ],
+      "result" : {
+        "type" : "set",
+        "description" : "the union of `x` and `y`",
+        "dynamic" : {
+          "type" : "any"
+        }
+      }
+    }
+  }, {
+    "name" : "plus",
+    "description" : "Adds two numbers",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "first number"
+      }, {
+        "type" : "number",
+        "name" : "y",
+        "description" : "second number"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the result of `x` plus `y`"
+      }
+    },
+    "infix" : "+"
+  }, {
+    "name" : "product",
+    "description" : "Multiplies elements of an array or set of numbers",
+    "categories" : [ "aggregates" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "collection",
+        "description" : "the set or array of numbers to multiply",
+        "of" : [ {
+          "type" : "array[number]"
+        }, {
+          "type" : "set[number]"
+        } ]
+      } ],
+      "result" : {
+        "type" : "number",
+        "description" : "the product of all elements"
+      }
+    }
+  }, {
+    "name" : "rand.intn",
+    "description" : "Returns a random integer in the range `[0, abs(n))`",
+    "categories" : [ "random" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "str",
+        "description" : "seed string for deterministic random number generation"
+      }, {
+        "type" : "number",
+        "name" : "n",
+        "description" : "upper bound (exclusive)"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "y",
+        "description" : "random integer in the range `[0, abs(n))`"
+      }
+    }
+  }, {
+    "name" : "rem",
+    "description" : "Returns the remainder for of x divided by y, for y != 0",
+    "categories" : [ "numbers" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x"
+      }, {
+        "type" : "number",
+        "name" : "y"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the remainder of `x` divided by `y`"
+      }
+    },
+    "infix" : "%"
+  }, {
+    "name" : "replace",
+    "description" : "Replace replaces all instances of a sub-string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string being processed"
+      }, {
+        "type" : "string",
+        "name" : "old",
+        "description" : "substring to replace"
+      }, {
+        "type" : "string",
+        "name" : "new",
+        "description" : "string to replace `old` with"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "string with replaced substrings"
+      }
+    }
+  }, {
+    "name" : "round",
+    "description" : "Rounds the number to the nearest integer",
+    "categories" : [ "numbers" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the number to round"
+      } ],
+      "result" : {
+        "type" : "number",
+        "description" : "the result of rounding x"
+      }
+    }
+  }, {
+    "name" : "sort",
+    "description" : "Returns a sorted array",
+    "categories" : [ "aggregates" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "collection",
+        "description" : "the array or set to be sorted",
+        "of" : [ {
+          "type" : "array[any]"
+        }, {
+          "type" : "set[any]"
+        } ]
+      } ],
+      "result" : {
+        "type" : "array",
+        "description" : "the sorted array"
+      }
+    }
+  }, {
+    "name" : "split",
+    "description" : "Split returns an array containing elements of the input string split on a delimiter.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string that is split"
+      }, {
+        "type" : "string",
+        "name" : "delimiter",
+        "description" : "delimiter used for splitting"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "ys",
+        "description" : "split parts",
+        "dynamic" : {
+          "type" : "string"
+        }
+      }
+    }
+  }, {
+    "name" : "sprintf",
+    "description" : "Returns a formatted string using Go fmt.Sprintf-style format specifiers",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "format",
+        "description" : "string with formatting verbs"
+      }, {
+        "type" : "array",
+        "name" : "values",
+        "description" : "arguments to format into formatting verbs",
+        "dynamic" : {
+          "type" : "any"
+        }
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "`format` formatted by the values in `values`"
+      }
+    }
+  }, {
+    "name" : "startswith",
+    "description" : "Returns true if the search string begins with the base string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "search",
+        "description" : "search string"
+      }, {
+        "type" : "string",
+        "name" : "base",
+        "description" : "base string"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "result of the prefix check"
+      }
+    }
+  }, {
+    "name" : "strings.any_prefix_match",
+    "description" : "Returns true if any of the search strings begins with any of the base strings.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "search",
+        "description" : "search string(s)"
+      }, {
+        "type" : "any",
+        "name" : "base",
+        "description" : "base string(s)"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "result of the prefix check"
+      }
+    }
+  }, {
+    "name" : "strings.any_suffix_match",
+    "description" : "Returns true if any of the search strings ends with any of the base strings.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "search",
+        "description" : "search string(s)"
+      }, {
+        "type" : "any",
+        "name" : "base",
+        "description" : "base string(s)"
+      } ],
+      "result" : {
+        "type" : "boolean",
+        "name" : "result",
+        "description" : "result of the suffix check"
+      }
+    }
+  }, {
+    "name" : "strings.count",
+    "description" : "Returns the number of non-overlapping instances of a substring in a string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "search",
+        "description" : "string to search in"
+      }, {
+        "type" : "string",
+        "name" : "substring",
+        "description" : "substring to look for"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "output",
+        "description" : "count of occurrences, `0` if not found"
+      }
+    }
+  }, {
+    "name" : "strings.replace_n",
+    "description" : "Replace all occurrences of a pattern with a replacement",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object",
+        "name" : "patterns",
+        "description" : "replacement pairs"
+      }, {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to replace substring matches in"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "string with replaced substrings"
+      }
+    }
+  }, {
+    "name" : "strings.reverse",
+    "description" : "Reverses a given string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string to reverse"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "reversed string"
+      }
+    }
+  }, {
+    "name" : "substring",
+    "description" : "Returns the  portion of a string for a given `offset` and a `length`.  If `length < 0`, `output` is the remainder of the string.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to extract substring from"
+      }, {
+        "type" : "number",
+        "name" : "offset",
+        "description" : "offset, must be positive"
+      }, {
+        "type" : "number",
+        "name" : "length",
+        "description" : "length of the substring starting from `offset`"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "substring of `value` from `offset`, of length `length`"
+      }
+    }
+  }, {
+    "name" : "sum",
+    "description" : "Sums elements of an array or set of numbers",
+    "categories" : [ "aggregates" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "collection",
+        "description" : "the set or array of numbers to sum",
+        "of" : [ {
+          "type" : "array[number]"
+        }, {
+          "type" : "set[number]"
+        } ]
+      } ],
+      "result" : {
+        "type" : "number",
+        "description" : "the sum of all elements"
+      }
+    }
+  }, {
+    "name" : "time.add_date",
+    "description" : "Returns the nanoseconds since epoch after adding years, months and days to nanoseconds. Month & day values outside their usual ranges after the operation and will be normalized - for example, October 32 would become November 1. `undefined` if the result would be outside the valid time range that can fit within an `int64`.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "ns",
+        "description" : "nanoseconds since the epoch"
+      }, {
+        "type" : "number",
+        "name" : "years",
+        "description" : "number of years to add"
+      }, {
+        "type" : "number",
+        "name" : "months",
+        "description" : "number of months to add"
+      }, {
+        "type" : "number",
+        "name" : "days",
+        "description" : "number of days to add"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "output",
+        "description" : "nanoseconds since the epoch representing the input time, with years, months and days added"
+      }
+    }
+  }, {
+    "name" : "time.clock",
+    "description" : "Returns the `[hour, minute, second]` of the day for the nanoseconds since epoch.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "a number representing the nanoseconds since the epoch (UTC); or a two-element array of the nanoseconds, and a timezone string"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "output",
+        "description" : "the `hour`, `minute` (0-59), and `second` (0-59) representing the time of day for the nanoseconds since epoch in the supplied timezone (or UTC)"
+      }
+    }
+  }, {
+    "name" : "time.date",
+    "description" : "Returns the `[year, month, day]` for the nanoseconds since epoch.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "a number representing the nanoseconds since the epoch (UTC); or a two-element array of the nanoseconds, and a timezone string"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "date",
+        "description" : "an array of `year`, `month` (1-12), and `day` (1-31)"
+      }
+    }
+  }, {
+    "name" : "time.diff",
+    "description" : "Returns the difference between two unix timestamps in nanoseconds (with optional timezone strings).",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "ns1",
+        "description" : "nanoseconds since the epoch; or a two-element array of the nanoseconds, and a timezone string"
+      }, {
+        "type" : "any",
+        "name" : "ns2",
+        "description" : "nanoseconds since the epoch; or a two-element array of the nanoseconds, and a timezone string"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "output",
+        "description" : "difference between `ns1` and `ns2` (in their supplied timezones, if supplied, or UTC) as array of numbers: `[years, months, days, hours, minutes, seconds]`"
+      }
+    }
+  }, {
+    "name" : "time.format",
+    "description" : "Returns the formatted timestamp for the nanoseconds since epoch.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "a number representing the nanoseconds since the epoch (UTC); or a two-element array of the nanoseconds, and a timezone string; or a three-element array of ns, timezone string and a layout string or golang defined formatting constant (see golang supported time formats)"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "formatted timestamp",
+        "description" : "the formatted timestamp represented for the nanoseconds since the epoch in the supplied timezone (or UTC)"
+      }
+    }
+  }, {
+    "name" : "time.now_ns",
+    "description" : "Returns the current time since epoch in nanoseconds.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ ],
+      "result" : {
+        "type" : "number",
+        "name" : "now",
+        "description" : "nanoseconds since epoch"
+      }
+    },
+    "nondeterministic" : true
+  }, {
+    "name" : "time.parse_duration_ns",
+    "description" : "Returns the duration in nanoseconds represented by a string.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "duration",
+        "description" : "a duration like \"3m\"; see the [Go `time` package documentation](https://golang.org/pkg/time/#ParseDuration) for more details"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "ns",
+        "description" : "the `duration` in nanoseconds"
+      }
+    }
+  }, {
+    "name" : "time.parse_ns",
+    "description" : "Returns the time in nanoseconds parsed from the string in the given format. `undefined` if the result would be outside the valid time range that can fit within an `int64`.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "layout",
+        "description" : "format used for parsing, see the [Go `time` package documentation](https://golang.org/pkg/time/#Parse) for more details"
+      }, {
+        "type" : "string",
+        "name" : "value",
+        "description" : "input to parse according to `layout`"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "ns",
+        "description" : "`value` in nanoseconds since epoch"
+      }
+    }
+  }, {
+    "name" : "time.parse_rfc3339_ns",
+    "description" : "Returns the time in nanoseconds parsed from the string in RFC3339 format. `undefined` if the result would be outside the valid time range that can fit within an `int64`.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "input string to parse in RFC3339 format"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "ns",
+        "description" : "`value` in nanoseconds since epoch"
+      }
+    }
+  }, {
+    "name" : "time.weekday",
+    "description" : "Returns the day of the week (Monday, Tuesday, ...) for the nanoseconds since epoch.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "a number representing the nanoseconds since the epoch (UTC); or a two-element array of the nanoseconds, and a timezone string"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "day",
+        "description" : "the weekday represented by `ns` nanoseconds since the epoch in the supplied timezone (or UTC)"
+      }
+    }
+  }, {
+    "name" : "to_number",
+    "description" : "Converts a string, bool, or number value to a number: Strings are converted to numbers using `strconv.Atoi`, Boolean `false` is converted to 0 and `true` is converted to 1.",
+    "categories" : [ "conversions" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "value to convert"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "num",
+        "description" : "the numeric representation of `x`"
+      }
+    }
+  }, {
+    "name" : "trim",
+    "description" : "Returns `value` with all leading or trailing instances of the `cutset` characters removed.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to trim"
+      }, {
+        "type" : "string",
+        "name" : "cutset",
+        "description" : "string of characters that are cut off"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "string trimmed of `cutset` characters"
+      }
+    }
+  }, {
+    "name" : "trim_left",
+    "description" : "Returns `value` with all leading instances of the `cutset` characters removed.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to trim"
+      }, {
+        "type" : "string",
+        "name" : "cutset",
+        "description" : "string of characters that are cut off on the left"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "string left-trimmed of `cutset` characters"
+      }
+    }
+  }, {
+    "name" : "trim_prefix",
+    "description" : "Returns `value` with all leading occurrences of `prefix` removed.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to trim"
+      }, {
+        "type" : "string",
+        "name" : "prefix",
+        "description" : "prefix to cut off"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "string with `prefix` cut off"
+      }
+    }
+  }, {
+    "name" : "trim_right",
+    "description" : "Returns `value` with all trailing instances of the `cutset` characters removed.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to trim"
+      }, {
+        "type" : "string",
+        "name" : "cutset",
+        "description" : "string of characters that are cut off on the right"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "string right-trimmed of `cutset` characters"
+      }
+    }
+  }, {
+    "name" : "trim_space",
+    "description" : "Returns `value` with all leading or trailing spaces removed.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to trim"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "string leading and trailing white space cut off"
+      }
+    }
+  }, {
+    "name" : "trim_suffix",
+    "description" : "Returns `value` with all trailing occurrences of `prefix` removed.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "value",
+        "description" : "string to trim"
+      }, {
+        "type" : "string",
+        "name" : "suffix",
+        "description" : "suffix to cut off"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "output",
+        "description" : "string with `suffix` cut off"
+      }
+    }
+  }, {
+    "name" : "type_name",
+    "description" : "Returns the type of its input value.",
+    "categories" : [ "types" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "any",
+        "name" : "x",
+        "description" : "input value"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "type",
+        "description" : "one of \"null\", \"boolean\", \"number\", \"string\", \"array\", \"object\", \"set\""
+      }
+    }
+  }, {
+    "name" : "union"
+  }, {
+    "name" : "upper",
+    "description" : "Returns the input string but with all characters in upper-case.",
+    "categories" : [ "strings" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "string that is converted to upper-case"
+      } ],
+      "result" : {
+        "type" : "string",
+        "name" : "y",
+        "description" : "upper-case of x"
+      }
+    }
+  } ]
+}
