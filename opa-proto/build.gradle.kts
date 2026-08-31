@@ -14,7 +14,7 @@ repositories {
 
 // protobuf-java 4.x is required: the vendored schemas use edition 2023, which
 // needs protoc >= 27 (the 4.27+ line) and a matching runtime.
-val protobufVersion = "4.35.1"
+val protobufVersion = "4.36.0"
 
 dependencies {
     api(project(":opa-evaluator"))
