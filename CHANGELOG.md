@@ -22,6 +22,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   Snapshots for 0.1.0, 0.2.0, and 0.3.0 were reconstructed from those tags
 - Fail the compliance suite on fixtures whose builtin cannot be resolved, instead
   of skipping them silently, and run it for `opa-builtins` changes
+- Bump OPA to v1.20.1 and regenerate the compliance fixtures
 
 ## 0.3.0
 
