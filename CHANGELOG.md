@@ -5,24 +5,73 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 0.4.0
+
+This release brings the builtin surface to 156, adding 46 builtins: the
+`crypto`, `json`, `net`, `regex`, and `semver` families, plus `walk`, the
+`graph` builtins, `uuid.*`, `uri.*`, `providers.aws.sign_req`, and
+`io.jwt.verify_eddsa`. Coverage tracing becomes range-aware and can write
+OPA-format reports to disk, decision logs gain `mask_decision` support, and
+`capabilities.json` is now published at the repository root and attached to
+every release.
+
+### Breaking Changes
+
+- `CoverageProfiler#getCoveredLines()` is now `getCoveredRanges()` and returns
+  `Map<Integer, Set<Range>>` instead of `Map<Integer, Set<Integer>>` — coverage
+  is tracked as source ranges rather than line numbers ([#201](https://github.com/open-policy-agent/java-opa-sdk/pull/201))
+- `LocationStmt#setLocation` now takes end row/column (`setLocation(file, row, col, endRow, endCol)`)
+  and returns `void`; the three-argument form remains as a default method that
+  reuses the start position as the end ([#201](https://github.com/open-policy-agent/java-opa-sdk/pull/201))
+
 ### Runtime, SDK, Tooling
 
-- Implement the `walk` builtin
-- Encode composite object keys (arrays/sets/objects) as compact JSON to match
-  Go-OPA, instead of leaking Java's collection formatting
+- Register the `crypto`, `semver`, `regex`, `net`, and `json` `BuiltinProvider`s and fix the parity gaps that surfaced once their builtins were reachable ([#192](https://github.com/open-policy-agent/java-opa-sdk/pull/192), [#193](https://github.com/open-policy-agent/java-opa-sdk/pull/193), [#194](https://github.com/open-policy-agent/java-opa-sdk/pull/194), [#195](https://github.com/open-policy-agent/java-opa-sdk/pull/195)) authored by @sspaink
+- Implement the `walk` builtin ([#187](https://github.com/open-policy-agent/java-opa-sdk/pull/187)) authored by @sspaink
+- Implement the `graph.reachable` and `graph.reachable_paths` builtins ([#197](https://github.com/open-policy-agent/java-opa-sdk/pull/197)) authored by @dangzitou
+- Implement the `uuid.rfc4122` and `uuid.parse` builtins ([#155](https://github.com/open-policy-agent/java-opa-sdk/pull/155)) authored by @Aayush10016, with a follow-up to match `google/uuid` parsing leniency ([#196](https://github.com/open-policy-agent/java-opa-sdk/pull/196)) authored by @sspaink
+- Implement the `uri.parse` and `uri.is_valid` builtins ([#156](https://github.com/open-policy-agent/java-opa-sdk/pull/156)) authored by @shanksmp, with a missing import fix ([#188](https://github.com/open-policy-agent/java-opa-sdk/pull/188)) authored by @sspaink and additional upstream cases covered ([#203](https://github.com/open-policy-agent/java-opa-sdk/pull/203)) authored by @charlieegan3
+- Implement the `providers.aws.sign_req` builtin ([#151](https://github.com/open-policy-agent/java-opa-sdk/pull/151)) authored by @ume3445
+- Implement the `io.jwt.verify_eddsa` builtin ([#153](https://github.com/open-policy-agent/java-opa-sdk/pull/153)) authored by @ume3445
+- Encode composite object keys (arrays/sets/objects) as compact JSON to match Go-OPA, instead of leaking Java's collection formatting ([#187](https://github.com/open-policy-agent/java-opa-sdk/pull/187)) authored by @sspaink
+- Match Go's time formatting across all JVM locales ([#202](https://github.com/open-policy-agent/java-opa-sdk/pull/202)) authored by @charlieegan3
+- Apply the `decision_logs.mask_decision` policy to decision events before they are buffered, uploaded, or printed ([#186](https://github.com/open-policy-agent/java-opa-sdk/pull/186)) authored by @sspaink
+- Send a q-weighted `Accept` header preferring the Rego IR format on bundle requests, and accept the IR media type in responses ([#204](https://github.com/open-policy-agent/java-opa-sdk/pull/204)) authored by @sspaink
+- Make coverage tracing range-aware, following [open-policy-agent/opa#9007](https://github.com/open-policy-agent/opa/pull/9007) ([#201](https://github.com/open-policy-agent/java-opa-sdk/pull/201)) authored by @charlieegan3
+- Add `CoverageRecorder` and `CoverageReportWriter` to save coverage reports to disk, intended for IDE integrations rather than production use ([#210](https://github.com/open-policy-agent/java-opa-sdk/pull/210)) authored by @charlieegan3
+- Load and expose the plan's `unplanned_rules` data when present ([#209](https://github.com/open-policy-agent/java-opa-sdk/pull/209)) authored by @charlieegan3
+- Serialize bundle polling through a poll chain that awaits the in-flight download future ([#169](https://github.com/open-policy-agent/java-opa-sdk/pull/169)) authored by @polachandu
+- Remove dead code from `BundleDownloader` and make `eTag`/`lastModifiedTime` volatile ([#198](https://github.com/open-policy-agent/java-opa-sdk/pull/198)) authored by @polachandu
 
 ### Build and CI
 
-- Publish `capabilities.json`, listing the builtins this SDK implements, at the
-  repository root and as a release artifact. It is generated by
-  `./gradlew :cli:generateCapabilities` and CI fails if it drifts from the
-  registered builtins
-- Keep one capabilities snapshot per release in `capabilities/<version>.json`, so
-  downstream tooling can report the release a builtin became available in.
-  Snapshots for 0.1.0, 0.2.0, and 0.3.0 were reconstructed from those tags
-- Fail the compliance suite on fixtures whose builtin cannot be resolved, instead
-  of skipping them silently, and run it for `opa-builtins` changes
-- Bump OPA to v1.20.1 and regenerate the compliance fixtures
+- Publish `capabilities.json`, listing the builtins this SDK implements, at the repository root and as a release artifact. It is generated by `./gradlew :cli:generateCapabilities` and CI fails if it drifts from the registered builtins. One snapshot per release is kept in `capabilities/<version>.json`, so downstream tooling can report the release a builtin became available in; the 0.1.0, 0.2.0, and 0.3.0 snapshots were reconstructed from those tags ([#211](https://github.com/open-policy-agent/java-opa-sdk/pull/211)) authored by @sspaink
+- Fail the compliance suite on fixtures whose builtin cannot be resolved, instead of skipping them silently, and run it for `opa-builtins` changes ([#190](https://github.com/open-policy-agent/java-opa-sdk/pull/190)) authored by @sspaink
+- Bump OPA to v1.20.1 and regenerate the compliance fixtures ([#215](https://github.com/open-policy-agent/java-opa-sdk/pull/215)) authored by @sspaink
+- Regenerate compliance fixtures that were missing end row/column data ([#208](https://github.com/open-policy-agent/java-opa-sdk/pull/208)) authored by @charlieegan3
+
+### Docs, Website, Ecosystem
+
+- Correct the builtin support table ([#191](https://github.com/open-policy-agent/java-opa-sdk/pull/191)) authored by @sspaink
+- Bump the README install snippets to 0.3.0 ([#183](https://github.com/open-policy-agent/java-opa-sdk/pull/183)) authored by @sspaink
+
+### Miscellaneous
+
+- Dependency updates; notably:
+    - Bump com.fasterxml.jackson (bom, databind, dataformat-yaml, datatype-jsr310) from 2.22.1 to 2.22.2 ([#205](https://github.com/open-policy-agent/java-opa-sdk/pull/205))
+    - Bump com.google.protobuf:protobuf-java and :protoc from 4.29.3 to 4.36.0, and the protobuf Gradle plugin from 0.9.5 to 0.10.0 ([#184](https://github.com/open-policy-agent/java-opa-sdk/pull/184), [#212](https://github.com/open-policy-agent/java-opa-sdk/pull/212))
+    - Bump com.google.guava:guava from 33.6.0-jre to 33.7.1-jre ([#212](https://github.com/open-policy-agent/java-opa-sdk/pull/212))
+    - Bump com.networknt:json-schema-validator from 2.0.4 to 2.0.7 ([#212](https://github.com/open-policy-agent/java-opa-sdk/pull/212))
+    - Bump org.json:json from 20260719 to 20260814 ([#205](https://github.com/open-policy-agent/java-opa-sdk/pull/205))
+    - Bump JUnit (jupiter, jupiter-params, platform-launcher) to 6.1.3 ([#184](https://github.com/open-policy-agent/java-opa-sdk/pull/184), [#199](https://github.com/open-policy-agent/java-opa-sdk/pull/199))
+    - Bump gradle-wrapper from 9.6.1 to 9.7.1 ([#199](https://github.com/open-policy-agent/java-opa-sdk/pull/199), [#212](https://github.com/open-policy-agent/java-opa-sdk/pull/212))
+    - Bump actions/setup-java from 5.5.0 to 6.0.0, gradle/actions from 6.2.0 to 6.3.0, github/codeql-action from 4.37.1 to 4.37.7, and zizmorcore/zizmor-action from 0.6.1 to 0.6.2 ([#185](https://github.com/open-policy-agent/java-opa-sdk/pull/185), [#189](https://github.com/open-policy-agent/java-opa-sdk/pull/189), [#200](https://github.com/open-policy-agent/java-opa-sdk/pull/200), [#206](https://github.com/open-policy-agent/java-opa-sdk/pull/206), [#213](https://github.com/open-policy-agent/java-opa-sdk/pull/213))
+    - Bump google.golang.org/protobuf in the compliance-test generator ([#207](https://github.com/open-policy-agent/java-opa-sdk/pull/207))
+
+### New Contributors
+
+- @charlieegan3 made their first contribution in [#202](https://github.com/open-policy-agent/java-opa-sdk/pull/202)
+- @dangzitou made their first contribution in [#197](https://github.com/open-policy-agent/java-opa-sdk/pull/197)
 
 ## 0.3.0
 
