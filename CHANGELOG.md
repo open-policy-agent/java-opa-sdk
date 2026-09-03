@@ -5,6 +5,13 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Runtime, SDK, Tooling
+
+- Implement `SimpleMetrics.counter()` and `SimpleMetrics.histogram()`, which
+  previously returned `null` and made every caller of those metric types throw a
+  `NullPointerException`. Counters and histograms are now also reported by
+  `all()`, so they reach `MetricsPrinter` and decision logs
+
 ## 0.4.0
 
 This release brings the builtin surface to 156, adding 46 builtins: the
