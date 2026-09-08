@@ -142,9 +142,7 @@ public final class CoverageRecorder {
       String baseName = "report-" + runId + "-" + index++;
       try {
         Policy policy = entry.getKey();
-        CoverageReport report =
-            CoverageReport.from(
-                entry.getValue(), policy.getStaticFilenames(), policy.getUnplannedRules());
+        CoverageReport report = CoverageReport.from(entry.getValue(), policy);
         writer.write(report, outputDir, baseName);
       } catch (Exception e) {
         // A shutdown hook cannot usefully propagate error. One bad report does not impact others.

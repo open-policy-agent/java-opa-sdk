@@ -5,7 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.open_policy_agent.opa.ir.Location;
+import io.github.open_policy_agent.opa.ir.policy.Block;
+import io.github.open_policy_agent.opa.ir.policy.Plan;
+import io.github.open_policy_agent.opa.ir.policy.Plans;
+import io.github.open_policy_agent.opa.ir.policy.Policy;
+import io.github.open_policy_agent.opa.ir.policy.Static;
+import io.github.open_policy_agent.opa.ir.policy.StringConst;
 import io.github.open_policy_agent.opa.ir.policy.UnplannedRule;
+import io.github.open_policy_agent.opa.ir.stmts.NopStmt;
+import io.github.open_policy_agent.opa.ir.stmts.Stmt;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -97,5 +105,67 @@ class CoverageReportTest {
     assertEquals(0, report.coveredLines());
     assertEquals(0, report.notCoveredLines());
     assertEquals(0.0, report.coverage());
+  }
+
+  @Test
+  void from_marksRestOfPartlyRunRuleAsNotCovered() {
+    // A single plan (rule body) of two statements, e.g. `false` on row 5 then `another_rule` on
+    // row 6: the evaluator only runs the first before the rule fails, so the second was compiled
+    // (it's in the plan) but never executed and must show up as not covered.
+    Stmt first = new NopStmt(0, 1, 5);
+    Stmt second = new NopStmt(0, 1, 6);
+    Policy policy = policyWithSinglePlan(List.of(first, second));
+
+    CoverageProfiler profiler = new CoverageProfiler();
+    profiler.addEntry(first.getLocation(), 0);
+
+    CoverageReport report = CoverageReport.from(profiler, policy);
+
+    CoverageReport.FileCoverage file = report.files().get("policy.rego");
+    assertEquals(1, file.covered().size());
+    assertEquals(5, file.covered().get(0).start().getRow());
+    assertEquals(1, file.notCovered().size());
+    assertEquals(6, file.notCovered().get(0).start().getRow());
+  }
+
+  @Test
+  void from_reportsNothingNotCoveredWhenWholeRuleRuns() {
+    Stmt first = new NopStmt(0, 1, 5);
+    Stmt second = new NopStmt(0, 1, 6);
+    Policy policy = policyWithSinglePlan(List.of(first, second));
+
+    CoverageProfiler profiler = new CoverageProfiler();
+    profiler.addEntry(first.getLocation(), 0);
+    profiler.addEntry(second.getLocation(), 0);
+
+    CoverageReport report = CoverageReport.from(profiler, policy);
+
+    CoverageReport.FileCoverage file = report.files().get("policy.rego");
+    assertEquals(2, file.covered().size());
+    assertTrue(file.notCovered().isEmpty());
+  }
+
+  @Test
+  void from_treatsAPlannedRangeAsCoveredWhenContainedInALargerCoveredRange() {
+    // A planned range only needs to fall inside a covered range, not match it exactly, matching
+    // OPA's v1/cover isRangeCovered.
+    Stmt stmt = new NopStmt();
+    stmt.setLocation(0, 5, 3, 5, 8); // row 5, cols 3-8: inside the covered row 5, cols 1-10
+    Policy policy = policyWithSinglePlan(List.of(stmt));
+
+    CoverageProfiler profiler = new CoverageProfiler();
+    profiler.addEntry(new Location(0, 1, 5, 10, 5), 0);
+
+    CoverageReport report = CoverageReport.from(profiler, policy);
+
+    CoverageReport.FileCoverage file = report.files().get("policy.rego");
+    assertTrue(file.notCovered().isEmpty());
+  }
+
+  private static Policy policyWithSinglePlan(List<Stmt> stmts) {
+    Static staticField = new Static(List.of(), List.of(), List.of(new StringConst("policy.rego")));
+    Plan plan = new Plan("data.example", List.of(new Block(stmts)));
+    Plans plans = new Plans(List.of(plan));
+    return new Policy(staticField, plans, null, List.of());
   }
 }
