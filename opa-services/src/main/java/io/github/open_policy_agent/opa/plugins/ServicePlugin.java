@@ -1,5 +1,6 @@
 package io.github.open_policy_agent.opa.plugins;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -336,15 +337,7 @@ public final class ServicePlugin implements Plugin {
 
     void post(String path, String body) {
 
-      HttpRequest.Builder request =
-          HttpRequest.newBuilder()
-              .uri(buildUri(path))
-              .header("Content-Type", "application/json")
-              .header("Accept", "application/json")
-              .POST(HttpRequest.BodyPublishers.ofString(body));
-
-      request = applyCredentials(request);
-      request = applyHeaders(request);
+      HttpRequest.Builder request = newPostRequest(path, body);
 
       client
           .sendAsync(request.build(), HttpResponse.BodyHandlers.ofString())
@@ -357,6 +350,33 @@ public final class ServicePlugin implements Plugin {
                 logger.error("Failed to send POST request: " + e.getMessage());
                 return null;
               });
+    }
+
+    /**
+     * POST {@code body} to {@code path}, blocking until the response arrives, and return its status
+     * code. Unlike {@link #post}, which is fire-and-forget, this surfaces transport failures (as an
+     * {@link IOException}) and the server's status code, so a caller can decide whether to retry.
+     */
+    int postSync(String path, String body) throws IOException, InterruptedException {
+      // HttpRequest rejects a non-positive timeout, so a service configured with 0 falls back to
+      // the default (mirrors BundleDownloader.requestTimeout).
+      int timeoutSeconds = responseHeaderTimeoutSeconds > 0 ? responseHeaderTimeoutSeconds : 10;
+      HttpRequest request =
+          newPostRequest(path, body).timeout(Duration.ofSeconds(timeoutSeconds)).build();
+
+      return client.send(request, HttpResponse.BodyHandlers.discarding()).statusCode();
+    }
+
+    private HttpRequest.Builder newPostRequest(String path, String body) {
+      HttpRequest.Builder request =
+          HttpRequest.newBuilder()
+              .uri(buildUri(path))
+              .header("Content-Type", "application/json")
+              .header("Accept", "application/json")
+              .POST(HttpRequest.BodyPublishers.ofString(body));
+
+      request = applyCredentials(request);
+      return applyHeaders(request);
     }
 
     /**
