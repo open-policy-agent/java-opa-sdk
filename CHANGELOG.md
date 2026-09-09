@@ -5,6 +5,23 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Runtime, SDK, Tooling
+
+- Implement `SimpleMetrics.counter()` and `SimpleMetrics.histogram()`, which
+  previously returned `null` and made every caller of those metric types throw a
+  `NullPointerException`. Counters and histograms are now also reported by
+  `all()`, so they reach `MetricsPrinter` and decision logs
+- Emit counters and histograms in decision log events under the names OPA Go
+  publishes them as, `counter_<name>` and `histogram_<name>`. Neither exposes a
+  Jackson-visible property, so the previous default serialization threw and
+  `logDecision` dropped the entire decision event, not just the metric
+- Serialize `Metrics.Counter` and `Metrics.Histogram` via `MetricsModule`, which
+  previously covered only `Metrics.Timer`
+- Saturate `SimpleMetrics` histogram stats at the `int` bounds instead of
+  wrapping. `Histogram.Values` holds `int`s, but nanosecond timings pass
+  `Integer.MAX_VALUE` after 2.147s, so a 3s sample reported `-1294967296` for
+  every stat, and the sign flipped both ways
+
 ## 0.4.0
 
 This release brings the builtin surface to 156, adding 46 builtins: the
