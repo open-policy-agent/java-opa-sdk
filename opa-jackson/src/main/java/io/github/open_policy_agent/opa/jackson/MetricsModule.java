@@ -7,12 +7,15 @@ import io.github.open_policy_agent.opa.metrics.SimpleMetrics;
 import java.time.Duration;
 
 /**
- * Jackson {@link SimpleModule} that adds {@code @JsonValue} behavior to {@link SimpleMetrics}'s inner {@code Timer}.
+ * Jackson {@link SimpleModule} that adds {@code @JsonValue} behavior to {@link SimpleMetrics}'s inner metrics.
  * Register this module to have {@link Metrics.Timer} serialize as the underlying
- * {@link Duration} value rather than a default bean.
+ * {@link Duration} value, {@link Metrics.Counter} as its {@code int} value and
+ * {@link Metrics.Histogram} as its {@link Metrics.Histogram.Values} stats, rather than as default
+ * beans. None of them expose a Jackson-visible property, so without these mixins serializing one
+ * fails outright.
  *
- * <p>Applied at the {@link Metrics.Timer} interface level via a mixin, so it covers any Timer
- * implementation, not just the one returned by {@link SimpleMetrics}.
+ * <p>Applied at the {@link Metrics} interface level via mixins, so they cover any implementation,
+ * not just the ones returned by {@link SimpleMetrics}.
  *
  * <p>Usage:
  *
@@ -26,10 +29,22 @@ public class MetricsModule extends SimpleModule {
   public MetricsModule() {
     super("opa-metrics");
     setMixInAnnotation(Metrics.Timer.class, TimerMixin.class);
+    setMixInAnnotation(Metrics.Counter.class, CounterMixin.class);
+    setMixInAnnotation(Metrics.Histogram.class, HistogramMixin.class);
   }
 
-  abstract static class TimerMixin {
+  interface TimerMixin {
     @JsonValue
-    abstract Duration value();
+    Duration value();
+  }
+
+  interface CounterMixin {
+    @JsonValue
+    int value();
+  }
+
+  interface HistogramMixin {
+    @JsonValue
+    Metrics.Histogram.Values value();
   }
 }

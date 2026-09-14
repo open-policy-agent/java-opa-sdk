@@ -31,4 +31,27 @@ class MetricsModuleTest {
     // serializing its underlying Duration produces.
     assertThat(timerJson).isEqualTo(durationJson);
   }
+
+  @Test
+  void counter_serializesAsItsValue() throws IOException {
+    SimpleMetrics metrics = new SimpleMetrics();
+    Metrics.Counter counter = metrics.counter("server_query_cache_hit");
+    counter.add(3);
+
+    // Without the mixin a Counter has no Jackson-visible property and serialization fails
+    // outright, so asserting the shape also asserts that it serializes at all.
+    assertThat(mapper.writeValueAsString(counter)).isEqualTo("3");
+  }
+
+  @Test
+  void histogram_serializesAsItsStats() throws IOException {
+    SimpleMetrics metrics = new SimpleMetrics();
+    Metrics.Histogram histogram = metrics.histogram("sizes");
+    histogram.update(11);
+
+    String histogramJson = mapper.writeValueAsString(histogram);
+
+    assertThat(histogramJson).isEqualTo(mapper.writeValueAsString(histogram.value()));
+    assertThat(histogramJson).contains("\"count\":1", "\"99%\":11");
+  }
 }

@@ -590,21 +590,7 @@ public final class DecisionLogPlugin implements Plugin {
       if (metrics != null) {
         ObjectNode metricsNode = MAPPER.createObjectNode();
 
-        metrics
-            .all()
-            .forEach(
-                (key, value) -> {
-                  // Convert Timer metrics to nanoseconds with proper naming
-                  if (value instanceof Metrics.Timer) {
-                    Metrics.Timer timer = (Metrics.Timer) value;
-                    long nanos = timer.value().toNanos();
-                    String metricName = "timer_" + key + "_ns";
-                    metricsNode.put(metricName, nanos);
-                  } else {
-                    // For other metric types, use default serialization
-                    metricsNode.set(key, MAPPER.valueToTree(value));
-                  }
-                });
+        metrics.all().forEach((key, value) -> addMetric(metricsNode, key, value));
         event.set("metrics", metricsNode);
       }
 
@@ -640,6 +626,41 @@ public final class DecisionLogPlugin implements Plugin {
       }
 
       return event;
+    }
+
+    /**
+     * Add one metric to the event's {@code metrics} object under the name OPA Go publishes it as
+     * (see {@code metrics.formatKey}): {@code timer_<name>_ns}, {@code counter_<name>} and
+     * {@code histogram_<name>}.
+     *
+     * <p>The three known types are written out field by field rather than handed to Jackson:
+     * none of them exposes a Jackson-visible property, so default serialization throws and
+     * {@code logDecision} drops the whole decision event rather than one metric. Any other
+     * implementation still falls back to Jackson under its bare name, as Go's default branch does.
+     */
+    private static void addMetric(ObjectNode metricsNode, String key, Metrics.Metric metric) {
+      if (metric instanceof Metrics.Timer) {
+        metricsNode.put("timer_" + key + "_ns", ((Metrics.Timer) metric).value().toNanos());
+      } else if (metric instanceof Metrics.Counter) {
+        metricsNode.put("counter_" + key, ((Metrics.Counter) metric).value());
+      } else if (metric instanceof Metrics.Histogram) {
+        Metrics.Histogram.Values values = ((Metrics.Histogram) metric).value();
+        if (values == null) {
+          return;
+        }
+        ObjectNode stats = metricsNode.putObject("histogram_" + key);
+        stats.put("count", values.count);
+        stats.put("min", values.min);
+        stats.put("max", values.max);
+        stats.put("mean", values.mean);
+        stats.put("stddev", values.stddev);
+        stats.put("median", values.median);
+        if (values.percentiles != null) {
+          values.percentiles.forEach(stats::put);
+        }
+      } else {
+        metricsNode.set(key, MAPPER.valueToTree(metric));
+      }
     }
 
     /** Flush buffered decisions to service. */
