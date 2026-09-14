@@ -320,6 +320,17 @@ See [opa-services/README.md](opa-services/README.md#tls-and-mtls) for a full mTL
 |-------|------|---------|-------------|
 | `service` | string | - | Service for status reports |
 | `console` | boolean | false | Enable console output |
+| `resource` | string | `/status` | Resource path for status uploads |
+| `min_delay_seconds` | int | 30 | Minimum delay between reports |
+| `max_delay_seconds` | int | 2x min | Maximum delay between reports |
+| `max_retry_attempts` | int | 3 | Retries after a failed upload (0 disables) |
+
+A failed status upload is retried with an exponential backoff. Server errors (5xx), `408`, and
+`429` are treated as transient; any other `4xx` is not retried, since resending the same report
+would fail identically. The whole retry sequence is capped at `min_delay_seconds`, so retries
+never run into the next scheduled report. Status reports are periodic snapshots, so a report
+that still fails after the last attempt is logged and dropped rather than buffered — the next
+tick sends a fresh one.
 
 #### Discovery
 

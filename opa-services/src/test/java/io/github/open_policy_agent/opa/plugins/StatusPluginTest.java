@@ -1,12 +1,20 @@
 package io.github.open_policy_agent.opa.plugins;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.sun.net.httpserver.HttpServer;
+import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import io.github.open_policy_agent.opa.config.Config;
@@ -25,6 +33,11 @@ class StatusPluginTest {
   private Logger mockLogger;
   private Store store;
   private Config config;
+  private HttpServer server;
+  private ServicePlugin servicePlugin;
+
+  /** One entry per status upload the test server received, in arrival order. */
+  private final List<String> uploads = new CopyOnWriteArrayList<>();
 
   @BeforeEach
   void setUp() {
@@ -36,6 +49,16 @@ class StatusPluginTest {
     Config.ServiceConfig service =
         new Config.ServiceConfig().setName("test-service").setUrl("https://example.com");
     config.setServices(Collections.singletonMap("test-service", service));
+  }
+
+  @AfterEach
+  void tearDown() {
+    if (servicePlugin != null) {
+      servicePlugin.stop();
+    }
+    if (server != null) {
+      server.stop(0);
+    }
   }
 
   @Test
@@ -208,6 +231,26 @@ class StatusPluginTest {
   }
 
   @Test
+  void validate_negativeMaxRetryAttempts_returnsError() {
+    Config.StatusConfig status =
+        new Config.StatusConfig().setService("test-service").setMaxRetryAttempts(-1);
+    config.setStatus(status);
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    StatusPlugin plugin = new StatusPlugin();
+    Set<String> errors = plugin.validate(manager);
+
+    assertTrue(errors.stream().anyMatch(e -> e.contains("max_retry_attempts must be >= 0")));
+  }
+
+  @Test
   void initialize_noStatusConfigured_returnsPlugin() {
     manager =
         new PluginManager.Builder()
@@ -354,6 +397,11 @@ class StatusPluginTest {
 
     assertFalse(status.getConsole());
     assertEquals("/status", status.getResource());
+  }
+
+  @Test
+  void configDefaults_maxRetryAttempts() {
+    assertEquals(3, new Config.StatusConfig().getMaxRetryAttempts());
   }
 
   @Test
@@ -540,46 +588,114 @@ class StatusPluginTest {
 
   @Test
   void statusReport_sendsToService() throws Exception {
-    Config.StatusConfig status =
-        new Config.StatusConfig().setService("test-service").setConsole(false);
-    config.setStatus(status);
+    StatusPlugin.Status statusReporter =
+        statusReporterAgainstServer(new Config.StatusConfig().setConsole(false), 200);
 
-    manager =
-        new PluginManager.Builder()
-            .withId("test-opa")
-            .withStore(store)
-            .withConfig(config)
-            .withLogger(mockLogger)
-            .build();
+    statusReporter.reportStatus();
 
-    // Initialize ServicePlugin first
-    ServicePlugin servicePlugin = new ServicePlugin();
-    servicePlugin = (ServicePlugin) servicePlugin.initialize(manager);
-    servicePlugin.start();
+    assertEquals(1, uploads.size(), "a healthy endpoint should be posted to exactly once");
+    verify(mockLogger, atLeastOnce())
+        .debug(eq("Status report sent to service '%s'"), eq("test-service"));
+  }
 
-    // Register the ServicePlugin with PluginManager
-    java.lang.reflect.Field pluginsField = PluginManager.class.getDeclaredField("plugins");
-    pluginsField.setAccessible(true);
-    @SuppressWarnings("unchecked")
-    Map<String, Plugin> plugins = (Map<String, Plugin>) pluginsField.get(manager);
-    plugins.put("services", servicePlugin);
+  @Test
+  void statusReport_transientFailureThenSuccess_retriesAndDelivers() throws Exception {
+    // A 503 on the first attempt used to drop the report until the next tick.
+    StatusPlugin.Status statusReporter =
+        statusReporterAgainstServer(
+            new Config.StatusConfig().setConsole(false).setMinDelaySeconds(30), 503, 200);
 
-    // Initialize StatusPlugin
-    StatusPlugin plugin = new StatusPlugin();
-    plugin = (StatusPlugin) plugin.initialize(manager);
+    statusReporter.reportStatus();
 
-    // Access the status reporter via reflection to trigger a report manually
-    java.lang.reflect.Field statusField = StatusPlugin.class.getDeclaredField("status");
-    statusField.setAccessible(true);
-    StatusPlugin.Status statusReporter = (StatusPlugin.Status) statusField.get(plugin);
+    assertEquals(2, uploads.size(), "expected a retry after the 503");
+    verify(mockLogger, atLeastOnce())
+        .debug(eq("Status report sent to service '%s'"), eq("test-service"));
+    verify(mockLogger, never()).error(startsWith("Failed to send status"), any(), any(), any());
+  }
 
-    if (statusReporter != null) {
-      statusReporter.reportStatus();
+  @Test
+  void statusReport_permanentFailure_isNotRetried() throws Exception {
+    // Resending a report the server rejected only burns the budget the next report needs.
+    StatusPlugin.Status statusReporter =
+        statusReporterAgainstServer(
+            new Config.StatusConfig().setConsole(false).setMinDelaySeconds(30), 400);
 
-      // Verify debug log for sending to service
-      verify(mockLogger, atLeastOnce())
-          .debug(eq("Status report sent to service '%s'"), eq("test-service"));
-    }
+    statusReporter.reportStatus();
+
+    assertEquals(1, uploads.size(), "a 4xx must not be retried");
+    verify(mockLogger)
+        .error(
+            eq("Failed to send status to service '%s' after %d attempt(s): %s"),
+            eq("test-service"),
+            eq(1),
+            eq("HTTP 400"));
+  }
+
+  @Test
+  void statusReport_persistentServerError_stopsAtMaxRetryAttempts() throws Exception {
+    StatusPlugin.Status statusReporter =
+        statusReporterAgainstServer(
+            new Config.StatusConfig()
+                .setConsole(false)
+                .setMinDelaySeconds(30)
+                .setMaxRetryAttempts(2),
+            500);
+
+    statusReporter.reportStatus();
+
+    assertEquals(3, uploads.size(), "expected the initial attempt plus 2 retries");
+    verify(mockLogger)
+        .error(
+            eq("Failed to send status to service '%s' after %d attempt(s): %s"),
+            eq("test-service"),
+            eq(3),
+            eq("HTTP 500"));
+  }
+
+  @Test
+  void statusReport_retryBudget_isCappedAtTheNextReportInterval() throws Exception {
+    // 10 exponential retries would run for over a minute; with reports due every second, the
+    // sequence has to stop after ~1s so it never overlaps the next tick.
+    StatusPlugin.Status statusReporter =
+        statusReporterAgainstServer(
+            new Config.StatusConfig()
+                .setConsole(false)
+                .setMinDelaySeconds(1)
+                .setMaxDelaySeconds(1)
+                .setMaxRetryAttempts(10),
+            500);
+
+    long startNanos = System.nanoTime();
+    statusReporter.reportStatus();
+    long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000;
+
+    assertTrue(
+        elapsedMillis < 3000,
+        "retries should stop within the 1s budget, but took " + elapsedMillis + "ms");
+    assertTrue(uploads.size() < 11, "budget should cut the sequence short of max_retry_attempts");
+    verify(mockLogger)
+        .error(
+            eq(
+                "Failed to send status to service '%s' after %d attempt(s), retry budget"
+                    + " exhausted: %s"),
+            eq("test-service"),
+            anyInt(),
+            eq("HTTP 500"));
+  }
+
+  @Test
+  void statusReport_retriesDisabled_sendsOnce() throws Exception {
+    StatusPlugin.Status statusReporter =
+        statusReporterAgainstServer(
+            new Config.StatusConfig()
+                .setConsole(false)
+                .setMinDelaySeconds(30)
+                .setMaxRetryAttempts(0),
+            500);
+
+    statusReporter.reportStatus();
+
+    assertEquals(1, uploads.size(), "max_retry_attempts=0 disables retrying");
   }
 
   @Test
@@ -620,6 +736,60 @@ class StatusPluginTest {
 
   private ObjectNode buildStatusReport(StatusPlugin plugin) throws Exception {
     return buildStatusReport(getStatusReporter(plugin));
+  }
+
+  /**
+   * Returns a status reporter wired to a local server that answers each request with the next code
+   * in {@code responseCodes}, repeating the last one once they run out.
+   */
+  private StatusPlugin.Status statusReporterAgainstServer(
+      Config.StatusConfig statusConfig, int... responseCodes) throws Exception {
+    startServer(responseCodes);
+
+    config.setServices(
+        Collections.singletonMap(
+            "test-service",
+            new Config.ServiceConfig()
+                .setName("test-service")
+                .setUrl("http://localhost:" + server.getAddress().getPort())));
+    config.setStatus(statusConfig.setService("test-service"));
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    servicePlugin = (ServicePlugin) new ServicePlugin().initialize(manager);
+    servicePlugin.start();
+
+    // Register the ServicePlugin with PluginManager
+    java.lang.reflect.Field pluginsField = PluginManager.class.getDeclaredField("plugins");
+    pluginsField.setAccessible(true);
+    @SuppressWarnings("unchecked")
+    Map<String, Plugin> plugins = (Map<String, Plugin>) pluginsField.get(manager);
+    plugins.put("services", servicePlugin);
+
+    StatusPlugin.Status statusReporter =
+        getStatusReporter((StatusPlugin) new StatusPlugin().initialize(manager));
+    assertNotNull(statusReporter, "status reporter should have been wired from the config");
+    return statusReporter;
+  }
+
+  private void startServer(int... responseCodes) throws IOException {
+    AtomicInteger nextResponse = new AtomicInteger();
+    server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+    server.createContext(
+        "/status",
+        exchange -> {
+          uploads.add(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
+          int index = Math.min(nextResponse.getAndIncrement(), responseCodes.length - 1);
+          exchange.sendResponseHeaders(responseCodes[index], -1);
+          exchange.close();
+        });
+    server.start();
   }
 
   private static StatusPlugin.Status getStatusReporter(StatusPlugin plugin) throws Exception {

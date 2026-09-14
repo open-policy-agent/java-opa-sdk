@@ -2,6 +2,7 @@ package io.github.open_policy_agent.opa.plugins;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -67,6 +68,10 @@ public final class StatusPlugin implements Plugin {
               + ")");
     }
 
+    if (statusConfig.getMaxRetryAttempts() < 0) {
+      errors.add("Status max_retry_attempts must be >= 0");
+    }
+
     return errors;
   }
 
@@ -84,7 +89,8 @@ public final class StatusPlugin implements Plugin {
               .setService(statusConfig.getService())
               .setResource(statusConfig.getResource())
               .setMinDelaySeconds(statusConfig.getMinDelaySeconds())
-              .setMaxDelaySeconds(statusConfig.getMaxDelaySeconds());
+              .setMaxDelaySeconds(statusConfig.getMaxDelaySeconds())
+              .setMaxRetryAttempts(statusConfig.getMaxRetryAttempts());
     }
 
     return plugin;
@@ -97,38 +103,47 @@ public final class StatusPlugin implements Plugin {
       return;
     }
 
-    // Get report interval bounds (default: 30 seconds, matching OPA's previous fixed interval;
-    // OPA Go's status plugin has no standalone min/max delay of its own today - reports are
-    // triggered by the bundle/discovery plugin's polling - so there's no upstream number to
-    // mirror here beyond the interval this SDK already used).
-    // - only min set → max defaults to 2 * min
-    // - only max set → min defaults to min(30, max) so a max below 30 is not silently ignored
-    // - neither set → min=30, max=60
-    Integer configuredMin = status.getMinDelaySeconds();
-    Integer configuredMax = status.getMaxDelaySeconds();
-    int minDelaySeconds;
-    int maxDelaySeconds;
-    if (configuredMin != null && configuredMax != null) {
-      minDelaySeconds = configuredMin;
-      maxDelaySeconds = configuredMax;
-    } else if (configuredMin != null) {
-      minDelaySeconds = configuredMin;
-      maxDelaySeconds = configuredMin * 2;
-    } else if (configuredMax != null) {
-      maxDelaySeconds = configuredMax;
-      minDelaySeconds = Math.min(30, configuredMax);
-    } else {
-      minDelaySeconds = 30;
-      maxDelaySeconds = 60;
-    }
+    ReportInterval interval =
+        ReportInterval.of(status.getMinDelaySeconds(), status.getMaxDelaySeconds());
 
     // Report immediately on startup (matches previous behavior), then continue with a jittered
     // chained schedule for subsequent reports - mirrors BundleDownloader.startPolling(), which
     // downloads immediately before starting its own chained poll.
     scheduler.schedule(() -> status.reportStatus(), 0, TimeUnit.SECONDS);
-    scheduleNextReport(minDelaySeconds, maxDelaySeconds);
+    scheduleNextReport(interval.min, interval.max);
 
     manager.updatePluginStatus("status", PluginManager.Status.OK);
+  }
+
+  /**
+   * The bounds of the jittered delay between status reports, defaulting to 30-60 seconds.
+   *
+   * <p>OPA Go's status plugin has no standalone min/max delay of its own today - reports are
+   * triggered by the bundle/discovery plugin's polling - so there's no upstream number to mirror
+   * here beyond the interval this SDK already used.
+   */
+  private static final class ReportInterval {
+    private final int min;
+    private final int max;
+
+    private ReportInterval(int min, int max) {
+      this.min = min;
+      this.max = max;
+    }
+
+    static ReportInterval of(Integer configuredMin, Integer configuredMax) {
+      if (configuredMin != null && configuredMax != null) {
+        return new ReportInterval(configuredMin, configuredMax);
+      }
+      if (configuredMin != null) {
+        return new ReportInterval(configuredMin, configuredMin * 2);
+      }
+      if (configuredMax != null) {
+        // min(30, max) so a max below the default min is not silently ignored.
+        return new ReportInterval(Math.min(30, configuredMax), configuredMax);
+      }
+      return new ReportInterval(30, 60);
+    }
   }
 
   // Re-schedules the next status report with a uniformly random delay in [minDelay, maxDelay],
@@ -183,6 +198,11 @@ public final class StatusPlugin implements Plugin {
   public static class Status {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    private static final long INITIAL_BACKOFF_MILLIS = 1000L;
+
+    /** Ceiling for the doubling, so a long retry budget doesn't produce minutes-long waits. */
+    private static final long MAX_BACKOFF_MILLIS = 30_000L;
+
     private final PluginManager manager;
     private final Logger logger;
     private Boolean console;
@@ -190,6 +210,7 @@ public final class StatusPlugin implements Plugin {
     private String resource;
     private Integer minDelaySeconds;
     private Integer maxDelaySeconds;
+    private int maxRetryAttempts;
 
     private Status(PluginManager manager, Logger logger) {
       this.manager = manager;
@@ -238,6 +259,15 @@ public final class StatusPlugin implements Plugin {
 
     public Status setMaxDelaySeconds(Integer maxDelaySeconds) {
       this.maxDelaySeconds = maxDelaySeconds;
+      return this;
+    }
+
+    public int getMaxRetryAttempts() {
+      return maxRetryAttempts;
+    }
+
+    public Status setMaxRetryAttempts(int maxRetryAttempts) {
+      this.maxRetryAttempts = maxRetryAttempts;
       return this;
     }
 
@@ -317,7 +347,15 @@ public final class StatusPlugin implements Plugin {
       // If status is null, plugin is not registered - don't add to report
     }
 
-    /** Send status report to configured service. */
+    /**
+     * Send the status report to the configured service, retrying transient failures with an
+     * exponential backoff.
+     *
+     * <p>Reports are periodic snapshots, so unlike decision logs there is no buffer to preserve on
+     * final failure - the report is dropped and the next tick sends a fresh one. Retries run on the
+     * calling scheduler thread, which only re-arms the next report once this returns, and the whole
+     * sequence is capped at the shortest interval that report could be scheduled with.
+     */
     private void sendToService(ObjectNode statusReport) {
       // Get ServicePlugin from manager
       Plugin plugin = manager.getPlugin("services");
@@ -334,14 +372,113 @@ public final class StatusPlugin implements Plugin {
         return;
       }
 
-      try {
-        // Determine resource path (default: /status)
-        String path = (resource != null && !resource.isEmpty()) ? resource : "/status";
+      // Determine resource path (default: /status)
+      String path = (resource != null && !resource.isEmpty()) ? resource : "/status";
+      String body = statusReport.toString();
 
-        svc.post(path, statusReport.toString());
-        logger.debug("Status report sent to service '%s'", service);
-      } catch (Exception e) {
-        logger.error("Failed to send status to service '%s': %s", service, e.getMessage());
+      long deadlineNanos =
+          System.nanoTime()
+              + TimeUnit.SECONDS.toNanos(
+                  ReportInterval.of(minDelaySeconds, maxDelaySeconds).min);
+
+      long backoffMillis = INITIAL_BACKOFF_MILLIS;
+      int attempt = 0;
+      while (true) {
+        attempt++;
+        Attempt result = postOnce(svc, path, body);
+        if (result.succeeded) {
+          logger.debug("Status report sent to service '%s'", service);
+          return;
+        }
+
+        if (!result.retryable || attempt > maxRetryAttempts) {
+          logger.error(
+              "Failed to send status to service '%s' after %d attempt(s): %s",
+              service, attempt, result.detail);
+          return;
+        }
+
+        long sleepMillis = Math.min(jitter(backoffMillis), remainingMillis(deadlineNanos));
+        if (sleepMillis <= 0) {
+          logger.error(
+              "Failed to send status to service '%s' after %d attempt(s), retry budget exhausted: %s",
+              service, attempt, result.detail);
+          return;
+        }
+
+        logger.debug(
+            "Status report to service '%s' failed (%s); retrying in %dms",
+            service, result.detail, sleepMillis);
+        try {
+          Thread.sleep(sleepMillis);
+        } catch (InterruptedException e) {
+          // Plugin shutdown interrupts the scheduler thread: stop retrying and let it unwind.
+          Thread.currentThread().interrupt();
+          logger.warn("Interrupted while retrying status report to service '%s'", service);
+          return;
+        }
+
+        backoffMillis = Math.min(backoffMillis * 2, MAX_BACKOFF_MILLIS);
+      }
+    }
+
+    private Attempt postOnce(ServicePlugin.Service svc, String path, String body) {
+      try {
+        int statusCode = svc.postSync(path, body);
+        if (statusCode >= 200 && statusCode < 300) {
+          return Attempt.SUCCESS;
+        }
+        return Attempt.failed(isRetryableStatus(statusCode), "HTTP " + statusCode);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return Attempt.failed(false, "interrupted");
+      } catch (IOException e) {
+        // Connection refused, connection reset, request timeout: transient by nature.
+        return Attempt.failed(true, describe(e));
+      } catch (RuntimeException e) {
+        // A malformed resource URI or an unsupported credential type won't fix itself.
+        return Attempt.failed(false, describe(e));
+      }
+    }
+
+    /**
+     * Server errors and an explicit "slow down" are worth another attempt; every other 4xx is the
+     * client's fault (bad path, bad credentials) and will fail identically on a resend.
+     */
+    private static boolean isRetryableStatus(int statusCode) {
+      return statusCode >= 500 || statusCode == 429 || statusCode == 408;
+    }
+
+    // Spread over [half, full] so instances knocked offline by one outage don't retry in lockstep.
+    private static long jitter(long backoffMillis) {
+      return ThreadLocalRandom.current().nextLong(backoffMillis / 2, backoffMillis + 1);
+    }
+
+    private static long remainingMillis(long deadlineNanos) {
+      return TimeUnit.NANOSECONDS.toMillis(deadlineNanos - System.nanoTime());
+    }
+
+    // Not every exception carries a message, so fall back to the type name rather than "null".
+    private static String describe(Throwable t) {
+      return t.getMessage() != null ? t.getMessage() : t.toString();
+    }
+
+    /** The outcome of one upload attempt: whether it worked, and if not, whether to try again. */
+    private static final class Attempt {
+      private static final Attempt SUCCESS = new Attempt(true, false, null);
+
+      private final boolean succeeded;
+      private final boolean retryable;
+      private final String detail;
+
+      private Attempt(boolean succeeded, boolean retryable, String detail) {
+        this.succeeded = succeeded;
+        this.retryable = retryable;
+        this.detail = detail;
+      }
+
+      static Attempt failed(boolean retryable, String detail) {
+        return new Attempt(false, retryable, detail);
       }
     }
   }

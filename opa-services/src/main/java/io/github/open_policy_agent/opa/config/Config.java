@@ -465,6 +465,13 @@ public class Config {
     @JsonProperty("max_delay_seconds")
     private Integer maxDelaySeconds;
 
+    /**
+     * Retries attempted after a failed status upload, on top of the initial attempt. 0 disables
+     * retrying. The sequence is additionally capped at the next report interval.
+     */
+    @JsonProperty("max_retry_attempts")
+    private int maxRetryAttempts = 3;
+
     public Boolean getConsole() {
       return console;
     }
@@ -510,6 +517,15 @@ public class Config {
       return this;
     }
 
+    public int getMaxRetryAttempts() {
+      return maxRetryAttempts;
+    }
+
+    public StatusConfig setMaxRetryAttempts(int maxRetryAttempts) {
+      this.maxRetryAttempts = maxRetryAttempts;
+      return this;
+    }
+
     @Override
     public String toString() {
       return "StatusConfig{"
@@ -525,6 +541,8 @@ public class Config {
           + minDelaySeconds
           + ", maxDelaySeconds="
           + maxDelaySeconds
+          + ", maxRetryAttempts="
+          + maxRetryAttempts
           + '}';
     }
   }
