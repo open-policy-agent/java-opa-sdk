@@ -29,6 +29,7 @@ class UnitsBuiltinsTest {
     assertEquals(new RegoBigInt(102_400L), parse("100Ki"));
     assertEquals(new RegoDecimal(0.1), parse("100m"));
     assertEquals(new RegoBigInt(new BigInteger("11529215046068469760")), parse("10Ei"));
+    assertEquals(new RegoBigInt(109_951_162_777_600L), parse("\"100TI\""));
   }
 
   @Test
@@ -43,7 +44,11 @@ class UnitsBuiltinsTest {
     assertEquals(new RegoBigInt(100_000_000L), parseBytes("100mb"));
     assertEquals(new RegoBigInt(104_857_600L), parseBytes("100MiB"));
     assertEquals(new RegoBigInt(335_544_320L), parseBytes("3.2E2MiB"));
+    assertEquals(new RegoBigInt(109_951_162_777_600L), parseBytes("\"100TIB\""));
     assertEquals(RegoInt32.of(10), parseBytes("1e-2KB"));
+    assertEquals(RegoInt32.of(1), parseBytes("1.9"));
+    assertEquals(RegoInt32.of(-1), parseBytes("-1.9"));
+    assertEquals(RegoInt32.of(0), parseBytes("0.9"));
   }
 
   @Test
@@ -54,11 +59,14 @@ class UnitsBuiltinsTest {
         "units.parse: could not parse amount to a number",
         () -> parse("0.0.0"));
     assertError("units.parse: exponent too large", () -> parse("10e10000000Ei"));
+    assertError("units.parse: exponent too large", () -> parse("1e0000001"));
 
     assertError("units.parse_bytes: no byte amount provided", () -> parseBytes("GB"));
     assertError(
         "units.parse_bytes: could not parse byte amount to a number",
         () -> parseBytes(".5.2"));
+    assertError(
+        "units.parse_bytes: byte unit xb not recognized", () -> parseBytes("1XB"));
   }
 
   private RegoValue parse(String input) {

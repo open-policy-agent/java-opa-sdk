@@ -12,6 +12,7 @@ import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.regex.Matcher;
@@ -97,11 +98,12 @@ public class UnitsBuiltins {
 
   private RegoValue parseQuantity(
       String input, String name, Map<String, BigDecimal> units, boolean byteMode) {
-    if (input.chars().anyMatch(Character::isWhitespace)) {
+    String quantity = input.replace("\"", "");
+    if (quantity.contains(" ")) {
       throw new BuiltinError(name + ": spaces not allowed in resource strings");
     }
 
-    Matcher matcher = AMOUNT_PATTERN.matcher(input);
+    Matcher matcher = AMOUNT_PATTERN.matcher(quantity);
     if (!matcher.matches()) {
       throw new BuiltinError(name + ": no " + amountName(byteMode) + " provided");
     }
@@ -113,22 +115,25 @@ public class UnitsBuiltins {
       if (matcher.group(2).startsWith(".")) {
         throw new BuiltinError(name + ": could not parse " + amountName(byteMode) + " to a number");
       }
-      throw new BuiltinError(name + ": unit " + matcher.group(2) + " not recognized");
+      String unitName = byteMode ? "byte unit" : "unit";
+      String unrecognizedUnit =
+          byteMode ? matcher.group(2).toLowerCase(Locale.ROOT) : unitText;
+      throw new BuiltinError(name + ": " + unitName + " " + unrecognizedUnit + " not recognized");
     }
 
     BigDecimal amount = parseAmount(name, amountText, byteMode);
-    return toRegoNumber(amount.multiply(unit));
+    return toRegoNumber(amount.multiply(unit), byteMode);
   }
 
   private static String normalizeUnit(String unit, boolean byteMode) {
-    String normalized = unit;
+    String normalized = byteMode ? unit.toLowerCase(Locale.ROOT) : unit;
     if (byteMode
         && !normalized.isEmpty()
         && normalized.substring(normalized.length() - 1).equalsIgnoreCase("b")) {
       normalized = normalized.substring(0, normalized.length() - 1);
     }
     if (normalized.length() > 1) {
-      return normalized.toLowerCase();
+      return normalized.toLowerCase(Locale.ROOT);
     }
     return normalized;
   }
@@ -136,11 +141,10 @@ public class UnitsBuiltins {
   private static BigDecimal parseAmount(String name, String amountText, boolean byteMode) {
     Matcher exponentMatcher = EXPONENT_PATTERN.matcher(amountText);
     if (exponentMatcher.find()) {
-      try {
-        if (Math.abs(Integer.parseInt(exponentMatcher.group(1))) > 1_000_000) {
-          throw new BuiltinError(name + ": exponent too large");
-        }
-      } catch (NumberFormatException e) {
+      String exponent = exponentMatcher.group(1);
+      int digits = exponent.startsWith("+") || exponent.startsWith("-")
+          ? exponent.length() - 1 : exponent.length();
+      if (digits > 6) {
         throw new BuiltinError(name + ": exponent too large");
       }
     }
@@ -152,7 +156,10 @@ public class UnitsBuiltins {
     }
   }
 
-  private static RegoValue toRegoNumber(BigDecimal value) {
+  private static RegoValue toRegoNumber(BigDecimal value, boolean byteMode) {
+    if (byteMode) {
+      return new RegoBigInt(value.toBigInteger());
+    }
     BigDecimal normalized = value.stripTrailingZeros();
     if (normalized.scale() <= 0) {
       return new RegoBigInt(normalized.toBigIntegerExact());
