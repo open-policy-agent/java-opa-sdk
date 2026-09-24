@@ -78,6 +78,11 @@ tasks.register<Copy>("snapshotCapabilities") {
     val version = rootProject.property("version") as String
     val snapshot = rootProject.layout.projectDirectory.file("capabilities/${version}.json").asFile
 
+    // The version only reaches the copy through the rename closure, which Gradle does not track, so
+    // without this a release whose capabilities.json is unchanged from the last one is UP-TO-DATE
+    // and no snapshot is written.
+    inputs.property("version", version)
+
     // A published snapshot describes what that release exposed. Overwriting it would rewrite
     // history, which is easy to do by accident because the version stays at the released value
     // until the next release bumps it.
