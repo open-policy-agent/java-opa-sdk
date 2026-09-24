@@ -3,24 +3,53 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 0.5.0
+
+This release makes status reporting resilient to transient failures, fixes
+`SimpleMetrics` counters and histograms, and brings coverage reports in line
+with OPA by reporting compiled-but-unexecuted lines. The builtin surface is
+unchanged at 156.
 
 ### Runtime, SDK, Tooling
 
+- Retry failed status uploads with an exponential backoff, bounded by the new
+  `status.max_retry_attempts` setting (default 3, `0` disables) and capped at
+  `min_delay_seconds` so retries never overlap the next report. Server errors
+  (5xx), `408`, and `429` are retried; other `4xx` responses are not ([#222](https://github.com/open-policy-agent/java-opa-sdk/pull/222)) authored by @sspaink
 - Implement `SimpleMetrics.counter()` and `SimpleMetrics.histogram()`, which
   previously returned `null` and made every caller of those metric types throw a
   `NullPointerException`. Counters and histograms are now also reported by
-  `all()`, so they reach `MetricsPrinter` and decision logs
+  `all()`, so they reach `MetricsPrinter` and decision logs ([#216](https://github.com/open-policy-agent/java-opa-sdk/pull/216)) authored by @c879873067877881111
 - Emit counters and histograms in decision log events under the names OPA Go
   publishes them as, `counter_<name>` and `histogram_<name>`. Neither exposes a
   Jackson-visible property, so the previous default serialization threw and
-  `logDecision` dropped the entire decision event, not just the metric
+  `logDecision` dropped the entire decision event, not just the metric ([#216](https://github.com/open-policy-agent/java-opa-sdk/pull/216))
 - Serialize `Metrics.Counter` and `Metrics.Histogram` via `MetricsModule`, which
-  previously covered only `Metrics.Timer`
+  previously covered only `Metrics.Timer` ([#216](https://github.com/open-policy-agent/java-opa-sdk/pull/216))
 - Saturate `SimpleMetrics` histogram stats at the `int` bounds instead of
   wrapping. `Histogram.Values` holds `int`s, but nanosecond timings pass
   `Integer.MAX_VALUE` after 2.147s, so a 3s sample reported `-1294967296` for
-  every stat, and the sign flipped both ways
+  every stat, and the sign flipped both ways ([#216](https://github.com/open-policy-agent/java-opa-sdk/pull/216))
+- Report `not_covered` ranges for statements that were compiled into the plan
+  but never executed, matching OPA's `v1/cover`. `CoverageReport.from` gains an
+  overload taking the `Policy` directly; the existing signature is kept ([#220](https://github.com/open-policy-agent/java-opa-sdk/pull/220)) authored by @charlieegan3
+
+### Docs, Website, Ecosystem
+
+- Bump the README install snippets to 0.4.0 ([#218](https://github.com/open-policy-agent/java-opa-sdk/pull/218)) authored by @sspaink
+
+### Miscellaneous
+
+- Dependency updates; notably:
+    - Bump org.bouncycastle:bcpkix-jdk18on from 1.85 to 1.86 ([#227](https://github.com/open-policy-agent/java-opa-sdk/pull/227))
+    - Bump com.google.protobuf:protobuf-java and :protoc from 4.36.0 to 4.36.1 ([#223](https://github.com/open-policy-agent/java-opa-sdk/pull/223))
+    - Bump org.slf4j:slf4j-api from 2.0.18 to 2.0.19 ([#223](https://github.com/open-policy-agent/java-opa-sdk/pull/223))
+    - Bump actions/setup-java from 6.0.0 to 6.0.1, github/codeql-action from 4.37.8 to 4.38.0, and zizmorcore/zizmor-action from 0.6.2 to 0.6.4 ([#219](https://github.com/open-policy-agent/java-opa-sdk/pull/219), [#228](https://github.com/open-policy-agent/java-opa-sdk/pull/228))
+    - Bump github.com/open-policy-agent/opa from 1.20.1 to 1.20.2 in the compliance-test generator ([#224](https://github.com/open-policy-agent/java-opa-sdk/pull/224))
+
+### New Contributors
+
+- @c879873067877881111 made their first contribution in [#216](https://github.com/open-policy-agent/java-opa-sdk/pull/216)
 
 ## 0.4.0
 
