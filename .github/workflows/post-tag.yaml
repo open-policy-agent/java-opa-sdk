@@ -17,6 +17,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # The GitHub release notes come from the tag's CHANGELOG.md section. Checking for it here,
+      # before anything is published, stops a tag cut without its changelog entry from reaching
+      # Maven Central and then failing at the release step.
+      - name: Check release notes
+        if: github.ref_type == 'tag'
+        run: tools/release-notes.sh "${GITHUB_REF_NAME}" > /dev/null
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           java-version: "17"
@@ -66,7 +72,10 @@ jobs:
       # per-version record of the builtins this SDK implements. OPA's builtin documentation uses
       # it to report which implementations support each builtin. The file is checked in and
       # verified against the registered builtins by the capabilities-check job on every PR.
+      # The release notes are the tag's CHANGELOG.md section rather than GitHub's generated PR list.
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create "${TAG_NAME}" --generate-notes capabilities.json
+        run: |
+          tools/release-notes.sh "${TAG_NAME}" > release-notes.md
+          gh release create "${TAG_NAME}" --notes-file release-notes.md capabilities.json
