@@ -2,6 +2,8 @@ package io.github.open_policy_agent.opa.proto;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.protobuf.Struct;
+import com.google.protobuf.Value;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import opa.ir.v1.AssignVarStmt;
@@ -13,8 +15,23 @@ import opa.ir.v1.Policy;
 import opa.ir.v1.Stmt;
 import org.junit.jupiter.api.Test;
 
-/** Verifies decode-failure error handling for the proto plan reader. */
+/** Verifies decode-failure error handling for the proto bundle reader. */
 class ProtoBundleReaderTest {
+
+  @Test
+  void malformedManifestIsReportedAsIoException() {
+    opa.bundle.v1.Manifest proto = opa.bundle.v1.Manifest.newBuilder()
+        .setMetadata(Struct.newBuilder()
+            .putFields("invalid", Value.newBuilder().setNumberValue(Double.NaN).build()))
+        .build();
+
+    assertThatThrownBy(() -> new ProtoBundleReader()
+        .decodeManifest(new ByteArrayInputStream(proto.toByteArray())))
+        .isInstanceOf(IOException.class)
+        .hasCauseInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("malformed proto manifest")
+        .hasMessageContaining("Manifest values must be finite numbers, got NaN");
+  }
 
   @Test
   void malformedPlanIsReportedAsIoException() {

@@ -315,13 +315,12 @@ public class Opa {
     provenance.setVersion(version != null ? version : "unknown");
 
     Map<String, Provenance.ProvenanceBundle> bundleProvenance = new HashMap<>();
+    // OPA lists every bundle in the store; a bundle without a recorded revision reports "".
     for (Map.Entry<String, Bundle> entry : store.getBundles().entrySet()) {
       Bundle bundle = entry.getValue();
-      if (bundle.manifest != null && bundle.manifest.containsKey("revision")) {
-        Provenance.ProvenanceBundle pb = new Provenance.ProvenanceBundle();
-        pb.setRevision(String.valueOf(bundle.manifest.get("revision")));
-        bundleProvenance.put(entry.getKey(), pb);
-      }
+      Provenance.ProvenanceBundle pb = new Provenance.ProvenanceBundle();
+      pb.setRevision(bundle.manifest != null ? bundle.manifest.getRevision() : "");
+      bundleProvenance.put(entry.getKey(), pb);
     }
 
     if (!bundleProvenance.isEmpty()) {

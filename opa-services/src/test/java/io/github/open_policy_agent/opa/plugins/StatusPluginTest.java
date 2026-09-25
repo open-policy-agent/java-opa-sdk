@@ -17,6 +17,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.bundle.Bundle;
+import io.github.open_policy_agent.opa.bundle.Manifest;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.storage.InMem;
@@ -555,6 +558,42 @@ class StatusPluginTest {
 
     assertTrue(plugins.has("custom_plugin"));
     assertEquals("OK", plugins.get("custom_plugin").asText());
+  }
+
+  @Test
+  void statusReportOmitsEmptyBundleRevision() throws Exception {
+    Config.StatusConfig status = new Config.StatusConfig().setConsole(true);
+    config.setStatus(status);
+
+    // OPA's bundle.Status.ActiveRevision is `omitempty`, so only a non-empty revision is reported.
+    store.write(
+        "with-revision",
+        new Bundle.Builder()
+            .withManifest(Manifest.fromMap(Map.of("revision", "rev-1", "roots", List.of("a"))))
+            .build(),
+        new RegoObject());
+    store.write(
+        "no-revision",
+        new Bundle.Builder().withManifest(Manifest.fromMap(Map.of("roots", List.of("b")))).build(),
+        new RegoObject());
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    StatusPlugin plugin = new StatusPlugin();
+    plugin = (StatusPlugin) plugin.initialize(manager);
+
+    ObjectNode bundles = (ObjectNode) buildStatusReport(plugin).get("bundles");
+
+    assertEquals("rev-1", bundles.get("with-revision").get("revision").asText());
+    assertTrue(bundles.get("with-revision").get("active").asBoolean());
+    assertFalse(bundles.get("no-revision").has("revision"));
+    assertTrue(bundles.get("no-revision").get("active").asBoolean());
   }
 
   @Test

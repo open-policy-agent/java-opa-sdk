@@ -13,9 +13,9 @@ import opa.bundle.v1.SchemaAnnotation;
 import opa.bundle.v1.WasmResolver;
 
 /**
- * Maps a decoded proto {@link Manifest} into the {@code Map<String, Object>} shape produced for the
- * JSON {@code .manifest} by the {@code BundleParser}, so downstream consumers see identical metadata
- * regardless of the bundle's wire format.
+ * Maps a decoded proto {@link Manifest} into OPA's JSON object shape, which is then passed through
+ * the shared SDK manifest model's validation and defaults. The intermediate map also preserves
+ * OPA's JSON field presence for round-tripping.
  *
  * <p>Field presence mirrors OPA's JSON marshaling exactly: fields tagged {@code omitempty} (or
  * emitted conditionally by a custom {@code MarshalJSON}, as {@code ast.Annotations} does) are

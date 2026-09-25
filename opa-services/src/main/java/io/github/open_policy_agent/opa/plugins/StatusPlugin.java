@@ -313,9 +313,10 @@ public final class StatusPlugin implements Plugin {
       if (storeBundles != null) {
         for (Map.Entry<String, Bundle> entry : storeBundles.entrySet()) {
           ObjectNode bundleInfo = MAPPER.createObjectNode();
+          // OPA's bundle.Status.ActiveRevision is `omitempty`: an empty revision leaves the key out.
           if (entry.getValue().manifest != null
-              && entry.getValue().manifest.containsKey("revision")) {
-            bundleInfo.put("revision", String.valueOf(entry.getValue().manifest.get("revision")));
+              && !entry.getValue().manifest.getRevision().isEmpty()) {
+            bundleInfo.put("revision", entry.getValue().manifest.getRevision());
           }
           bundleInfo.put("active", true);
           bundles.set(entry.getKey(), bundleInfo);

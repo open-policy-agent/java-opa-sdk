@@ -42,7 +42,7 @@ class TarballProtoBundleLoaderTest {
 
     assertNotNull(bundle.irPolicy, "proto plan.pb should decode into an IR policy");
     assertNotNull(bundle.irPolicy.getPlans().getPlanByName("authz/allow"));
-    assertEquals(1, ((Number) bundle.manifest.get("rego_version")).intValue());
+    assertEquals(1, bundle.manifest.getRegoVersion());
   }
 
   @Test

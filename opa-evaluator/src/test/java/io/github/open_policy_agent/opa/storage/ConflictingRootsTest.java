@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.bundle.Bundle;
+import io.github.open_policy_agent.opa.bundle.Manifest;
 
 /** Unit tests for bundle root conflict detection in Store implementations. */
 public class ConflictingRootsTest {
@@ -32,7 +33,7 @@ public class ConflictingRootsTest {
         rootList.add(root);
       }
       manifest.put("roots", rootList);
-      builder.withManifest(manifest);
+      builder.withManifest(Manifest.fromMap(manifest));
     }
 
     return builder.build();

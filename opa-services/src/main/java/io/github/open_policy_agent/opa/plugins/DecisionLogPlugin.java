@@ -570,9 +570,10 @@ public final class DecisionLogPlugin implements Plugin {
         ObjectNode bundlesNode = MAPPER.createObjectNode();
         for (Map.Entry<String, Bundle> entry : bundles.entrySet()) {
           ObjectNode bundleInfo = MAPPER.createObjectNode();
+          // OPA's BundleInfoV1.Revision is `omitempty`: an empty revision leaves the key out.
           if (entry.getValue().manifest != null
-              && entry.getValue().manifest.containsKey("revision")) {
-            bundleInfo.put("revision", String.valueOf(entry.getValue().manifest.get("revision")));
+              && !entry.getValue().manifest.getRevision().isEmpty()) {
+            bundleInfo.put("revision", entry.getValue().manifest.getRevision());
           }
           bundlesNode.set(entry.getKey(), bundleInfo);
         }

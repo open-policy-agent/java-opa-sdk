@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -78,7 +79,8 @@ class TarballBundleLoaderTest {
     Bundle bundle = new TarballBundleLoader("test", tarball).load(store);
 
     assertNotNull(bundle.manifest);
-    assertEquals("abc123", bundle.manifest.get("revision"));
+    assertEquals("abc123", bundle.manifest.getRevision());
+    assertEquals(List.of(""), bundle.manifest.getRoots());
   }
 
   @Test
