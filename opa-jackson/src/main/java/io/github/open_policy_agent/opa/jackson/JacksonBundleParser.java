@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.bundle.BundleParser;
+import io.github.open_policy_agent.opa.bundle.Manifest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,7 +29,12 @@ public class JacksonBundleParser implements BundleParser {
   }
 
   @Override
-  public Map<String, Object> parseManifest(InputStream in) throws IOException {
-    return MAPPER.readValue(in, MAP_TYPE);
+  public Manifest parseManifest(InputStream in) throws IOException {
+    Map<String, Object> properties = MAPPER.readValue(in, MAP_TYPE);
+    try {
+      return Manifest.fromMap(properties == null ? Map.of() : properties);
+    } catch (IllegalArgumentException e) {
+      throw new IOException("Invalid bundle manifest: " + e.getMessage(), e);
+    }
   }
 }

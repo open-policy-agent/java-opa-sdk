@@ -1,10 +1,10 @@
 package io.github.open_policy_agent.opa.proto;
 
+import io.github.open_policy_agent.opa.bundle.Manifest;
 import io.github.open_policy_agent.opa.bundle.ProtoBundleDecoder;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Protobuf-based {@link ProtoBundleDecoder} implementation.
@@ -32,7 +32,12 @@ public final class ProtoBundleReader implements ProtoBundleDecoder {
   }
 
   @Override
-  public Map<String, Object> decodeManifest(InputStream in) throws IOException {
-    return ManifestMapper.toMap(opa.bundle.v1.Manifest.parseFrom(in));
+  public Manifest decodeManifest(InputStream in) throws IOException {
+    opa.bundle.v1.Manifest proto = opa.bundle.v1.Manifest.parseFrom(in);
+    try {
+      return Manifest.fromMap(ManifestMapper.toMap(proto));
+    } catch (IllegalArgumentException e) {
+      throw new IOException("malformed proto manifest (.manifest.pb): " + e.getMessage(), e);
+    }
   }
 }

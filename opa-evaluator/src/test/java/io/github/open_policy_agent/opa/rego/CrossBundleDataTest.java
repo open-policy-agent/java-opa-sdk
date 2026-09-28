@@ -16,6 +16,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.bundle.Bundle;
+import io.github.open_policy_agent.opa.bundle.Manifest;
 import io.github.open_policy_agent.opa.ir.PolicyReader;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
 import io.github.open_policy_agent.opa.storage.InMem;
@@ -56,13 +57,16 @@ class CrossBundleDataTest {
   private static Bundle createBundleWithRoot(String root) {
     Map<String, Object> manifest = new HashMap<>();
     manifest.put("roots", List.of(root));
-    return new Bundle.Builder().withManifest(manifest).build();
+    return new Bundle.Builder().withManifest(Manifest.fromMap(manifest)).build();
   }
 
   private static Bundle createPolicyBundleWithRoot(String root) {
     Map<String, Object> manifest = new HashMap<>();
     manifest.put("roots", List.of(root));
-    return new Bundle.Builder().withIrPolicy(authzPolicy).withManifest(manifest).build();
+    return new Bundle.Builder()
+        .withIrPolicy(authzPolicy)
+        .withManifest(Manifest.fromMap(manifest))
+        .build();
   }
 
   private static JsonNode bobInGroup(String group) throws IOException {

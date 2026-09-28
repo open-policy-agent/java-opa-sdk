@@ -3,7 +3,6 @@ package io.github.open_policy_agent.opa.bundle;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 /**
  * Optional SPI for decoding protobuf-format bundle files produced by
@@ -43,12 +42,9 @@ public interface ProtoBundleDecoder {
   /**
    * Decode bundle metadata from a {@code .manifest.pb} stream.
    *
-   * <p>The returned map mirrors the shape produced by {@link BundleParser#parseManifest} for the
-   * JSON {@code .manifest}, so downstream consumers do not need to distinguish the two formats.
-   *
    * @param in the {@code .manifest.pb} input stream
-   * @return the decoded manifest as a map
+   * @return the decoded manifest
    * @throws IOException if the stream cannot be read or the bytes are not a valid proto manifest
    */
-  Map<String, Object> decodeManifest(InputStream in) throws IOException;
+  Manifest decodeManifest(InputStream in) throws IOException;
 }

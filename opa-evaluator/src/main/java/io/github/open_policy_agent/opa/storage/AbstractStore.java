@@ -2,7 +2,9 @@ package io.github.open_policy_agent.opa.storage;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.bundle.Bundle;
 
@@ -47,8 +49,8 @@ public abstract class AbstractStore implements Store {
   public String getDefaultEntrypoint() {
     return bundles.values().stream()
         .filter(bundle -> bundle.manifest != null)
-        .filter(bundle -> bundle.manifest.containsKey("default_decision"))
-        .map(bundle -> String.valueOf(bundle.manifest.get("default_decision")))
+        .map(bundle -> bundle.manifest.getDefaultDecision())
+        .filter(Objects::nonNull)
         .findFirst()
         .orElse("");
   }
@@ -77,13 +79,12 @@ public abstract class AbstractStore implements Store {
    * @return the root path (empty string for global root)
    */
   private String extractRoot(Bundle bundle) {
-    if (bundle.manifest != null && bundle.manifest.get("roots") instanceof java.util.List) {
-      java.util.List<?> roots = (java.util.List<?>) bundle.manifest.get("roots");
+    if (bundle.manifest != null) {
+      List<String> roots = bundle.manifest.getRoots();
       if (!roots.isEmpty()) {
-        return String.valueOf(roots.get(0));
+        return roots.get(0);
       }
     }
-    // No manifest or no roots field, default to empty root (global data root)
     return "";
   }
 

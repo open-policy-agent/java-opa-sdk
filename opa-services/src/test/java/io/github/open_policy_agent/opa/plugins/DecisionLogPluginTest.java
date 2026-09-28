@@ -6,10 +6,15 @@ import static org.mockito.Mockito.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.bundle.Bundle;
+import io.github.open_policy_agent.opa.bundle.Manifest;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.metrics.Metrics;
@@ -380,6 +385,51 @@ class DecisionLogPluginTest {
 
     // Verify console logging happened
     verify(mockLogger, atLeastOnce()).info(eq("Decision: %s"), anyString());
+  }
+
+  @Test
+  void logDecisionOmitsEmptyBundleRevision() throws Exception {
+    Config.DecisionLogsConfig decisionLogs =
+        new Config.DecisionLogsConfig().setConsole(true).setService("test-service");
+    config.setDecisionLogs(decisionLogs);
+
+    // OPA's BundleInfoV1.Revision is `omitempty`, so only a non-empty revision is logged.
+    store.write(
+        "with-revision",
+        new Bundle.Builder()
+            .withManifest(Manifest.fromMap(Map.of("revision", "rev-1", "roots", List.of("a"))))
+            .build(),
+        new RegoObject());
+    store.write(
+        "no-revision",
+        new Bundle.Builder().withManifest(Manifest.fromMap(Map.of("roots", List.of("b")))).build(),
+        new RegoObject());
+
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+
+    DecisionLogPlugin plugin = new DecisionLogPlugin();
+    plugin = (DecisionLogPlugin) plugin.initialize(manager);
+    plugin.start();
+
+    JsonNode input = mapper.createObjectNode().put("user", "dave");
+    JsonNode result = mapper.createObjectNode().put("allow", true);
+    plugin
+        .getDecisionLogs()
+        .logDecision("decision-789", input, result, "data.authz.allow", null, 0, null, null);
+
+    ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+    verify(mockLogger).info(eq("Decision: %s"), captor.capture());
+    JsonNode bundles = mapper.readTree(captor.getValue()).get("bundles");
+
+    assertEquals("rev-1", bundles.get("with-revision").get("revision").asText());
+    assertTrue(bundles.has("no-revision"));
+    assertFalse(bundles.get("no-revision").has("revision"));
   }
 
   @Test

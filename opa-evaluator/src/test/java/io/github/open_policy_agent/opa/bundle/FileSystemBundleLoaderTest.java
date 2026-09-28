@@ -77,7 +77,8 @@ class FileSystemBundleLoaderTest {
     Bundle bundle = new FileSystemBundleLoader("test", dir).load(store);
 
     assertNotNull(bundle.manifest);
-    assertEquals("abc123", bundle.manifest.get("revision"));
+    assertEquals("abc123", bundle.manifest.getRevision());
+    assertEquals(List.of("authz"), bundle.manifest.getRoots());
   }
 
   @Test

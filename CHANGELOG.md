@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Breaking Changes
+
+- `Bundle.manifest` is now a typed, immutable `Manifest` instead of
+  `Map<String, Object>`, and `BundleParser#parseManifest` and
+  `ProtoBundleDecoder#decodeManifest` return it; replace
+  `manifest.get("revision")` with `getRevision()` and wrap existing maps with
+  `Manifest.fromMap(...)`
+
+### Runtime, SDK, Tooling
+
+- Malformed manifest field types (for example a numeric `revision`) now fail at
+  bundle load instead of surfacing later as untyped data
+- Status reports and decision logs omit `revision` when it is empty, matching
+  OPA's `omitempty`, and decision provenance lists every bundle in the store
+  with an empty revision when none is recorded
+
 ## 0.5.0
 
 This release makes status reporting resilient to transient failures, fixes
