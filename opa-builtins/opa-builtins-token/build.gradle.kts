@@ -9,7 +9,7 @@ repositories {
 dependencies {
     api(project(":opa-evaluator"))
 
-    implementation("com.nimbusds:nimbus-jose-jwt:10.9.1")
+    implementation("com.nimbusds:nimbus-jose-jwt:10.10")
     implementation("org.bouncycastle:bcpkix-jdk18on:1.86")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.2")
     // RegoValueModule provides Jackson (de)serialization for RegoObject/RegoArray/etc.
