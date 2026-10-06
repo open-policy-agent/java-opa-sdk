@@ -60,9 +60,10 @@ public class SimpleMetrics implements Metrics {
 
   @Override
   public Map<String, Metric> all() {
-    Map<String, Metric> all = new TreeMap<>(timers);
-    all.putAll(counters);
-    all.putAll(histograms);
+    Map<String, Metric> all = new TreeMap<>();
+    timers.forEach((name, metric) -> all.put("timer_" + name + "_ns", metric));
+    counters.forEach((name, metric) -> all.put("counter_" + name, metric));
+    histograms.forEach((name, metric) -> all.put("histogram_" + name, metric));
     return all;
   }
 

@@ -16,6 +16,10 @@ public interface Metrics {
 
   Counter counter(String name);
 
+  /**
+   * Return every metric keyed using OPA's type-specific naming convention: {@code
+   * timer_<name>_ns}, {@code counter_<name>} and {@code histogram_<name>}.
+   */
   Map<String, Metric> all();
 
   void clear();
