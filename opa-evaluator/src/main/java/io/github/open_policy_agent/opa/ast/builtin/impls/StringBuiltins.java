@@ -162,22 +162,32 @@ public class StringBuiltins {
     pairs.sort(Comparator.comparing(p -> p[0]));
 
     // Single left-to-right scan matching Go's strings.NewReplacer semantics:
-    // at each position, try all patterns in order and take the first match.
+    // at each position, try all patterns in order and take the first match. An empty key matches
+    // at every position, including the end, but not twice in a row at the same position.
     StringBuilder sb = new StringBuilder(value.length());
     int i = 0;
-    while (i < value.length()) {
-      boolean matched = false;
+    boolean prevMatchEmpty = false;
+    while (i <= value.length()) {
+      String[] match = null;
       for (String[] pair : pairs) {
+        if (pair[0].isEmpty() && prevMatchEmpty) {
+          continue;
+        }
         if (value.startsWith(pair[0], i)) {
-          sb.append(pair[1]);
-          i += pair[0].length();
-          matched = true;
+          match = pair;
           break;
         }
       }
-      if (!matched) {
-        sb.append(value.charAt(i));
-        i++;
+      prevMatchEmpty = match != null && match[0].isEmpty();
+      if (match != null) {
+        sb.append(match[1]);
+        i += match[0].length();
+      } else if (i < value.length()) {
+        int cp = value.codePointAt(i);
+        sb.appendCodePoint(cp);
+        i += Character.charCount(cp);
+      } else {
+        break;
       }
     }
     return new RegoString(sb.toString());

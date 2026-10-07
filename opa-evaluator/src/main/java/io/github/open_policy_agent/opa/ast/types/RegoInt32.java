@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public class RegoInt32 implements RegoValue, RegoNumber {
     private Integer value;
+    private boolean floatText;
 
   private static final RegoInt32[] INSTANCES =
       new RegoInt32[] {
@@ -60,6 +61,15 @@ public class RegoInt32 implements RegoValue, RegoNumber {
     }
 
     public String getTypeName() { return "number";}
+
+    @Override
+    public boolean isFloatText() {
+        return floatText;
+    }
+
+    void setFloatText(boolean floatText) {
+        this.floatText = floatText;
+    }
 
   public static RegoInt32 of(Integer i) {
     if (i >= 0 && i <= 20) {
