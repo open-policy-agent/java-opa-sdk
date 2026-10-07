@@ -1,0 +1,4650 @@
+{
+	"cases": [
+		{
+			"note": "globmatch/single wildcard requires exactly one character",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"?\", null, \"\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "?"
+						},
+						{
+							"value": ""
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 31,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CjgKAwoBeAoDCgE/CgIKABIMCgpnbG9iLm1hdGNoGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQa8AEK7QEKDmcwLmRhdGEudGVzdC5wEgIAARgCIoYBChEIABABGAOwAh+4AgOCAgIIAwoRCAAQBhgDsAIfuAIDqgECCAQKLggAEAYYA7ACH7gCA1ogCgpnbG9iLm1hdGNoEgQKAhgBEgQKAhAEEgQKAhgCGAUKFggAEAYYA7ACH7gCAzoICgQKAhAFEAYKFggAEAEYA7ACH7gCAzIICgQKAhAGEAMiKgoQCAAQARgDsAIfuAIDegIIAwoWCAAQARgDsAIfuAIDMggKBAoCEAMQAiITChEIABABGAOwAh+4AgOSAgIIAioCZzAqBHRlc3QqAXA="
+		},
+		{
+			"note": "globmatch/negated character-list requires exactly one character",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"[!0-9]\", null, \"\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "[!0-9]"
+						},
+						{
+							"value": ""
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 36,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "Cj0KAwoBeAoICgZbITAtOV0KAgoAEgwKCmdsb2IubWF0Y2gaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrwAQrtAQoOZzAuZGF0YS50ZXN0LnASAgABGAIihgEKEQgAEAEYA7ACJLgCA4ICAggDChEIABAGGAOwAiS4AgOqAQIIBAouCAAQBhgDsAIkuAIDWiAKCmdsb2IubWF0Y2gSBAoCGAESBAoCEAQSBAoCGAIYBQoWCAAQBhgDsAIkuAIDOggKBAoCEAUQBgoWCAAQARgDsAIkuAIDMggKBAoCEAYQAyIqChAIABABGAOwAiS4AgN6AggDChYIABABGAOwAiS4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACJLgCA5ICAggCKgJnMCoEdGVzdCoBcA=="
+		},
+		{
+			"note": "globmatch/wildcard does not consume a literal of the pattern",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"a/*/b\", null, \"a/b\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "a/*/b"
+						},
+						{
+							"value": "a/b"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "Cj8KAwoBeAoHCgVhLyovYgoFCgNhL2ISDAoKZ2xvYi5tYXRjaBoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGvABCu0BCg5nMC5kYXRhLnRlc3QucBICAAEYAiKGAQoRCAAQARgDsAImuAIDggICCAMKEQgAEAYYA7ACJrgCA6oBAggECi4IABAGGAOwAia4AgNaIAoKZ2xvYi5tYXRjaBIECgIYARIECgIQBBIECgIYAhgFChYIABAGGAOwAia4AgM6CAoECgIQBRAGChYIABABGAOwAia4AgMyCAoECgIQBhADIioKEAgAEAEYA7ACJrgCA3oCCAMKFggAEAEYA7ACJrgCAzIICgQKAhADEAIiEwoRCAAQARgDsAImuAIDkgICCAIqAmcwKgR0ZXN0KgFw"
+		},
+		{
+			"note": "globmatch/wildcard between literals",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"a/*/b\", null, \"a/x/b\")\n"
+			],
+			"want_result": [
+				{
+					"x": true
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "a/*/b"
+						},
+						{
+							"value": "a/x/b"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": true
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CkEKAwoBeAoHCgVhLyovYgoHCgVhL3gvYhIMCgpnbG9iLm1hdGNoGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQa8AEK7QEKDmcwLmRhdGEudGVzdC5wEgIAARgCIoYBChEIABABGAOwAii4AgOCAgIIAwoRCAAQBhgDsAIouAIDqgECCAQKLggAEAYYA7ACKLgCA1ogCgpnbG9iLm1hdGNoEgQKAhgBEgQKAhAEEgQKAhgCGAUKFggAEAYYA7ACKLgCAzoICgQKAhAFEAYKFggAEAEYA7ACKLgCAzIICgQKAhAGEAMiKgoQCAAQARgDsAIouAIDegIIAwoWCAAQARgDsAIouAIDMggKBAoCEAMQAiITChEIABABGAOwAii4AgOSAgIIAioCZzAqBHRlc3QqAXA="
+		},
+		{
+			"note": "globmatch/super wildcard does not consume a literal of the pattern",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"a/**/b\", null, \"a/b\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "a/**/b"
+						},
+						{
+							"value": "a/b"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CkAKAwoBeAoICgZhLyoqL2IKBQoDYS9iEgwKCmdsb2IubWF0Y2gaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrwAQrtAQoOZzAuZGF0YS50ZXN0LnASAgABGAIihgEKEQgAEAEYA7ACJ7gCA4ICAggDChEIABAGGAOwAie4AgOqAQIIBAouCAAQBhgDsAInuAIDWiAKCmdsb2IubWF0Y2gSBAoCGAESBAoCEAQSBAoCGAIYBQoWCAAQBhgDsAInuAIDOggKBAoCEAUQBgoWCAAQARgDsAInuAIDMggKBAoCEAYQAyIqChAIABABGAOwAie4AgN6AggDChYIABABGAOwAie4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACJ7gCA5ICAggCKgJnMCoEdGVzdCoBcA=="
+		},
+		{
+			"note": "globmatch/super wildcard matches the empty string between literals",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"a/**/b\", null, \"a//b\")\n"
+			],
+			"want_result": [
+				{
+					"x": true
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "a/**/b"
+						},
+						{
+							"value": "a//b"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": true
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CkEKAwoBeAoICgZhLyoqL2IKBgoEYS8vYhIMCgpnbG9iLm1hdGNoGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQa8AEK7QEKDmcwLmRhdGEudGVzdC5wEgIAARgCIoYBChEIABABGAOwAii4AgOCAgIIAwoRCAAQBhgDsAIouAIDqgECCAQKLggAEAYYA7ACKLgCA1ogCgpnbG9iLm1hdGNoEgQKAhgBEgQKAhAEEgQKAhgCGAUKFggAEAYYA7ACKLgCAzoICgQKAhAFEAYKFggAEAEYA7ACKLgCAzIICgQKAhAGEAMiKgoQCAAQARgDsAIouAIDegIIAwoWCAAQARgDsAIouAIDMggKBAoCEAMQAiITChEIABABGAOwAii4AgOSAgIIAioCZzAqBHRlc3QqAXA="
+		},
+		{
+			"note": "globmatch/super wildcard is not a globstar",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"**/x\", null, \"x\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "**/x"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 0
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 35,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CjcKAwoBeAoGCgQqKi94EgwKCmdsb2IubWF0Y2gaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrwAQrtAQoOZzAuZGF0YS50ZXN0LnASAgABGAIihgEKEQgAEAEYA7ACI7gCA4ICAggDChEIABAGGAOwAiO4AgOqAQIIBAouCAAQBhgDsAIjuAIDWiAKCmdsb2IubWF0Y2gSBAoCGAESBAoCEAQSBAoCGAAYBQoWCAAQBhgDsAIjuAIDOggKBAoCEAUQBgoWCAAQARgDsAIjuAIDMggKBAoCEAYQAyIqChAIABABGAOwAiO4AgN6AggDChYIABABGAOwAiO4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACI7gCA5ICAggCKgJnMCoEdGVzdCoBcA=="
+		},
+		{
+			"note": "globmatch/empty pattern alternative",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"{**/,}x\", null, \"x\")\n"
+			],
+			"want_result": [
+				{
+					"x": true
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "{**/,}x"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 0
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 38,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": true
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CjoKAwoBeAoJCgd7KiovLH14EgwKCmdsb2IubWF0Y2gaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrwAQrtAQoOZzAuZGF0YS50ZXN0LnASAgABGAIihgEKEQgAEAEYA7ACJrgCA4ICAggDChEIABAGGAOwAia4AgOqAQIIBAouCAAQBhgDsAImuAIDWiAKCmdsb2IubWF0Y2gSBAoCGAESBAoCEAQSBAoCGAAYBQoWCAAQBhgDsAImuAIDOggKBAoCEAUQBgoWCAAQARgDsAImuAIDMggKBAoCEAYQAyIqChAIABABGAOwAia4AgN6AggDChYIABABGAOwAia4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACJrgCA5ICAggCKgJnMCoEdGVzdCoBcA=="
+		},
+		{
+			"note": "globmatch/a run of wildcards matches the empty string",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"***\", [\".\"], \"\")\n"
+			],
+			"want_result": [
+				{
+					"x": true
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "***"
+						},
+						{
+							"value": "."
+						},
+						{
+							"value": ""
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeArrayStmt",
+											"stmt": {
+												"capacity": 1,
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "ArrayAppendStmt",
+											"stmt": {
+												"value": {
+													"type": "string_index",
+													"value": 2
+												},
+												"array": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 3
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": true
+				}
+			],
+			"ignore": false,
+			"plan_proto": "Cj8KAwoBeAoFCgMqKioKAwoBLgoCCgASDAoKZ2xvYi5tYXRjaBoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGooCCocCCg5nMC5kYXRhLnRlc3QucBICAAEYAiKgAQoRCAAQARgDsAIiuAIDggICCAMKEwgAEAYYA7ACIrgCA6IBBAgBEAQKFggAEAYYA7ACIrgCAyIICgQKAhgCEAQKLggAEAYYA7ACIrgCA1ogCgpnbG9iLm1hdGNoEgQKAhgBEgQKAhAEEgQKAhgDGAUKFggAEAYYA7ACIrgCAzoICgQKAhAFEAYKFggAEAEYA7ACIrgCAzIICgQKAhAGEAMiKgoQCAAQARgDsAIiuAIDegIIAwoWCAAQARgDsAIiuAIDMggKBAoCEAMQAiITChEIABABGAOwAiK4AgOSAgIIAioCZzAqBHRlc3QqAXA="
+		},
+		{
+			"note": "globmatch/wildcards do not cross any of multiple delimiters",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"*?*\", [\".\", \"/\"], \"api.github.com\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "*?*"
+						},
+						{
+							"value": "."
+						},
+						{
+							"value": "/"
+						},
+						{
+							"value": "api.github.com"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeArrayStmt",
+											"stmt": {
+												"capacity": 2,
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "ArrayAppendStmt",
+											"stmt": {
+												"value": {
+													"type": "string_index",
+													"value": 2
+												},
+												"array": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "ArrayAppendStmt",
+											"stmt": {
+												"value": {
+													"type": "string_index",
+													"value": 3
+												},
+												"array": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 4
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 53,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "ClIKAwoBeAoFCgMqPyoKAwoBLgoDCgEvChAKDmFwaS5naXRodWIuY29tEgwKCmdsb2IubWF0Y2gaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBqiAgqfAgoOZzAuZGF0YS50ZXN0LnASAgABGAIiuAEKEQgAEAEYA7ACNbgCA4ICAggDChMIABAGGAOwAjW4AgOiAQQIAhAEChYIABAGGAOwAjW4AgMiCAoECgIYAhAEChYIABAGGAOwAjW4AgMiCAoECgIYAxAECi4IABAGGAOwAjW4AgNaIAoKZ2xvYi5tYXRjaBIECgIYARIECgIQBBIECgIYBBgFChYIABAGGAOwAjW4AgM6CAoECgIQBRAGChYIABABGAOwAjW4AgMyCAoECgIQBhADIioKEAgAEAEYA7ACNbgCA3oCCAMKFggAEAEYA7ACNbgCAzIICgQKAhADEAIiEwoRCAAQARgDsAI1uAIDkgICCAIqAmcwKgR0ZXN0KgFw"
+		},
+		{
+			"note": "globmatch/wildcards with multiple delimiters",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"*?*\", [\".\", \"/\"], \"abc\")\n"
+			],
+			"want_result": [
+				{
+					"x": true
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "*?*"
+						},
+						{
+							"value": "."
+						},
+						{
+							"value": "/"
+						},
+						{
+							"value": "abc"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeArrayStmt",
+											"stmt": {
+												"capacity": 2,
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "ArrayAppendStmt",
+											"stmt": {
+												"value": {
+													"type": "string_index",
+													"value": 2
+												},
+												"array": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "ArrayAppendStmt",
+											"stmt": {
+												"value": {
+													"type": "string_index",
+													"value": 3
+												},
+												"array": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 4
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": true
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CkcKAwoBeAoFCgMqPyoKAwoBLgoDCgEvCgUKA2FiYxIMCgpnbG9iLm1hdGNoGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQaogIKnwIKDmcwLmRhdGEudGVzdC5wEgIAARgCIrgBChEIABABGAOwAiq4AgOCAgIIAwoTCAAQBhgDsAIquAIDogEECAIQBAoWCAAQBhgDsAIquAIDIggKBAoCGAIQBAoWCAAQBhgDsAIquAIDIggKBAoCGAMQBAouCAAQBhgDsAIquAIDWiAKCmdsb2IubWF0Y2gSBAoCGAESBAoCEAQSBAoCGAQYBQoWCAAQBhgDsAIquAIDOggKBAoCEAUQBgoWCAAQARgDsAIquAIDMggKBAoCEAYQAyIqChAIABABGAOwAiq4AgN6AggDChYIABABGAOwAiq4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACKrgCA5ICAggCKgJnMCoEdGVzdCoBcA=="
+		},
+		{
+			"note": "globmatch/wildcard does not cross the second delimiter",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"*\", [\".\", \"/\"], \"a/b\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "*"
+						},
+						{
+							"value": "."
+						},
+						{
+							"value": "/"
+						},
+						{
+							"value": "a/b"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeArrayStmt",
+											"stmt": {
+												"capacity": 2,
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "ArrayAppendStmt",
+											"stmt": {
+												"value": {
+													"type": "string_index",
+													"value": 2
+												},
+												"array": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "ArrayAppendStmt",
+											"stmt": {
+												"value": {
+													"type": "string_index",
+													"value": 3
+												},
+												"array": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 4
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 40,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CkUKAwoBeAoDCgEqCgMKAS4KAwoBLwoFCgNhL2ISDAoKZ2xvYi5tYXRjaBoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGqICCp8CCg5nMC5kYXRhLnRlc3QucBICAAEYAiK4AQoRCAAQARgDsAIouAIDggICCAMKEwgAEAYYA7ACKLgCA6IBBAgCEAQKFggAEAYYA7ACKLgCAyIICgQKAhgCEAQKFggAEAYYA7ACKLgCAyIICgQKAhgDEAQKLggAEAYYA7ACKLgCA1ogCgpnbG9iLm1hdGNoEgQKAhgBEgQKAhAEEgQKAhgEGAUKFggAEAYYA7ACKLgCAzoICgQKAhAFEAYKFggAEAEYA7ACKLgCAzIICgQKAhAGEAMiKgoQCAAQARgDsAIouAIDegIIAwoWCAAQARgDsAIouAIDMggKBAoCEAMQAiITChEIABABGAOwAii4AgOSAgIIAioCZzAqBHRlc3QqAXA="
+		},
+		{
+			"note": "globmatch/escaped meta character is a literal",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"\\\\*\", null, \"*\")\n"
+			],
+			"want_result": [
+				{
+					"x": true
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "\\*"
+						},
+						{
+							"value": "*"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": true
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CjoKAwoBeAoECgJcKgoDCgEqEgwKCmdsb2IubWF0Y2gaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrwAQrtAQoOZzAuZGF0YS50ZXN0LnASAgABGAIihgEKEQgAEAEYA7ACIrgCA4ICAggDChEIABAGGAOwAiK4AgOqAQIIBAouCAAQBhgDsAIiuAIDWiAKCmdsb2IubWF0Y2gSBAoCGAESBAoCEAQSBAoCGAIYBQoWCAAQBhgDsAIiuAIDOggKBAoCEAUQBgoWCAAQARgDsAIiuAIDMggKBAoCEAYQAyIqChAIABABGAOwAiK4AgN6AggDChYIABABGAOwAiK4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACIrgCA5ICAggCKgJnMCoEdGVzdCoBcA=="
+		},
+		{
+			"note": "globmatch/escaped meta character does not match another character",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := glob.match(\"\\\\*\", null, \"a\")\n"
+			],
+			"want_result": [
+				{
+					"x": false
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "\\*"
+						},
+						{
+							"value": "a"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "glob.match",
+							"decl": {
+								"args": [
+									{
+										"description": "glob pattern",
+										"name": "pattern",
+										"type": "string"
+									},
+									{
+										"description": "glob pattern delimiters, e.g. `[\".\", \":\"]`, defaults to `[\".\"]` if unset. If `delimiters` is `null`, glob match without delimiter.",
+										"name": "delimiters",
+										"of": [
+											{
+												"type": "null"
+											},
+											{
+												"dynamic": {
+													"type": "string"
+												},
+												"type": "array"
+											}
+										],
+										"type": "any"
+									},
+									{
+										"description": "string to match against `pattern`",
+										"name": "match",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "true if `match` can be found in `pattern` which is separated by `delimiters`",
+									"name": "result",
+									"type": "boolean"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "MakeNullStmt",
+											"stmt": {
+												"target": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "glob.match",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "local",
+														"value": 4
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 6,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 6
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 34,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": false
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CjoKAwoBeAoECgJcKgoDCgFhEgwKCmdsb2IubWF0Y2gaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrwAQrtAQoOZzAuZGF0YS50ZXN0LnASAgABGAIihgEKEQgAEAEYA7ACIrgCA4ICAggDChEIABAGGAOwAiK4AgOqAQIIBAouCAAQBhgDsAIiuAIDWiAKCmdsb2IubWF0Y2gSBAoCGAESBAoCEAQSBAoCGAIYBQoWCAAQBhgDsAIiuAIDOggKBAoCEAUQBgoWCAAQARgDsAIiuAIDMggKBAoCEAYQAyIqChAIABABGAOwAiK4AgN6AggDChYIABABGAOwAiK4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACIrgCA5ICAggCKgJnMCoEdGVzdCoBcA=="
+		}
+	]
+}
