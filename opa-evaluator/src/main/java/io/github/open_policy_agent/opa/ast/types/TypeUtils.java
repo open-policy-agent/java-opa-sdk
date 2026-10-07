@@ -55,6 +55,19 @@ public final class TypeUtils {
     }
   }
 
+  // Whole numbers written with a fraction or exponent compare as integers, but remember their
+  // float text so sprintf formats them like OPA does. Fresh instances keep the RegoInt32 cache clean.
+  private static RegoNumber floatTextInteger(long longValue) {
+    if (longValue >= Integer.MIN_VALUE && longValue <= Integer.MAX_VALUE) {
+      RegoInt32 i = new RegoInt32(String.valueOf(longValue));
+      i.setFloatText(true);
+      return i;
+    }
+    RegoBigInt b = new RegoBigInt(longValue);
+    b.setFloatText(true);
+    return b;
+  }
+
   public static RegoValue parseStringToNumber(String number) {
     // Try parsing as int first
     try {
@@ -72,7 +85,7 @@ public final class TypeUtils {
           // Check if it's a whole number and convert to integer type
           // BUT only if it's within the range of a long (to avoid overflow)
           if (isWholeNumberInLongRange(d)) {
-            return longToRegoInteger((long) d);
+            return floatTextInteger((long) d);
           }
 
           // If the value is infinite, preserve the original string

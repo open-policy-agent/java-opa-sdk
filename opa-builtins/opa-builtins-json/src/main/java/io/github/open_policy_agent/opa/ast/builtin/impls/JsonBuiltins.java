@@ -1,6 +1,7 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
@@ -1098,10 +1099,14 @@ public class JsonBuiltins implements BuiltinProvider {
       return RegoBoolean.FALSE;
     }
 
-    try {
-      YAML_MAPPER.readTree(yamlInput.getValue());
+    // Read the whole stream: readTree stops after the first document, missing errors in content
+    // that follows it (including later documents), which Go's parser still rejects.
+    try (JsonParser parser = YAML_MAPPER.createParser(yamlInput.getValue())) {
+      while (parser.nextToken() != null) {
+        // consume
+      }
       return RegoBoolean.TRUE;
-    } catch (JsonProcessingException e) {
+    } catch (IOException e) {
       return RegoBoolean.FALSE;
     }
   }

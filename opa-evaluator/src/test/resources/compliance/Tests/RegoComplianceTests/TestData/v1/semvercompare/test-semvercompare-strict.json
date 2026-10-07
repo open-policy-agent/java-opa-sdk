@@ -1,16 +1,14 @@
 {
 	"cases": [
 		{
-			"note": "sprintf/big_int",
+			"note": "semvercompare/leading zero in operand 1",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\np := x if {\n\tx = sprintf(\"%s\", [123456789123456789123])\n}\n"
+				"package test\n\np := semver.compare(\"1.02.3\", \"1.2.3\")\n"
 			],
-			"want_result": [
-				{
-					"x": "123456789123456789123"
-				}
-			],
+			"want_error_code": "eval_builtin_error",
+			"want_error": "semver.compare: operand 1: string \"1.02.3\" is not a valid SemVer",
+			"strict_error": true,
 			"entrypoints": [
 				"eval"
 			],
@@ -21,35 +19,32 @@
 							"value": "x"
 						},
 						{
-							"value": "%s"
+							"value": "1.02.3"
 						},
 						{
-							"value": "123456789123456789123"
+							"value": "1.2.3"
 						}
 					],
 					"builtin_funcs": [
 						{
-							"name": "sprintf",
+							"name": "semver.compare",
 							"decl": {
 								"args": [
 									{
-										"description": "string with formatting verbs",
-										"name": "format",
+										"description": "first version string",
+										"name": "a",
 										"type": "string"
 									},
 									{
-										"description": "arguments to format into formatting verbs",
-										"dynamic": {
-											"type": "any"
-										},
-										"name": "values",
-										"type": "array"
+										"description": "second version string",
+										"name": "b",
+										"type": "string"
 									}
 								],
 								"result": {
-									"description": "`format` formatted by the values in `values`",
-									"name": "output",
-									"type": "string"
+									"description": "`-1` if `a \u003c b`; `1` if `a \u003e b`; `0` if `a == b`",
+									"name": "result",
+									"type": "number"
 								},
 								"type": "function"
 							}
@@ -174,70 +169,30 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
-											}
-										},
-										{
-											"type": "MakeArrayStmt",
-											"stmt": {
-												"capacity": 1,
-												"target": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 44,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "MakeNumberRefStmt",
-											"stmt": {
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 44,
-												"end_row": 4,
-												"index": 2,
-												"Index": 2,
-												"target": 5
-											}
-										},
-										{
-											"type": "ArrayAppendStmt",
-											"stmt": {
-												"value": {
-													"type": "local",
-													"value": 5
-												},
-												"array": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 44,
-												"end_row": 4
 											}
 										},
 										{
 											"type": "CallStmt",
 											"stmt": {
-												"func": "sprintf",
+												"func": "semver.compare",
 												"args": [
 													{
 														"type": "string_index",
 														"value": 1
 													},
 													{
-														"type": "local",
-														"value": 4
+														"type": "string_index",
+														"value": 2
 													}
 												],
-												"result": 6,
+												"result": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 44,
-												"end_row": 4
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
 											}
 										},
 										{
@@ -245,29 +200,14 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 6
+													"value": 4
 												},
-												"target": 7,
+												"target": 5,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 44,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "AssignVarStmt",
-											"stmt": {
-												"source": {
-													"type": "local",
-													"value": 7
-												},
-												"target": 8,
-												"file": 0,
-												"col": 2,
-												"row": 4,
-												"end_col": 44,
-												"end_row": 4
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
 											}
 										},
 										{
@@ -275,13 +215,13 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 8
+													"value": 5
 												},
 												"target": 3,
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										}
@@ -296,7 +236,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										},
@@ -311,7 +251,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										}
@@ -326,7 +266,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										}
@@ -342,25 +282,19 @@
 					]
 				}
 			},
-			"want_plan_result": [
-				{
-					"x": "123456789123456789123"
-				}
-			],
+			"want_plan_result": null,
 			"ignore": false,
-			"plan_proto": "CksKAwoBeAoECgIlcwoXChUxMjM0NTY3ODkxMjM0NTY3ODkxMjMSCQoHc3ByaW50ZhoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGq4CCqsCCg5nMC5kYXRhLnRlc3QucBICAAEYAiLEAQoRCAAQARgDsAIHuAIDggICCAMKEwgAEAYYBLACLLgCBKIBBAgBEAQKEwgAEAYYBLACLLgCBLoBBAgCEAUKFggAEAYYBLACLLgCBCIICgQKAhAFEAQKJQgAEAYYBLACLLgCBFoXCgdzcHJpbnRmEgQKAhgBEgQKAhAEGAYKFggAEAYYBLACLLgCBDoICgQKAhAGEAcKFggAEAIYBLACLLgCBDoICgQKAhAHEAgKFggAEAEYA7ACB7gCAzIICgQKAhAIEAMiKgoQCAAQARgDsAIHuAIDegIIAwoWCAAQARgDsAIHuAIDMggKBAoCEAMQAiITChEIABABGAOwAge4AgOSAgIIAioCZzAqBHRlc3QqAXA="
+			"plan_proto": "CkYKAwoBeAoICgYxLjAyLjMKBwoFMS4yLjMSEAoOc2VtdmVyLmNvbXBhcmUaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBraAQrXAQoOZzAuZGF0YS50ZXN0LnASAgABGAIicQoRCAAQARgDsAInuAIDggICCAMKLAgAEAYYA7ACJ7gCA1oeCg5zZW12ZXIuY29tcGFyZRIECgIYARIECgIYAhgEChYIABAGGAOwAie4AgM6CAoECgIQBBAFChYIABABGAOwAie4AgMyCAoECgIQBRADIioKEAgAEAEYA7ACJ7gCA3oCCAMKFggAEAEYA7ACJ7gCAzIICgQKAhADEAIiEwoRCAAQARgDsAInuAIDkgICCAIqAmcwKgR0ZXN0KgFw"
 		},
 		{
-			"note": "sprintf/big_int/max_cert_serial_number",
+			"note": "semvercompare/leading zero in a numeric pre-release identifier of operand 2",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\np := x if {\n\tx = sprintf(\"%s\", [1208925819614629174706175])\n}\n"
+				"package test\n\np := semver.compare(\"1.2.3\", \"1.2.3-01\")\n"
 			],
-			"want_result": [
-				{
-					"x": "1208925819614629174706175"
-				}
-			],
+			"want_error_code": "eval_builtin_error",
+			"want_error": "semver.compare: operand 2: string \"1.2.3-01\" is not a valid SemVer",
+			"strict_error": true,
 			"entrypoints": [
 				"eval"
 			],
@@ -371,35 +305,32 @@
 							"value": "x"
 						},
 						{
-							"value": "%s"
+							"value": "1.2.3"
 						},
 						{
-							"value": "1208925819614629174706175"
+							"value": "1.2.3-01"
 						}
 					],
 					"builtin_funcs": [
 						{
-							"name": "sprintf",
+							"name": "semver.compare",
 							"decl": {
 								"args": [
 									{
-										"description": "string with formatting verbs",
-										"name": "format",
+										"description": "first version string",
+										"name": "a",
 										"type": "string"
 									},
 									{
-										"description": "arguments to format into formatting verbs",
-										"dynamic": {
-											"type": "any"
-										},
-										"name": "values",
-										"type": "array"
+										"description": "second version string",
+										"name": "b",
+										"type": "string"
 									}
 								],
 								"result": {
-									"description": "`format` formatted by the values in `values`",
-									"name": "output",
-									"type": "string"
+									"description": "`-1` if `a \u003c b`; `1` if `a \u003e b`; `0` if `a == b`",
+									"name": "result",
+									"type": "number"
 								},
 								"type": "function"
 							}
@@ -524,70 +455,30 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 41,
 												"end_row": 3
-											}
-										},
-										{
-											"type": "MakeArrayStmt",
-											"stmt": {
-												"capacity": 1,
-												"target": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 48,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "MakeNumberRefStmt",
-											"stmt": {
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 48,
-												"end_row": 4,
-												"index": 2,
-												"Index": 2,
-												"target": 5
-											}
-										},
-										{
-											"type": "ArrayAppendStmt",
-											"stmt": {
-												"value": {
-													"type": "local",
-													"value": 5
-												},
-												"array": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 48,
-												"end_row": 4
 											}
 										},
 										{
 											"type": "CallStmt",
 											"stmt": {
-												"func": "sprintf",
+												"func": "semver.compare",
 												"args": [
 													{
 														"type": "string_index",
 														"value": 1
 													},
 													{
-														"type": "local",
-														"value": 4
+														"type": "string_index",
+														"value": 2
 													}
 												],
-												"result": 6,
+												"result": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 48,
-												"end_row": 4
+												"row": 3,
+												"end_col": 41,
+												"end_row": 3
 											}
 										},
 										{
@@ -595,29 +486,14 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 6
+													"value": 4
 												},
-												"target": 7,
+												"target": 5,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 48,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "AssignVarStmt",
-											"stmt": {
-												"source": {
-													"type": "local",
-													"value": 7
-												},
-												"target": 8,
-												"file": 0,
-												"col": 2,
-												"row": 4,
-												"end_col": 48,
-												"end_row": 4
+												"row": 3,
+												"end_col": 41,
+												"end_row": 3
 											}
 										},
 										{
@@ -625,13 +501,13 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 8
+													"value": 5
 												},
 												"target": 3,
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 41,
 												"end_row": 3
 											}
 										}
@@ -646,7 +522,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 41,
 												"end_row": 3
 											}
 										},
@@ -661,7 +537,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 41,
 												"end_row": 3
 											}
 										}
@@ -676,7 +552,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 41,
 												"end_row": 3
 											}
 										}
@@ -692,25 +568,19 @@
 					]
 				}
 			},
-			"want_plan_result": [
-				{
-					"x": "1208925819614629174706175"
-				}
-			],
+			"want_plan_result": null,
 			"ignore": false,
-			"plan_proto": "Ck8KAwoBeAoECgIlcwobChkxMjA4OTI1ODE5NjE0NjI5MTc0NzA2MTc1EgkKB3NwcmludGYaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBquAgqrAgoOZzAuZGF0YS50ZXN0LnASAgABGAIixAEKEQgAEAEYA7ACB7gCA4ICAggDChMIABAGGASwAjC4AgSiAQQIARAEChMIABAGGASwAjC4AgS6AQQIAhAFChYIABAGGASwAjC4AgQiCAoECgIQBRAECiUIABAGGASwAjC4AgRaFwoHc3ByaW50ZhIECgIYARIECgIQBBgGChYIABAGGASwAjC4AgQ6CAoECgIQBhAHChYIABACGASwAjC4AgQ6CAoECgIQBxAIChYIABABGAOwAge4AgMyCAoECgIQCBADIioKEAgAEAEYA7ACB7gCA3oCCAMKFggAEAEYA7ACB7gCAzIICgQKAhADEAIiEwoRCAAQARgDsAIHuAIDkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "CkgKAwoBeAoHCgUxLjIuMwoKCggxLjIuMy0wMRIQCg5zZW12ZXIuY29tcGFyZRoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGtoBCtcBCg5nMC5kYXRhLnRlc3QucBICAAEYAiJxChEIABABGAOwAim4AgOCAgIIAwosCAAQBhgDsAIpuAIDWh4KDnNlbXZlci5jb21wYXJlEgQKAhgBEgQKAhgCGAQKFggAEAYYA7ACKbgCAzoICgQKAhAEEAUKFggAEAEYA7ACKbgCAzIICgQKAhAFEAMiKgoQCAAQARgDsAIpuAIDegIIAwoWCAAQARgDsAIpuAIDMggKBAoCEAMQAiITChEIABABGAOwAim4AgOSAgIIAioCZzAqBHRlc3QqAXA="
 		},
 		{
-			"note": "sprintf/float/zero_fraction",
+			"note": "semvercompare/empty pre-release section in operand 1",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\np := x if {\n\tx = sprintf(\"%f, %3.1f, %.3f\", [0.0, 100.0, .0])\n}\n"
+				"package test\n\np := semver.compare(\"1.2.3-\", \"1.2.3\")\n"
 			],
-			"want_result": [
-				{
-					"x": "0.000000, 100.0, 0.000"
-				}
-			],
+			"want_error_code": "eval_builtin_error",
+			"want_error": "semver.compare: operand 1: string \"1.2.3-\" is not a valid SemVer",
+			"strict_error": true,
 			"entrypoints": [
 				"eval"
 			],
@@ -721,41 +591,32 @@
 							"value": "x"
 						},
 						{
-							"value": "%f, %3.1f, %.3f"
+							"value": "1.2.3-"
 						},
 						{
-							"value": "0.0"
-						},
-						{
-							"value": "100.0"
-						},
-						{
-							"value": ".0"
+							"value": "1.2.3"
 						}
 					],
 					"builtin_funcs": [
 						{
-							"name": "sprintf",
+							"name": "semver.compare",
 							"decl": {
 								"args": [
 									{
-										"description": "string with formatting verbs",
-										"name": "format",
+										"description": "first version string",
+										"name": "a",
 										"type": "string"
 									},
 									{
-										"description": "arguments to format into formatting verbs",
-										"dynamic": {
-											"type": "any"
-										},
-										"name": "values",
-										"type": "array"
+										"description": "second version string",
+										"name": "b",
+										"type": "string"
 									}
 								],
 								"result": {
-									"description": "`format` formatted by the values in `values`",
-									"name": "output",
-									"type": "string"
+									"description": "`-1` if `a \u003c b`; `1` if `a \u003e b`; `0` if `a == b`",
+									"name": "result",
+									"type": "number"
 								},
 								"type": "function"
 							}
@@ -880,126 +741,30 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
-											}
-										},
-										{
-											"type": "MakeArrayStmt",
-											"stmt": {
-												"capacity": 3,
-												"target": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "MakeNumberRefStmt",
-											"stmt": {
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4,
-												"index": 2,
-												"Index": 2,
-												"target": 5
-											}
-										},
-										{
-											"type": "ArrayAppendStmt",
-											"stmt": {
-												"value": {
-													"type": "local",
-													"value": 5
-												},
-												"array": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "MakeNumberRefStmt",
-											"stmt": {
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4,
-												"index": 3,
-												"Index": 3,
-												"target": 6
-											}
-										},
-										{
-											"type": "ArrayAppendStmt",
-											"stmt": {
-												"value": {
-													"type": "local",
-													"value": 6
-												},
-												"array": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "MakeNumberRefStmt",
-											"stmt": {
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4,
-												"index": 4,
-												"Index": 4,
-												"target": 7
-											}
-										},
-										{
-											"type": "ArrayAppendStmt",
-											"stmt": {
-												"value": {
-													"type": "local",
-													"value": 7
-												},
-												"array": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4
 											}
 										},
 										{
 											"type": "CallStmt",
 											"stmt": {
-												"func": "sprintf",
+												"func": "semver.compare",
 												"args": [
 													{
 														"type": "string_index",
 														"value": 1
 													},
 													{
-														"type": "local",
-														"value": 4
+														"type": "string_index",
+														"value": 2
 													}
 												],
-												"result": 8,
+												"result": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
 											}
 										},
 										{
@@ -1007,29 +772,14 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 8
+													"value": 4
 												},
-												"target": 9,
+												"target": 5,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "AssignVarStmt",
-											"stmt": {
-												"source": {
-													"type": "local",
-													"value": 9
-												},
-												"target": 10,
-												"file": 0,
-												"col": 2,
-												"row": 4,
-												"end_col": 50,
-												"end_row": 4
+												"row": 3,
+												"end_col": 39,
+												"end_row": 3
 											}
 										},
 										{
@@ -1037,13 +787,13 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 10
+													"value": 5
 												},
 												"target": 3,
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										}
@@ -1058,7 +808,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										},
@@ -1073,7 +823,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										}
@@ -1088,7 +838,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 39,
 												"end_row": 3
 											}
 										}
@@ -1104,23 +854,19 @@
 					]
 				}
 			},
-			"want_plan_result": [
-				{
-					"x": "0.000000, 100.0, 0.000"
-				}
-			],
+			"want_plan_result": null,
 			"ignore": false,
-			"plan_proto": "ClUKAwoBeAoRCg8lZiwgJTMuMWYsICUuM2YKBQoDMC4wCgcKBTEwMC4wCgQKAi4wEgkKB3NwcmludGYaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBqIAwqFAwoOZzAuZGF0YS50ZXN0LnASAgABGAIingIKEQgAEAEYA7ACB7gCA4ICAggDChMIABAGGASwAjK4AgSiAQQIAxAEChMIABAGGASwAjK4AgS6AQQIAhAFChYIABAGGASwAjK4AgQiCAoECgIQBRAEChMIABAGGASwAjK4AgS6AQQIAxAGChYIABAGGASwAjK4AgQiCAoECgIQBhAEChMIABAGGASwAjK4AgS6AQQIBBAHChYIABAGGASwAjK4AgQiCAoECgIQBxAECiUIABAGGASwAjK4AgRaFwoHc3ByaW50ZhIECgIYARIECgIQBBgIChYIABAGGASwAjK4AgQ6CAoECgIQCBAJChYIABACGASwAjK4AgQ6CAoECgIQCRAKChYIABABGAOwAge4AgMyCAoECgIQChADIioKEAgAEAEYA7ACB7gCA3oCCAMKFggAEAEYA7ACB7gCAzIICgQKAhADEAIiEwoRCAAQARgDsAIHuAIDkgICCAIqAmcwKgR0ZXN0KgFw"
+			"plan_proto": "CkYKAwoBeAoICgYxLjIuMy0KBwoFMS4yLjMSEAoOc2VtdmVyLmNvbXBhcmUaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBraAQrXAQoOZzAuZGF0YS50ZXN0LnASAgABGAIicQoRCAAQARgDsAInuAIDggICCAMKLAgAEAYYA7ACJ7gCA1oeCg5zZW12ZXIuY29tcGFyZRIECgIYARIECgIYAhgEChYIABAGGAOwAie4AgM6CAoECgIQBBAFChYIABABGAOwAie4AgMyCAoECgIQBRADIioKEAgAEAEYA7ACJ7gCA3oCCAMKFggAEAEYA7ACJ7gCAzIICgQKAhADEAIiEwoRCAAQARgDsAInuAIDkgICCAIqAmcwKgR0ZXN0KgFw"
 		},
 		{
-			"note": "sprintf/float/exponent",
+			"note": "semvercompare/single zero pre-release identifier",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\np := x if {\n\tx = sprintf(\"%f\", [1e2])\n}\n"
+				"package test\n\np := semver.compare(\"1.2.3-0\", \"1.2.3-1\")\n"
 			],
 			"want_result": [
 				{
-					"x": "100.000000"
+					"x": -1
 				}
 			],
 			"entrypoints": [
@@ -1133,35 +879,32 @@
 							"value": "x"
 						},
 						{
-							"value": "%f"
+							"value": "1.2.3-0"
 						},
 						{
-							"value": "1e2"
+							"value": "1.2.3-1"
 						}
 					],
 					"builtin_funcs": [
 						{
-							"name": "sprintf",
+							"name": "semver.compare",
 							"decl": {
 								"args": [
 									{
-										"description": "string with formatting verbs",
-										"name": "format",
+										"description": "first version string",
+										"name": "a",
 										"type": "string"
 									},
 									{
-										"description": "arguments to format into formatting verbs",
-										"dynamic": {
-											"type": "any"
-										},
-										"name": "values",
-										"type": "array"
+										"description": "second version string",
+										"name": "b",
+										"type": "string"
 									}
 								],
 								"result": {
-									"description": "`format` formatted by the values in `values`",
-									"name": "output",
-									"type": "string"
+									"description": "`-1` if `a \u003c b`; `1` if `a \u003e b`; `0` if `a == b`",
+									"name": "result",
+									"type": "number"
 								},
 								"type": "function"
 							}
@@ -1286,70 +1029,30 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 42,
 												"end_row": 3
-											}
-										},
-										{
-											"type": "MakeArrayStmt",
-											"stmt": {
-												"capacity": 1,
-												"target": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 26,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "MakeNumberRefStmt",
-											"stmt": {
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 26,
-												"end_row": 4,
-												"index": 2,
-												"Index": 2,
-												"target": 5
-											}
-										},
-										{
-											"type": "ArrayAppendStmt",
-											"stmt": {
-												"value": {
-													"type": "local",
-													"value": 5
-												},
-												"array": 4,
-												"file": 0,
-												"col": 6,
-												"row": 4,
-												"end_col": 26,
-												"end_row": 4
 											}
 										},
 										{
 											"type": "CallStmt",
 											"stmt": {
-												"func": "sprintf",
+												"func": "semver.compare",
 												"args": [
 													{
 														"type": "string_index",
 														"value": 1
 													},
 													{
-														"type": "local",
-														"value": 4
+														"type": "string_index",
+														"value": 2
 													}
 												],
-												"result": 6,
+												"result": 4,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 26,
-												"end_row": 4
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
 											}
 										},
 										{
@@ -1357,29 +1060,14 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 6
+													"value": 4
 												},
-												"target": 7,
+												"target": 5,
 												"file": 0,
 												"col": 6,
-												"row": 4,
-												"end_col": 26,
-												"end_row": 4
-											}
-										},
-										{
-											"type": "AssignVarStmt",
-											"stmt": {
-												"source": {
-													"type": "local",
-													"value": 7
-												},
-												"target": 8,
-												"file": 0,
-												"col": 2,
-												"row": 4,
-												"end_col": 26,
-												"end_row": 4
+												"row": 3,
+												"end_col": 42,
+												"end_row": 3
 											}
 										},
 										{
@@ -1387,13 +1075,13 @@
 											"stmt": {
 												"source": {
 													"type": "local",
-													"value": 8
+													"value": 5
 												},
 												"target": 3,
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 42,
 												"end_row": 3
 											}
 										}
@@ -1408,7 +1096,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 42,
 												"end_row": 3
 											}
 										},
@@ -1423,7 +1111,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 42,
 												"end_row": 3
 											}
 										}
@@ -1438,7 +1126,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 3,
-												"end_col": 7,
+												"end_col": 42,
 												"end_row": 3
 											}
 										}
@@ -1456,11 +1144,303 @@
 			},
 			"want_plan_result": [
 				{
-					"x": "100.000000"
+					"x": -1
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CjkKAwoBeAoECgIlZgoFCgMxZTISCQoHc3ByaW50ZhoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGq4CCqsCCg5nMC5kYXRhLnRlc3QucBICAAEYAiLEAQoRCAAQARgDsAIHuAIDggICCAMKEwgAEAYYBLACGrgCBKIBBAgBEAQKEwgAEAYYBLACGrgCBLoBBAgCEAUKFggAEAYYBLACGrgCBCIICgQKAhAFEAQKJQgAEAYYBLACGrgCBFoXCgdzcHJpbnRmEgQKAhgBEgQKAhAEGAYKFggAEAYYBLACGrgCBDoICgQKAhAGEAcKFggAEAIYBLACGrgCBDoICgQKAhAHEAgKFggAEAEYA7ACB7gCAzIICgQKAhAIEAMiKgoQCAAQARgDsAIHuAIDegIIAwoWCAAQARgDsAIHuAIDMggKBAoCEAMQAiITChEIABABGAOwAge4AgOSAgIIAioCZzAqBHRlc3QqAXA="
+			"plan_proto": "CkkKAwoBeAoJCgcxLjIuMy0wCgkKBzEuMi4zLTESEAoOc2VtdmVyLmNvbXBhcmUaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBraAQrXAQoOZzAuZGF0YS50ZXN0LnASAgABGAIicQoRCAAQARgDsAIquAIDggICCAMKLAgAEAYYA7ACKrgCA1oeCg5zZW12ZXIuY29tcGFyZRIECgIYARIECgIYAhgEChYIABAGGAOwAiq4AgM6CAoECgIQBBAFChYIABABGAOwAiq4AgMyCAoECgIQBRADIioKEAgAEAEYA7ACKrgCA3oCCAMKFggAEAEYA7ACKrgCAzIICgQKAhADEAIiEwoRCAAQARgDsAIquAIDkgICCAIqAmcwKgR0ZXN0KgFw"
+		},
+		{
+			"note": "semvercompare/build metadata is ignored",
+			"query": "data.test.p = x",
+			"modules": [
+				"package test\n\np := semver.compare(\"1.2.3+01\", \"1.2.3+2\")\n"
+			],
+			"want_result": [
+				{
+					"x": 0
+				}
+			],
+			"entrypoints": [
+				"eval"
+			],
+			"plan": {
+				"static": {
+					"strings": [
+						{
+							"value": "x"
+						},
+						{
+							"value": "1.2.3+01"
+						},
+						{
+							"value": "1.2.3+2"
+						}
+					],
+					"builtin_funcs": [
+						{
+							"name": "semver.compare",
+							"decl": {
+								"args": [
+									{
+										"description": "first version string",
+										"name": "a",
+										"type": "string"
+									},
+									{
+										"description": "second version string",
+										"name": "b",
+										"type": "string"
+									}
+								],
+								"result": {
+									"description": "`-1` if `a \u003c b`; `1` if `a \u003e b`; `0` if `a == b`",
+									"name": "result",
+									"type": "number"
+								},
+								"type": "function"
+							}
+						}
+					],
+					"files": [
+						{
+							"value": "module-0.rego"
+						},
+						{
+							"value": "\u003cquery\u003e"
+						}
+					]
+				},
+				"plans": {
+					"plans": [
+						{
+							"name": "eval",
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "g0.data.test.p",
+												"args": [
+													{
+														"type": "local",
+														"value": 0
+													},
+													{
+														"type": "local",
+														"value": 1
+													}
+												],
+												"result": 2,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 2
+												},
+												"target": 3,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 0
+												},
+												"value": {
+													"type": "local",
+													"value": 3
+												},
+												"object": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										},
+										{
+											"type": "ResultSetAddStmt",
+											"stmt": {
+												"value": 4,
+												"file": 1,
+												"col": 1,
+												"row": 1,
+												"end_col": 16,
+												"end_row": 1
+											}
+										}
+									]
+								}
+							]
+						}
+					]
+				},
+				"funcs": {
+					"funcs": [
+						{
+							"name": "g0.data.test.p",
+							"params": [
+								0,
+								1
+							],
+							"return": 2,
+							"blocks": [
+								{
+									"stmts": [
+										{
+											"type": "ResetLocalStmt",
+											"stmt": {
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 43,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "CallStmt",
+											"stmt": {
+												"func": "semver.compare",
+												"args": [
+													{
+														"type": "string_index",
+														"value": 1
+													},
+													{
+														"type": "string_index",
+														"value": 2
+													}
+												],
+												"result": 4,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 43,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 4
+												},
+												"target": 5,
+												"file": 0,
+												"col": 6,
+												"row": 3,
+												"end_col": 43,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 5
+												},
+												"target": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 43,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "IsDefinedStmt",
+											"stmt": {
+												"source": 3,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 43,
+												"end_row": 3
+											}
+										},
+										{
+											"type": "AssignVarOnceStmt",
+											"stmt": {
+												"source": {
+													"type": "local",
+													"value": 3
+												},
+												"target": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 43,
+												"end_row": 3
+											}
+										}
+									]
+								},
+								{
+									"stmts": [
+										{
+											"type": "ReturnLocalStmt",
+											"stmt": {
+												"source": 2,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 43,
+												"end_row": 3
+											}
+										}
+									]
+								}
+							],
+							"path": [
+								"g0",
+								"test",
+								"p"
+							]
+						}
+					]
+				}
+			},
+			"want_plan_result": [
+				{
+					"x": 0
+				}
+			],
+			"ignore": false,
+			"plan_proto": "CkoKAwoBeAoKCggxLjIuMyswMQoJCgcxLjIuMysyEhAKDnNlbXZlci5jb21wYXJlGg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQa2gEK1wEKDmcwLmRhdGEudGVzdC5wEgIAARgCInEKEQgAEAEYA7ACK7gCA4ICAggDCiwIABAGGAOwAiu4AgNaHgoOc2VtdmVyLmNvbXBhcmUSBAoCGAESBAoCGAIYBAoWCAAQBhgDsAIruAIDOggKBAoCEAQQBQoWCAAQARgDsAIruAIDMggKBAoCEAUQAyIqChAIABABGAOwAiu4AgN6AggDChYIABABGAOwAiu4AgMyCAoECgIQAxACIhMKEQgAEAEYA7ACK7gCA5ICAggCKgJnMCoEdGVzdCoBcA=="
 		}
 	]
 }

@@ -387,10 +387,10 @@ public class SprintfUtil {
         switch (verb) {
             case 'T':
         // Map Rego types to Go-like type names for compatibility
-        if (arg instanceof RegoInt32 || arg instanceof RegoBigInt) {
-          result.append("int");
-        } else if (arg instanceof RegoDecimal) {
+        if (arg instanceof RegoNumber && ((RegoNumber) arg).isFloatText()) {
           result.append("float64");
+        } else if (arg instanceof RegoInt32 || arg instanceof RegoBigInt) {
+          result.append("int");
         } else if (arg instanceof RegoString) {
           result.append("string");
         } else if (arg instanceof RegoBoolean) {
@@ -417,7 +417,7 @@ public class SprintfUtil {
         // Format based on type
         if (arg instanceof RegoNumber) {
             RegoNumber num = (RegoNumber) arg;
-            if (num.isDecimal()) {
+            if (num.isFloatText()) {
                 fmtFloat(num, verb);
             } else {
         // For integers that fit in long, use long formatting
@@ -509,7 +509,7 @@ public class SprintfUtil {
         // Format based on type without consuming the arg
         if (arg instanceof RegoNumber) {
             RegoNumber num = (RegoNumber) arg;
-            if (num.isDecimal()) {
+            if (num.isFloatText()) {
         fmtFloat(num, 'v');
             } else {
         fmtInt(num.getBigIntValue().longValue(), 'v');
@@ -594,7 +594,7 @@ public class SprintfUtil {
     private String regoTypeToGoType(RegoValue value) {
         if (value instanceof RegoNumber) {
             RegoNumber num = (RegoNumber) value;
-            return num.isDecimal() ? "float64" : "int";
+            return num.isFloatText() ? "float64" : "int";
     } else if (value instanceof RegoBoolean) {
       return "string";
         } else if (value instanceof RegoArray) {

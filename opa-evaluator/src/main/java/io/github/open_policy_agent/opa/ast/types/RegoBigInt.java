@@ -5,6 +5,7 @@ import java.util.Objects;
 
 public class RegoBigInt implements RegoValue, RegoNumber {
     private BigInteger value;
+    private boolean floatText;
 
     public RegoBigInt(BigInteger i) {
         this.value = i;
@@ -35,6 +36,15 @@ public class RegoBigInt implements RegoValue, RegoNumber {
     }
 
     public String getTypeName() { return "number";}
+
+    @Override
+    public boolean isFloatText() {
+        return floatText;
+    }
+
+    void setFloatText(boolean floatText) {
+        this.floatText = floatText;
+    }
 
     @Override
     public boolean equals(Object o) {
