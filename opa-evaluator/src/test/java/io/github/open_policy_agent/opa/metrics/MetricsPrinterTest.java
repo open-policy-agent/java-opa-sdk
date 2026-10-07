@@ -31,7 +31,7 @@ class MetricsPrinterTest {
                 "└────────┴───────┘")),
         Arguments.of(
             "single timer is keyed timer_<name>_ns and value is in nanoseconds",
-            metricsOf(Map.of("foo", fixedTimer(Duration.ofNanos(123)))),
+            metricsOf(Map.of("timer_foo_ns", fixedTimer(Duration.ofNanos(123)))),
             join(
                 "┌──────────────┬───────┐",
                 "│    Metric    │ Value │",
@@ -42,8 +42,8 @@ class MetricsPrinterTest {
             "rows are sorted alphabetically by display name",
             metricsOf(
                 linkedMap(
-                    "zeta", fixedTimer(Duration.ofNanos(2)),
-                    "alpha", fixedTimer(Duration.ofNanos(1)))),
+                    "timer_zeta_ns", fixedTimer(Duration.ofNanos(2)),
+                    "timer_alpha_ns", fixedTimer(Duration.ofNanos(1)))),
             join(
                 "┌────────────────┬───────┐",
                 "│     Metric     │ Value │",
@@ -53,7 +53,7 @@ class MetricsPrinterTest {
                 "└────────────────┴───────┘")),
         Arguments.of(
             "counter is keyed counter_<name>",
-            metricsOf(Map.of("hits", fixedCounter(42))),
+            metricsOf(Map.of("counter_hits", fixedCounter(42))),
             join(
                 "┌──────────────┬───────┐",
                 "│    Metric    │ Value │",
@@ -64,7 +64,7 @@ class MetricsPrinterTest {
             "histogram explodes into one row per stat plus percentiles",
             metricsOf(
                 Map.of(
-                    "calls",
+                    "histogram_calls",
                     fixedHistogram(
                         histogramValues(10, 1, 9, 5, 3, 4, linkedMap("75%", 7, "99%", 9))))),
             join(
@@ -82,7 +82,10 @@ class MetricsPrinterTest {
                 "└────────────────────────┴───────┘")),
         Arguments.of(
             "column widths size to the widest cell",
-            metricsOf(Map.of("a_long_metric_name", fixedTimer(Duration.ofNanos(1234567890L)))),
+            metricsOf(
+                Map.of(
+                    "timer_a_long_metric_name_ns",
+                    fixedTimer(Duration.ofNanos(1234567890L)))),
             join(
                 "┌─────────────────────────────┬────────────┐",
                 "│           Metric            │   Value    │",

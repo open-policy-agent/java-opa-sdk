@@ -740,10 +740,10 @@ class DecisionLogPluginTest {
     DecisionLogPlugin.DecisionLogs decisionLogger = plugin.getDecisionLogs();
 
     SimpleMetrics metrics = new SimpleMetrics();
-    metrics.timer("rego_query_eval").start();
-    metrics.timer("rego_query_eval").stop();
-    metrics.counter("server_query_cache_hit").add(3);
-    metrics.histogram("eval_ns").update(11);
+    metrics.timer("request").start();
+    metrics.timer("request").stop();
+    metrics.counter("request").add(3);
+    metrics.histogram("request").update(11);
 
     JsonNode input = mapper.createObjectNode().put("user", "erin");
     JsonNode result = mapper.createObjectNode().put("allow", true);
@@ -761,10 +761,10 @@ class DecisionLogPluginTest {
     JsonNode metricsNode = event.get("metrics");
 
     // Key naming follows Go's metrics.formatKey: timer_<name>_ns, counter_<name>, histogram_<name>.
-    assertTrue(metricsNode.has("timer_rego_query_eval_ns"), metricsNode.toString());
-    assertEquals(3, metricsNode.get("counter_server_query_cache_hit").asInt());
-    assertEquals(1, metricsNode.get("histogram_eval_ns").get("count").asInt());
-    assertEquals(11, metricsNode.get("histogram_eval_ns").get("99%").asInt());
+    assertTrue(metricsNode.has("timer_request_ns"), metricsNode.toString());
+    assertEquals(3, metricsNode.get("counter_request").asInt());
+    assertEquals(1, metricsNode.get("histogram_request").get("count").asInt());
+    assertEquals(11, metricsNode.get("histogram_request").get("99%").asInt());
   }
 
   /** A Metric that is none of the three known types, but is serializable by Jackson. */

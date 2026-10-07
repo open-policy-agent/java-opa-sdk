@@ -97,15 +97,16 @@ class SimpleMetricsTest {
   @Test
   void all_containsEveryRegisteredMetricType() {
     SimpleMetrics metrics = new SimpleMetrics();
-    metrics.timer("rego_query_eval");
-    metrics.counter("hits");
-    metrics.histogram("sizes");
+    metrics.timer("request");
+    metrics.counter("request");
+    metrics.histogram("request");
 
     Map<String, Metric> all = metrics.all();
 
-    assertTrue(all.get("rego_query_eval") instanceof Timer, "timer missing from all()");
-    assertTrue(all.get("hits") instanceof Counter, "counter missing from all()");
-    assertTrue(all.get("sizes") instanceof Histogram, "histogram missing from all()");
+    assertEquals(3, all.size(), "metric types with the same name must not overwrite each other");
+    assertTrue(all.get("timer_request_ns") instanceof Timer, "timer missing from all()");
+    assertTrue(all.get("counter_request") instanceof Counter, "counter missing from all()");
+    assertTrue(all.get("histogram_request") instanceof Histogram, "histogram missing from all()");
   }
 
   @Test

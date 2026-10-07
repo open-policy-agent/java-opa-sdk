@@ -41,7 +41,10 @@ class MetricsIntegrationTest {
 
   // The Engine wires these timers around every prepared-query evaluation.
   private static final Set<String> EXPECTED_TIMER_KEYS =
-      Set.of("rego_query_eval", "rego_parse_pojo_input", "rego_marshal_pojo_results");
+      Set.of(
+          "timer_rego_query_eval_ns",
+          "timer_rego_parse_pojo_input_ns",
+          "timer_rego_marshal_pojo_results_ns");
 
   private static Policy policy;
 
@@ -110,12 +113,11 @@ class MetricsIntegrationTest {
     assertTrue(
         table.trim().endsWith("┘"), "table should end with bottom border:\n" + table);
 
-    // Every Engine-emitted timer should appear with the timer_<key>_ns naming convention.
+    // Every Engine-emitted timer should retain the key supplied by Metrics.all().
     EXPECTED_TIMER_KEYS.forEach(
         key ->
             assertTrue(
-                table.contains("timer_" + key + "_ns"),
-                "expected timer_" + key + "_ns row in:\n" + table));
+                table.contains(key), "expected " + key + " row in:\n" + table));
 
     // Each data row must respect the box width set by the widest cell.
     int boxWidth = table.indexOf('\n');

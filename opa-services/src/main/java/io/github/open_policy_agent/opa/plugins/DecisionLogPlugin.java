@@ -629,9 +629,9 @@ public final class DecisionLogPlugin implements Plugin {
     }
 
     /**
-     * Add one metric to the event's {@code metrics} object under the name OPA Go publishes it as
-     * (see {@code metrics.formatKey}): {@code timer_<name>_ns}, {@code counter_<name>} and
-     * {@code histogram_<name>}.
+     * Add one metric to the event's {@code metrics} object. {@link Metrics#all()} supplies the
+     * type-prefixed name OPA Go publishes (see {@code metrics.formatKey}): {@code timer_<name>_ns},
+     * {@code counter_<name>} or {@code histogram_<name>}.
      *
      * <p>The three known types are written out field by field rather than handed to Jackson:
      * none of them exposes a Jackson-visible property, so default serialization throws and
@@ -640,15 +640,15 @@ public final class DecisionLogPlugin implements Plugin {
      */
     private static void addMetric(ObjectNode metricsNode, String key, Metrics.Metric metric) {
       if (metric instanceof Metrics.Timer) {
-        metricsNode.put("timer_" + key + "_ns", ((Metrics.Timer) metric).value().toNanos());
+        metricsNode.put(key, ((Metrics.Timer) metric).value().toNanos());
       } else if (metric instanceof Metrics.Counter) {
-        metricsNode.put("counter_" + key, ((Metrics.Counter) metric).value());
+        metricsNode.put(key, ((Metrics.Counter) metric).value());
       } else if (metric instanceof Metrics.Histogram) {
         Metrics.Histogram.Values values = ((Metrics.Histogram) metric).value();
         if (values == null) {
           return;
         }
-        ObjectNode stats = metricsNode.putObject("histogram_" + key);
+        ObjectNode stats = metricsNode.putObject(key);
         stats.put("count", values.count);
         stats.put("min", values.min);
         stats.put("max", values.max);

@@ -76,15 +76,15 @@ public class MetricsPrinter {
       String key = entry.getKey();
       Metric m = entry.getValue();
       if (m instanceof Timer) {
-        rows.put("timer_" + key + "_ns", String.valueOf(((Timer) m).value().toNanos()));
+        rows.put(key, String.valueOf(((Timer) m).value().toNanos()));
       } else if (m instanceof Counter) {
-        rows.put("counter_" + key, String.valueOf(((Counter) m).value()));
+        rows.put(key, String.valueOf(((Counter) m).value()));
       } else if (m instanceof Histogram) {
         Histogram.Values v = ((Histogram) m).value();
         if (v == null) {
           continue;
         }
-        String prefix = "histogram_" + key + "_";
+        String prefix = key + "_";
         rows.put(prefix + "count", String.valueOf(v.count));
         rows.put(prefix + "min", String.valueOf(v.min));
         rows.put(prefix + "max", String.valueOf(v.max));
