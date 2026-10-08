@@ -82,6 +82,24 @@ Engine engine = new Engine.Builder()
     .build();
 ```
 
+### Bundle Manifests
+
+`Bundle.manifest` is a typed, immutable `Manifest` produced by both the JSON and
+protobuf decoders. Missing fields take OPA's defaults (`""` for the revision,
+`[""]` for the roots), and unknown fields are preserved and reachable via `asMap()`.
+
+```java
+Manifest manifest = bundle.manifest;
+String revision = manifest.getRevision();
+List<String> roots = manifest.getRoots();
+Map<String, Object> metadata = manifest.getMetadata();
+```
+
+`getWasm()` returns immutable `Manifest.WasmResolver` values with typed
+`getEntrypoint()` and `getModule()` accessors. Resolver fields are preserved by
+`asMap()`. Annotation objects remain immutable maps; their individual fields
+are not validated by this model.
+
 ## Extension Points
 
 ### BuiltinProvider SPI

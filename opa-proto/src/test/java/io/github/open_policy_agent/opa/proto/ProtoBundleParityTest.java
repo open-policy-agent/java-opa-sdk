@@ -6,14 +6,18 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.bundle.FileSystemBundleLoader;
+import io.github.open_policy_agent.opa.bundle.Manifest;
 import io.github.open_policy_agent.opa.ir.PolicyReader;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
+import io.github.open_policy_agent.opa.jackson.JacksonBundleParser;
 import io.github.open_policy_agent.opa.jackson.JacksonPolicyReader;
 import io.github.open_policy_agent.opa.rego.Engine;
 import io.github.open_policy_agent.opa.storage.InMem;
 import io.github.open_policy_agent.opa.storage.Store;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -116,10 +120,48 @@ class ProtoBundleParityTest {
   void decodedManifestMatchesJsonManifest() {
     Store store = new InMem();
     Bundle proto = new FileSystemBundleLoader("proto", PROTO_BUNDLE).load(store);
+    Bundle json = new FileSystemBundleLoader("json", JSON_BUNDLE).load(new InMem());
 
-    assertThat(proto.manifest).containsEntry("revision", "");
-    assertThat(proto.manifest).containsEntry("roots", List.of(""));
-    assertThat(((Number) proto.manifest.get("rego_version")).intValue()).isEqualTo(1);
+    assertThat(proto.manifest).isEqualTo(json.manifest);
+    assertThat(proto.manifest.getRevision()).isEmpty();
+    assertThat(proto.manifest.getRoots()).containsExactly("");
+    assertThat(proto.manifest.getRegoVersion()).isEqualTo(1);
+  }
+
+  @Test
+  void decodedManifestEqualityIgnoresOmittedDefaults() throws IOException {
+    opa.bundle.v1.Manifest encoded = opa.bundle.v1.Manifest.newBuilder()
+        .setRootsSet(true)
+        .addRoots("x")
+        .build();
+    Manifest proto = new ProtoBundleReader().decodeManifest(new ByteArrayInputStream(encoded.toByteArray()));
+    Manifest json = new JacksonBundleParser().parseManifest(
+        new ByteArrayInputStream("{\"roots\":[\"x\"]}".getBytes(StandardCharsets.UTF_8)));
+
+    assertThat(proto).isEqualTo(json);
+    assertThat(proto.hashCode()).isEqualTo(json.hashCode());
+    assertThat(proto.asMap()).containsEntry("revision", "");
+    assertThat(json.asMap()).doesNotContainKey("revision");
+  }
+
+  @Test
+  void decodedWasmEqualityIgnoresOmittedAnnotations() throws IOException {
+    opa.bundle.v1.Manifest encoded = opa.bundle.v1.Manifest.newBuilder()
+        .addWasm(opa.bundle.v1.WasmResolver.newBuilder()
+            .setEntrypoint("x/allow")
+            .setModule("/policy.wasm"))
+        .build();
+    Manifest proto = new ProtoBundleReader().decodeManifest(new ByteArrayInputStream(encoded.toByteArray()));
+    for (String annotations : List.of("[]", "null")) {
+      String document = "{\"wasm\":[{\"entrypoint\":\"x/allow\",\"module\":\"/policy.wasm\",\"annotations\":" + annotations + "}]}";
+      Manifest json = new JacksonBundleParser().parseManifest(
+          new ByteArrayInputStream(document.getBytes(StandardCharsets.UTF_8)));
+
+      assertThat(proto).isEqualTo(json);
+      assertThat(proto.hashCode()).isEqualTo(json.hashCode());
+      assertThat(proto.getWasm().get(0).asMap()).doesNotContainKey("annotations");
+      assertThat(json.getWasm().get(0).asMap()).containsKey("annotations");
+    }
   }
 
   @Test
