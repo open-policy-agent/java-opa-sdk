@@ -56,8 +56,6 @@ rego.parse_module
 strings.render_template
 strings.split_n
 
-units.parse
-units.parse_bytes
 
 urlquery.decode
 urlquery.decode_object
