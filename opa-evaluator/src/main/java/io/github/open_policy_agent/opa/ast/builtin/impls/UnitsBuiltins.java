@@ -11,7 +11,6 @@ import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.Locale;
 import java.util.Map;
@@ -156,10 +155,10 @@ public class UnitsBuiltins {
           firstNonNumberIndex = index;
           break;
         }
-        if (next == '+' || next == '-') {
-          index++;
-        }
         int exponentStart = index + 1;
+        if (next == '+' || next == '-') {
+          exponentStart++;
+        }
         int exponentEnd = exponentStart;
         while (exponentEnd < quantity.length()
             && Character.isDigit(quantity.charAt(exponentEnd))) {
