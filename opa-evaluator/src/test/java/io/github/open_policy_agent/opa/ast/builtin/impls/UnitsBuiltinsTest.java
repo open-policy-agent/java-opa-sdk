@@ -40,6 +40,14 @@ class UnitsBuiltinsTest {
   }
 
   @Test
+  void roundsDecimalResultsLikeOpa() {
+    assertEquals(new RegoBigInt(1L), parse("1.00000000001"));
+    assertEquals(new RegoBigInt(0L), parse("0.00000000001"));
+    assertEquals(new RegoDecimal(0.0000000001), parse("0.00000000005"));
+    assertEquals(new RegoDecimal(-0.0000000001), parse("-0.00000000005"));
+  }
+
+  @Test
   void parsesByteUnitsWithOptionalByteSuffix() {
     assertEquals(new RegoBigInt(100_000_000L), parseBytes("100mb"));
     assertEquals(new RegoBigInt(104_857_600L), parseBytes("100MiB"));
@@ -60,11 +68,18 @@ class UnitsBuiltinsTest {
         () -> parse("0.0.0"));
     assertError("units.parse: exponent too large", () -> parse("10e10000000Ei"));
     assertError("units.parse: exponent too large", () -> parse("1e0000001"));
+    assertError("units.parse: exponent too large", () -> parse("1e0000001X"));
+    assertError("units.parse: could not parse amount to a number", () -> parse("-K"));
+    assertError("units.parse: could not parse amount to a number", () -> parse("1-2K"));
+    assertError("units.parse: could not parse amount to a number", () -> parse("1e5e3"));
+    assertError("units.parse: unit Kb not recognized", () -> parse("1KB"));
 
     assertError("units.parse_bytes: no byte amount provided", () -> parseBytes("GB"));
     assertError(
         "units.parse_bytes: could not parse byte amount to a number",
         () -> parseBytes(".5.2"));
+    assertError(
+        "units.parse_bytes: byte unit b not recognized", () -> parseBytes("100B"));
     assertError(
         "units.parse_bytes: byte unit xb not recognized", () -> parseBytes("1XB"));
   }

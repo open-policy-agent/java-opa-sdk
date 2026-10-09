@@ -12,16 +12,13 @@ import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class UnitsBuiltins {
-  private static final Pattern AMOUNT_PATTERN =
-      Pattern.compile("^([+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?)(.*)$");
-  private static final Pattern EXPONENT_PATTERN = Pattern.compile("[eE]([+-]?\\d+)");
+  private static final int MAX_EXPONENT_DIGITS = 6;
 
   private static final Map<String, BigDecimal> DECIMAL_UNITS =
       Map.ofEntries(
@@ -39,11 +36,17 @@ public class UnitsBuiltins {
           Map.entry("e", new BigDecimal("1000000000000000000")),
           Map.entry("E", new BigDecimal("1000000000000000000")),
           Map.entry("ki", BigDecimal.valueOf(1_024L)),
+          Map.entry("Ki", BigDecimal.valueOf(1_024L)),
           Map.entry("mi", BigDecimal.valueOf(1_048_576L)),
+          Map.entry("Mi", BigDecimal.valueOf(1_048_576L)),
           Map.entry("gi", BigDecimal.valueOf(1_073_741_824L)),
+          Map.entry("Gi", BigDecimal.valueOf(1_073_741_824L)),
           Map.entry("ti", BigDecimal.valueOf(1_099_511_627_776L)),
+          Map.entry("Ti", BigDecimal.valueOf(1_099_511_627_776L)),
           Map.entry("pi", BigDecimal.valueOf(1_125_899_906_842_624L)),
-          Map.entry("ei", new BigDecimal("1152921504606846976")));
+          Map.entry("Pi", BigDecimal.valueOf(1_125_899_906_842_624L)),
+          Map.entry("ei", new BigDecimal("1152921504606846976")),
+          Map.entry("Ei", new BigDecimal("1152921504606846976")));
 
   private static final Map<String, BigDecimal> BYTE_UNITS =
       Map.ofEntries(
@@ -103,21 +106,19 @@ public class UnitsBuiltins {
       throw new BuiltinError(name + ": spaces not allowed in resource strings");
     }
 
-    Matcher matcher = AMOUNT_PATTERN.matcher(quantity);
-    if (!matcher.matches()) {
+    ParsedQuantity parsed = extractQuantity(quantity, name);
+    if (parsed.amount().isEmpty()) {
       throw new BuiltinError(name + ": no " + amountName(byteMode) + " provided");
     }
 
-    String amountText = matcher.group(1);
-    String unitText = normalizeUnit(matcher.group(2), byteMode);
+    String amountText = parsed.amount();
+    String unitText = normalizeUnit(parsed.unit(), byteMode);
     BigDecimal unit = units.get(unitText);
     if (unit == null) {
-      if (matcher.group(2).startsWith(".")) {
-        throw new BuiltinError(name + ": could not parse " + amountName(byteMode) + " to a number");
-      }
       String unitName = byteMode ? "byte unit" : "unit";
-      String unrecognizedUnit =
-          byteMode ? matcher.group(2).toLowerCase(Locale.ROOT) : unitText;
+      String unrecognizedUnit = byteMode
+          ? parsed.unit().toLowerCase(Locale.ROOT)
+          : normalizeUnit(parsed.unit(), false);
       throw new BuiltinError(name + ": " + unitName + " " + unrecognizedUnit + " not recognized");
     }
 
@@ -127,28 +128,60 @@ public class UnitsBuiltins {
 
   private static String normalizeUnit(String unit, boolean byteMode) {
     String normalized = byteMode ? unit.toLowerCase(Locale.ROOT) : unit;
-    if (byteMode
-        && !normalized.isEmpty()
-        && normalized.substring(normalized.length() - 1).equalsIgnoreCase("b")) {
+    if (byteMode && normalized.length() > 1 && normalized.endsWith("b")) {
       normalized = normalized.substring(0, normalized.length() - 1);
     }
-    if (normalized.length() > 1) {
-      return normalized.toLowerCase(Locale.ROOT);
+    if (!byteMode && normalized.length() > 1) {
+      return normalized.substring(0, 1) + normalized.substring(1).toLowerCase(Locale.ROOT);
     }
     return normalized;
   }
 
-  private static BigDecimal parseAmount(String name, String amountText, boolean byteMode) {
-    Matcher exponentMatcher = EXPONENT_PATTERN.matcher(amountText);
-    if (exponentMatcher.find()) {
-      String exponent = exponentMatcher.group(1);
-      int digits = exponent.startsWith("+") || exponent.startsWith("-")
-          ? exponent.length() - 1 : exponent.length();
-      if (digits > 6) {
-        throw new BuiltinError(name + ": exponent too large");
+  private static ParsedQuantity extractQuantity(String quantity, String name) {
+    int firstNonNumberIndex = -1;
+    for (int index = 0; index < quantity.length(); index++) {
+      char current = quantity.charAt(index);
+      boolean numeric = Character.isDigit(current) || current == '.';
+      if (!numeric && current != 'e' && current != 'E' && current != '+' && current != '-') {
+        firstNonNumberIndex = index;
+        break;
+      }
+      if (current == 'e' || current == 'E') {
+        if (index == quantity.length() - 1) {
+          firstNonNumberIndex = index;
+          break;
+        }
+        char next = quantity.charAt(index + 1);
+        if (!Character.isDigit(next) && next != '+' && next != '-') {
+          firstNonNumberIndex = index;
+          break;
+        }
+        if (next == '+' || next == '-') {
+          index++;
+        }
+        int exponentStart = index + 1;
+        int exponentEnd = exponentStart;
+        while (exponentEnd < quantity.length()
+            && Character.isDigit(quantity.charAt(exponentEnd))) {
+          exponentEnd++;
+        }
+        if (exponentEnd - exponentStart > MAX_EXPONENT_DIGITS) {
+          throw new BuiltinError(name + ": exponent too large");
+        }
       }
     }
 
+    if (firstNonNumberIndex < 0) {
+      return new ParsedQuantity(quantity, "");
+    }
+    if (firstNonNumberIndex == 0) {
+      return new ParsedQuantity("", quantity);
+    }
+    return new ParsedQuantity(
+        quantity.substring(0, firstNonNumberIndex), quantity.substring(firstNonNumberIndex));
+  }
+
+  private static BigDecimal parseAmount(String name, String amountText, boolean byteMode) {
     try {
       return new BigDecimal(amountText);
     } catch (NumberFormatException e) {
@@ -160,14 +193,16 @@ public class UnitsBuiltins {
     if (byteMode) {
       return new RegoBigInt(value.toBigInteger());
     }
-    BigDecimal normalized = value.stripTrailingZeros();
+    BigDecimal normalized = value.setScale(10, RoundingMode.HALF_UP).stripTrailingZeros();
     if (normalized.scale() <= 0) {
       return new RegoBigInt(normalized.toBigIntegerExact());
     }
-    return new RegoDecimal(normalized.doubleValue());
+    return new RegoDecimal(normalized.doubleValue(), normalized.toPlainString());
   }
 
   private static String amountName(boolean byteMode) {
     return byteMode ? "byte amount" : "amount";
   }
+
+  private record ParsedQuantity(String amount, String unit) {}
 }
