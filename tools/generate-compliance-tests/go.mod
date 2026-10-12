@@ -3,7 +3,7 @@ module generate-compliance-tests
 go 1.26.0
 
 require (
-	github.com/open-policy-agent/opa v1.21.0
+	github.com/open-policy-agent/opa v1.21.1
 	google.golang.org/protobuf v1.36.12
 )
 
