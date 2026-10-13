@@ -2,18 +2,18 @@ package io.github.open_policy_agent.opa.plugins;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Checked against the behavior of {@code plugins/logs/mask.go} in OPA's Go implementation. */
 class MaskRuleSetTest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER = JsonMapper.shared();
 
-  private static ObjectNode json(String raw) throws JsonProcessingException {
+  private static ObjectNode json(String raw) {
     return (ObjectNode) MAPPER.readTree(raw);
   }
 
@@ -24,12 +24,7 @@ class MaskRuleSetTest {
   }
 
   private static String parseError(String rules) {
-    JsonNode parsed;
-    try {
-      parsed = MAPPER.readTree(rules);
-    } catch (JsonProcessingException e) {
-      throw new AssertionError(e);
-    }
+    JsonNode parsed = MAPPER.readTree(rules);
     return assertThrows(IllegalArgumentException.class, () -> MaskRuleSet.parse(parsed)).getMessage();
   }
 

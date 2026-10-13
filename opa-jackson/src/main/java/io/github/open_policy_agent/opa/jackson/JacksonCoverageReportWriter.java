@@ -1,6 +1,6 @@
 package io.github.open_policy_agent.opa.jackson;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.ObjectNode;
 import io.github.open_policy_agent.opa.tracing.CoverageReport;
 import io.github.open_policy_agent.opa.tracing.CoverageReportWriter;
 import java.io.IOException;

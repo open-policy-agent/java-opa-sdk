@@ -4,10 +4,10 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import tools.jackson.databind.node.ObjectNode;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -724,8 +724,8 @@ class StatusPluginTest {
       java.lang.reflect.Method buildStatusMethod =
           StatusPlugin.Status.class.getDeclaredMethod("buildStatusReport");
       buildStatusMethod.setAccessible(true);
-      com.fasterxml.jackson.databind.node.ObjectNode report =
-          (com.fasterxml.jackson.databind.node.ObjectNode) buildStatusMethod.invoke(statusReporter);
+      tools.jackson.databind.node.ObjectNode report =
+          (tools.jackson.databind.node.ObjectNode) buildStatusMethod.invoke(statusReporter);
 
       // Verify the instance ID is included
       assertNotNull(report);

@@ -5,9 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.NullNode;
 import io.github.open_policy_agent.opa.OpaException;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinRegistry;
 import io.github.open_policy_agent.opa.ast.builtin.impls.ProvidersAwsBuiltins;
@@ -59,7 +60,7 @@ public class ProvidersAwsSignReqTest {
   private static final long SIGNING_TS = 1451311705000000000L;
 
   private static ObjectMapper mapper() {
-    return new ObjectMapper().registerModule(new RegoValueModule());
+    return JsonMapper.builder().addModule(new RegoValueModule()).build();
   }
 
   private static JsonNode loadCases(String resource) throws Exception {

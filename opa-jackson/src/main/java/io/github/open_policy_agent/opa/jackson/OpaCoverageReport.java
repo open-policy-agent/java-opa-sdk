@@ -2,10 +2,10 @@ package io.github.open_policy_agent.opa.jackson;
 
 import java.util.List;
 import java.util.Map;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.open_policy_agent.opa.ir.policy.UnplannedRule;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 import io.github.open_policy_agent.opa.tracing.CoverageProfiler;
 import io.github.open_policy_agent.opa.tracing.CoverageReport;
 import io.github.open_policy_agent.opa.tracing.CoverageReport.FileCoverage;

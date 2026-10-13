@@ -21,7 +21,8 @@ dependencies {
     api("com.google.protobuf:protobuf-java:$protobufVersion")
 
     testImplementation(project(":opa-jackson"))
-    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
+    testImplementation(platform("tools.jackson:jackson-bom:3.2.0"))
+    testImplementation("tools.jackson.core:jackson-databind")
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testImplementation("org.junit.jupiter:junit-jupiter-params:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.3")

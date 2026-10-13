@@ -10,7 +10,8 @@ dependencies {
     implementation(project(":opa-evaluator"))
     implementation(project(":opa-services"))
     implementation(project(":opa-jackson"))
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.3")
+    implementation(platform("tools.jackson:jackson-bom:3.2.0"))
+    implementation("tools.jackson.core:jackson-databind")
     implementation("info.picocli:picocli:4.7.7")
     implementation("org.apache.commons:commons-compress:1.28.0")
 

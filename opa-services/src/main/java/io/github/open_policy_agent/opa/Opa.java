@@ -1,8 +1,5 @@
 package io.github.open_policy_agent.opa;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -36,6 +33,10 @@ import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.storage.InMem;
 import io.github.open_policy_agent.opa.storage.Store;
 import io.github.open_policy_agent.opa.tracing.Profiler;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
  * Full OPA runtime with plugin management and configuration support.
@@ -102,8 +103,8 @@ import io.github.open_policy_agent.opa.tracing.Profiler;
  */
 public class Opa {
 
-  private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
-  private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
+  private static final ObjectMapper YAML_MAPPER = YAMLMapper.shared();
+  private static final ObjectMapper JSON_MAPPER = JsonMapper.shared();
 
   private final String id;
   private final Logger logger;
@@ -213,12 +214,8 @@ public class Opa {
   }
 
   public DecisionResult makeDecision(String input) {
-    try {
-      JsonNode inputNode = YAML_MAPPER.readTree(input);
-      return makeDecision(inputNode);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    JsonNode inputNode = YAML_MAPPER.readTree(input);
+    return makeDecision(inputNode);
   }
 
   /**

@@ -2,9 +2,10 @@ package io.github.open_policy_agent.opa.proto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.NullNode;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.NullNode;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinRegistry;
 import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
 import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
@@ -19,7 +20,6 @@ import io.github.open_policy_agent.opa.jackson.RegoValueModule;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,7 +53,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 class ProtoComplianceTest {
 
   private static final ObjectMapper MAPPER =
-      new ObjectMapper().registerModule(new RegoValueModule());
+      JsonMapper.builder().addModule(new RegoValueModule()).build();
 
   /** Locate the compliance fixtures, which live in the sibling {@code opa-evaluator} module. */
   private static Path complianceDir() {
@@ -90,20 +90,16 @@ class ProtoComplianceTest {
   }
 
   private static Stream<Arguments> casesIn(Path file) {
-    try {
-      JsonNode root = MAPPER.readTree(file.toFile());
-      List<Arguments> args = new ArrayList<>();
-      for (JsonNode c : root.get("cases")) {
-        if (c.get("plan") == null || c.get("plan_proto") == null) {
-          throw new IllegalStateException(
-              "case missing plan/plan_proto in " + file + ": " + c.get("note"));
-        }
-        args.add(Arguments.of(c.get("note").asText("unknown"), c));
+    JsonNode root = MAPPER.readTree(file.toFile());
+    List<Arguments> args = new ArrayList<>();
+    for (JsonNode c : root.get("cases")) {
+      if (c.get("plan") == null || c.get("plan_proto") == null) {
+        throw new IllegalStateException(
+            "case missing plan/plan_proto in " + file + ": " + c.get("note"));
       }
-      return args.stream();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+      args.add(Arguments.of(c.get("note").asString("unknown"), c));
     }
+    return args.stream();
   }
 
   @ParameterizedTest(name = "{0}")

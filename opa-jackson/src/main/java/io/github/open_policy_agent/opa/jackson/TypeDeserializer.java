@@ -1,13 +1,5 @@
 package io.github.open_policy_agent.opa.jackson;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.ResolvableDeserializer;
 import io.github.open_policy_agent.opa.ir.policy.types.AnyType;
 import io.github.open_policy_agent.opa.ir.policy.types.ArrayType;
 import io.github.open_policy_agent.opa.ir.policy.types.BooleanType;
@@ -18,13 +10,16 @@ import io.github.open_policy_agent.opa.ir.policy.types.ObjectType;
 import io.github.open_policy_agent.opa.ir.policy.types.SetType;
 import io.github.open_policy_agent.opa.ir.policy.types.StringType;
 import io.github.open_policy_agent.opa.ir.policy.types.Type;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-class TypeDeserializer extends JsonDeserializer<Type> {
+class TypeDeserializer extends ValueDeserializer<Type> {
   // Type marker strings match the OPA IR spec typeMarker constants.
   private static final Map<String, Class<? extends Type>> TYPE_REGISTRY =
       new HashMap<>() {
@@ -41,16 +36,9 @@ class TypeDeserializer extends JsonDeserializer<Type> {
         }
       };
 
-  // Cache of bean deserializers, built directly via the factory so they bypass
-  // this TypeDeserializer (which is registered for the Type interface and would
-  // otherwise be re-entered for any Type subclass).
-  private final Map<Class<? extends Type>, JsonDeserializer<Object>> beanDeserializerCache =
-      new ConcurrentHashMap<>();
-
   @Override
-  public Type deserialize(JsonParser jp, DeserializationContext ctx) throws IOException {
-    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-    JsonNode root = mapper.readTree(jp);
+  public Type deserialize(JsonParser jp, DeserializationContext ctx) {
+    JsonNode root = ctx.readTree(jp);
     JsonNode typeNode = root.get("type");
     if (typeNode == null) {
       return null;
@@ -59,29 +47,9 @@ class TypeDeserializer extends JsonDeserializer<Type> {
     String type = typeNode.asText();
     Class<? extends Type> typeClass = TYPE_REGISTRY.get(type);
     if (typeClass == null) {
-      throw new IOException("unknown type: " + type);
+      throw DatabindException.from(jp, "unknown type: " + type);
     }
 
-    JsonDeserializer<Object> beanDeserializer = beanDeserializerFor(typeClass, ctx);
-    JsonParser nodeParser = root.traverse(mapper);
-    nodeParser.nextToken();
-    return (Type) beanDeserializer.deserialize(nodeParser, ctx);
-  }
-
-  private JsonDeserializer<Object> beanDeserializerFor(
-      Class<? extends Type> typeClass, DeserializationContext ctx) throws IOException {
-    JsonDeserializer<Object> cached = beanDeserializerCache.get(typeClass);
-    if (cached != null) {
-      return cached;
-    }
-    JavaType javaType = ctx.constructType(typeClass);
-    BeanDescription beanDesc = ctx.getConfig().introspect(javaType);
-    JsonDeserializer<Object> beanDeserializer =
-        ctx.getFactory().createBeanDeserializer(ctx, javaType, beanDesc);
-    if (beanDeserializer instanceof ResolvableDeserializer) {
-      ((ResolvableDeserializer) beanDeserializer).resolve(ctx);
-    }
-    beanDeserializerCache.put(typeClass, beanDeserializer);
-    return beanDeserializer;
+    return ctx.readTreeAsValue(root, typeClass);
   }
 }

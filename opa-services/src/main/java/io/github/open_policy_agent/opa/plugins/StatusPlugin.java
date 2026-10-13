@@ -1,8 +1,9 @@
 package io.github.open_policy_agent.opa.plugins;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
+import io.github.open_policy_agent.opa.bundle.Bundle;
+import io.github.open_policy_agent.opa.config.Config;
+import io.github.open_policy_agent.opa.logging.Logger;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -10,9 +11,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import io.github.open_policy_agent.opa.bundle.Bundle;
-import io.github.open_policy_agent.opa.config.Config;
-import io.github.open_policy_agent.opa.logging.Logger;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Plugin that reports OPA runtime status periodically.
@@ -196,7 +197,7 @@ public final class StatusPlugin implements Plugin {
 
   /** Status reporter that collects and sends status information. */
   public static class Status {
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = JsonMapper.shared();
 
     private static final long INITIAL_BACKOFF_MILLIS = 1000L;
 

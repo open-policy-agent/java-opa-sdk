@@ -9,12 +9,10 @@ repositories {
 dependencies {
     api(project(":opa-evaluator"))
 
-    implementation("com.github.java-json-tools:json-patch:1.13")
-    implementation("com.networknt:json-schema-validator:2.0.8")
-    implementation(platform("com.fasterxml.jackson:jackson-bom:2.22.3"))
-    implementation("com.fasterxml.jackson.core:jackson-databind")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    implementation("com.networknt:json-schema-validator:3.0.5")
+    implementation(platform("tools.jackson:jackson-bom:3.2.0"))
+    implementation("tools.jackson.core:jackson-databind")
+    implementation("tools.jackson.dataformat:jackson-dataformat-yaml")
     // RegoValueModule (auto-registered via Jackson SPI) provides (de)serializers for the AST
     // types so they don't need to carry annotations.
     runtimeOnly(project(":opa-jackson"))
