@@ -5,6 +5,26 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+## 0.6.0
+
+This release moves the SDK to Jackson 3, maps Java records natively in
+`RegoMapper`, and brings `sprintf`, `strings.replace_n`, and `yaml.is_valid` in
+line with OPA 1.21. The builtin surface is unchanged at 156.
+
+### Breaking Changes
+
+- `opa-jackson` and `opa-services` now use Jackson 3 (`tools.jackson.*`) instead
+  of Jackson 2.x (`com.fasterxml.jackson.*`). Applications that put Jackson 2
+  types in front of these modules, such as custom modules or annotations, must
+  move to Jackson 3. The `opa-jackson` module registration file is now
+  `META-INF/services/tools.jackson.databind.JacksonModule`
+  ([#93](https://github.com/open-policy-agent/java-opa-sdk/pull/93)) authored by @sspaink
+- `Metrics#all()` now returns keys using OPA's type-specific names,
+  `timer_<name>_ns`, `counter_<name>`, and `histogram_<name>`, instead of the bare
+  metric name. Callers that look up entries of `all()` by bare name must use the
+  prefixed key, and a timer, counter, and histogram sharing a name no longer
+  overwrite each other ([#239](https://github.com/open-policy-agent/java-opa-sdk/pull/239)) authored by @Aayush10016
+
 ### Runtime, SDK, Tooling
 
 - Map Java records natively in `RegoMapper`, with no Jackson or Gson annotations
@@ -12,7 +32,41 @@ project adheres to [Semantic Versioning](http://semver.org/).
   mapped: any other public `getX()` method on a record is ignored (previously
   such methods were mapped, and a record with none mapped to `{}`). Records are
   deserialized through the canonical constructor unless a `@JsonCreator` is
-  present.
+  present ([#242](https://github.com/open-policy-agent/java-opa-sdk/pull/242)) authored by @kroekle
+- Replace the abandoned `com.github.java-json-tools:json-patch` dependency with an
+  inline RFC 6902 implementation for `json.patch`, covering edge cases the
+  upstream fixtures leave out: moving into an own child, the append token on
+  `remove` and `replace`, copy independence, escaped segments, and signed
+  indices ([#93](https://github.com/open-policy-agent/java-opa-sdk/pull/93)) authored by @sspaink
+- Format whole numbers written with a fraction or exponent (`100.0`, `1e2`) as
+  floats in `sprintf`, matching OPA 1.21 ([#238](https://github.com/open-policy-agent/java-opa-sdk/pull/238)) authored by @sspaink
+- Make `strings.replace_n` with an empty key insert the replacement at every
+  position like Go's `strings.Replacer`, instead of looping forever
+  ([#238](https://github.com/open-policy-agent/java-opa-sdk/pull/238)) authored by @sspaink
+- Make `yaml.is_valid` read the whole stream, so invalid content after the first
+  document is rejected ([#238](https://github.com/open-policy-agent/java-opa-sdk/pull/238)) authored by @sspaink
+
+### Build and CI
+
+- Track the project version as an input of `snapshotCapabilities` so the task
+  re-runs after a version bump ([#231](https://github.com/open-policy-agent/java-opa-sdk/pull/231)) authored by @sspaink
+- Use the `CHANGELOG.md` section for the tag as the GitHub release notes, and
+  fail the release before publishing if the section is missing
+  ([#232](https://github.com/open-policy-agent/java-opa-sdk/pull/232)) authored by @sspaink
+
+### Docs, Website, Ecosystem
+
+- Bump the README install snippets to 0.5.0 ([#233](https://github.com/open-policy-agent/java-opa-sdk/pull/233)) authored by @sspaink
+
+### Miscellaneous
+
+- Dependency updates; notably:
+    - Pin the Jackson BOM to 3.1.7 ([#93](https://github.com/open-policy-agent/java-opa-sdk/pull/93))
+    - Bump com.networknt:json-schema-validator from 2.0.7 to 2.0.8 and Guava from 33.7.1-jre to 33.7.2-jre ([#240](https://github.com/open-policy-agent/java-opa-sdk/pull/240))
+    - Bump com.nimbusds:nimbus-jose-jwt from 10.9.1 to 10.10 and com.google.protobuf:protobuf-java and :protoc from 4.36.1 to 4.36.2 ([#234](https://github.com/open-policy-agent/java-opa-sdk/pull/234))
+    - Bump Gradle from 9.7.1 to 9.8.0 ([#236](https://github.com/open-policy-agent/java-opa-sdk/pull/236))
+    - Bump gradle/actions from 6.3.0 to 6.4.0 and github/codeql-action from 4.38.0 to 4.38.2 ([#235](https://github.com/open-policy-agent/java-opa-sdk/pull/235), [#237](https://github.com/open-policy-agent/java-opa-sdk/pull/237))
+    - Bump github.com/open-policy-agent/opa from 1.20.2 to 1.21.1 in the compliance-test generator ([#238](https://github.com/open-policy-agent/java-opa-sdk/pull/238), [#241](https://github.com/open-policy-agent/java-opa-sdk/pull/241))
 
 ## 0.5.0
 
