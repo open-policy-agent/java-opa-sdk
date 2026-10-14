@@ -3015,6 +3015,40 @@
       }
     }
   }, {
+    "name" : "units.parse",
+    "description" : "Parses a resource quantity string into a number.",
+    "categories" : [ "units" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "resource quantity"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "n",
+        "description" : "parsed quantity"
+      }
+    }
+  }, {
+    "name" : "units.parse_bytes",
+    "description" : "Parses a byte quantity string into a number of bytes.",
+    "categories" : [ "units" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "x",
+        "description" : "byte quantity"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "n",
+        "description" : "parsed byte quantity"
+      }
+    }
+  }, {
     "name" : "upper",
     "description" : "Returns the input string but with all characters in upper-case.",
     "categories" : [ "strings" ],
