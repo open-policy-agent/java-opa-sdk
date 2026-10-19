@@ -15,7 +15,7 @@ The opa-builtins module is a convenience aggregator — it has no source code of
 | **[opa-builtins-regex](../opa-builtins-regex/)** | RegexBuiltins | Pattern matching | `regex.match`, `regex.split`, `regex.find_n`, `regex.globs_match` |
 | **[opa-builtins-semver](../opa-builtins-semver/)** | SemverBuiltins | Semantic versioning | `semver.compare`, `semver.is_valid` |
 | **[opa-builtins-net](../opa-builtins-net/)** | CidrBuiltins | Network/CIDR operations | `net.cidr_contains`, `net.cidr_intersects`, `net.cidr_merge` |
-| **[opa-builtins-crypto](../opa-builtins-crypto/)** | CryptoBuiltins | Hashing and HMAC | `crypto.md5`, `crypto.sha256`, `crypto.hmac.sha256`, `crypto.hmac.equal` |
+| **[opa-builtins-crypto](../opa-builtins-crypto/)** | CryptoBuiltins | Hashing, HMAC and X.509 certificates | `crypto.md5`, `crypto.sha256`, `crypto.hmac.sha256`, `crypto.x509.parse_certificates` |
 | **[opa-builtins-json](../opa-builtins-json/)** | JsonBuiltins | JSON operations | `json.filter`, `json.remove`, `json.patch`, `json.match_schema` |
 | **[opa-builtins-providers-aws](../opa-builtins-providers-aws/)** | ProvidersAwsBuiltins | AWS request signing | `providers.aws.sign_req` |
 
@@ -89,7 +89,10 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | `crypto.md5`, `crypto.sha1`, `crypto.sha256` | Yes |
 | `crypto.hmac.md5/sha1/sha256/sha512` | Yes |
 | `crypto.hmac.equal` | Yes |
-| `crypto.x509.*`, `crypto.parse_private_keys` | No |
+| `crypto.x509.parse_certificates` | Yes |
+| `crypto.x509.parse_and_verify_certificates`, `crypto.x509.parse_and_verify_certificates_with_options` | No |
+| `crypto.x509.parse_certificate_request` | No |
+| `crypto.x509.parse_keypair`, `crypto.x509.parse_rsa_private_key`, `crypto.parse_private_keys` | No |
 | **Net** (opa-builtins-net) | |
 | `net.cidr_contains`, `net.cidr_contains_matches` | Yes |
 | `net.cidr_intersects`, `net.cidr_expand`, `net.cidr_merge` | Yes |
