@@ -10,7 +10,7 @@ dependencies {
     api(project(":opa-evaluator"))
 
     implementation("com.networknt:json-schema-validator:3.0.5")
-    implementation(platform("tools.jackson:jackson-bom:3.1.7"))
+    implementation(platform("tools.jackson:jackson-bom:3.2.3"))
     implementation("tools.jackson.core:jackson-databind")
     implementation("tools.jackson.dataformat:jackson-dataformat-yaml")
     // RegoValueModule (auto-registered via Jackson SPI) provides (de)serializers for the AST

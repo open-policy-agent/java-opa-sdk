@@ -9,7 +9,7 @@ repositories {
 dependencies {
     api(project(":opa-evaluator"))
 
-    implementation(platform("tools.jackson:jackson-bom:3.1.7"))
+    implementation(platform("tools.jackson:jackson-bom:3.2.3"))
     implementation("tools.jackson.core:jackson-databind")
     implementation("tools.jackson.dataformat:jackson-dataformat-yaml")
     implementation("org.apache.commons:commons-compress:1.28.0")
