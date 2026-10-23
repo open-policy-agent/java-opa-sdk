@@ -5,6 +5,14 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ## Unreleased
 
+### Runtime, SDK, Tooling
+
+- Implement the `crypto.x509.parse_certificates` and
+  `crypto.x509.parse_and_verify_certificates` builtins in `opa-builtins-crypto`,
+  following Go's `crypto/x509` as OPA does. Chains whose signatures use NIST
+  P-224 or ML-DSA, which Java 17 does not provide, are reported as not verified
+  ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129))
+
 ## 0.6.0
 
 This release moves the SDK to Jackson 3, maps Java records natively in
