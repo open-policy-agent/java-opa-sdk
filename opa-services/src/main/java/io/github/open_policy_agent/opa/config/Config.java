@@ -1077,6 +1077,7 @@ public class Config {
    */
   public static class DiscoveryConfig {
     private String name;
+    private String decision;
     private String service;
     private String resource;
     private PollingConfig polling;
@@ -1087,6 +1088,16 @@ public class Config {
 
     public DiscoveryConfig setName(String name) {
       this.name = name;
+      return this;
+    }
+
+    /** Path of the discovered config inside the bundle data, e.g. {@code example/discovery}. */
+    public String getDecision() {
+      return decision;
+    }
+
+    public DiscoveryConfig setDecision(String decision) {
+      this.decision = decision;
       return this;
     }
 
@@ -1122,6 +1133,9 @@ public class Config {
       return "DiscoveryConfig{"
           + "name='"
           + name
+          + '\''
+          + ", decision='"
+          + decision
           + '\''
           + ", service='"
           + service

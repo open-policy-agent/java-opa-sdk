@@ -729,6 +729,7 @@ public class Opa {
           }
         }
       }
+      JsonNode bootConfigTree = null;
       if (config == null) {
         try {
           // Read fully so we can apply ${VAR} env-var interpolation before parsing. Avoids
@@ -740,7 +741,8 @@ public class Opa {
             raw.append(buf, 0, n);
           }
           String interpolated = EnvInterpolator.interpolate(raw.toString());
-          config = YAML_MAPPER.readValue(interpolated, Config.class);
+          bootConfigTree = YAML_MAPPER.readTree(interpolated);
+          config = YAML_MAPPER.treeToValue(bootConfigTree, Config.class);
         } catch (IOException e) {
           throw new RuntimeException(e);
         }
@@ -751,6 +753,7 @@ public class Opa {
               .withId(id)
               .withStore(store)
               .withConfig(config)
+              .withBootConfigTree(bootConfigTree)
               .withLogger(logger)
               .build();
 

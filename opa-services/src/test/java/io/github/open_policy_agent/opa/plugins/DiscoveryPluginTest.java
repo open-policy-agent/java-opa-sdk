@@ -7,15 +7,10 @@ import static org.mockito.ArgumentMatchers.contains;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-import tools.jackson.databind.ObjectMapper;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.zip.GZIPOutputStream;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -49,7 +44,6 @@ class DiscoveryPluginTest {
 
     Config.DiscoveryConfig discoveryConfig =
         new Config.DiscoveryConfig()
-            .setName("discovery")
             .setService("test-service")
             .setResource("/discovery.tar.gz");
     config.setDiscovery(discoveryConfig);
@@ -82,6 +76,10 @@ class DiscoveryPluginTest {
 
   @Test
   void validate_missingService_returnsError() {
+    config.setServices(
+        java.util.Map.of(
+            "test-service", new Config.ServiceConfig().setName("test-service").setUrl("file:///tmp/a"),
+            "other-service", new Config.ServiceConfig().setName("other-service").setUrl("file:///tmp/b")));
     Config.DiscoveryConfig discoveryConfig =
         new Config.DiscoveryConfig().setResource("/discovery.tar.gz");
     config.setDiscovery(discoveryConfig);
@@ -177,7 +175,7 @@ class DiscoveryPluginTest {
   @Test
   void discoveryBundle_withRegoFiles_rejectsBundle(@TempDir Path tempDir) throws Exception {
     // Create a discovery bundle with .rego files (should be rejected)
-    byte[] bundleData = createDiscoveryBundleWithRego(tempDir);
+    byte[] bundleData = DiscoveryTestSupport.configBundleWithRego(createValidDiscoveredConfig(tempDir));
     Path bundlePath = tempDir.resolve("discovery.tar.gz");
     Files.write(bundlePath, bundleData);
 
@@ -212,7 +210,7 @@ class DiscoveryPluginTest {
       throws Exception {
     // Create a valid discovery bundle with config
     Config discoveredConfig = createValidDiscoveredConfig(tempDir);
-    byte[] bundleData = createDiscoveryBundle(discoveredConfig);
+    byte[] bundleData = DiscoveryTestSupport.configBundle(discoveredConfig);
     Path bundlePath = tempDir.resolve("discovery.tar.gz");
     Files.write(bundlePath, bundleData);
 
@@ -259,7 +257,7 @@ class DiscoveryPluginTest {
       throws Exception {
     // Create initial valid discovery bundle
     Config goodConfig = createValidDiscoveredConfig(tempDir);
-    byte[] goodBundle = createDiscoveryBundle(goodConfig);
+    byte[] goodBundle = DiscoveryTestSupport.configBundle(goodConfig);
     Path bundlePath = tempDir.resolve("discovery.tar.gz");
     Files.write(bundlePath, goodBundle);
 
@@ -292,7 +290,7 @@ class DiscoveryPluginTest {
     verify(mockLogger, atLeastOnce()).info(eq("Configuration updated by discovery"));
 
     // Now replace with bad bundle (has .rego files)
-    byte[] badBundle = createDiscoveryBundleWithRego(tempDir);
+    byte[] badBundle = DiscoveryTestSupport.configBundleWithRego(createValidDiscoveredConfig(tempDir));
     Files.write(bundlePath, badBundle);
 
     // Wait for next poll (polling is every 1 second)
@@ -310,7 +308,7 @@ class DiscoveryPluginTest {
   @Test
   void discoveryBundle_emptyDataJson_rejectsBundle(@TempDir Path tempDir) throws Exception {
     // Create discovery bundle without data.json
-    byte[] bundleData = createEmptyDiscoveryBundle();
+    byte[] bundleData = DiscoveryTestSupport.emptyBundle();
     Path bundlePath = tempDir.resolve("discovery.tar.gz");
     Files.write(bundlePath, bundleData);
 
@@ -344,83 +342,6 @@ class DiscoveryPluginTest {
 
   // Helper methods to create test bundles
 
-  private byte[] createDiscoveryBundle(Config config) throws IOException {
-    ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-
-    try (GZIPOutputStream gzipOut = new GZIPOutputStream(byteOut);
-        TarArchiveOutputStream tarOut = new TarArchiveOutputStream(gzipOut)) {
-
-      // Add data.json with config
-      ObjectMapper mapper = new ObjectMapper();
-      String configJson = mapper.writeValueAsString(config);
-
-      TarArchiveEntry dataEntry = new TarArchiveEntry("data.json");
-      byte[] dataBytes = configJson.getBytes();
-      dataEntry.setSize(dataBytes.length);
-      tarOut.putArchiveEntry(dataEntry);
-      tarOut.write(dataBytes);
-      tarOut.closeArchiveEntry();
-
-      tarOut.finish();
-    }
-
-    return byteOut.toByteArray();
-  }
-
-  private byte[] createDiscoveryBundleWithRego(Path tempDir) throws IOException {
-    ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-
-    try (GZIPOutputStream gzipOut = new GZIPOutputStream(byteOut);
-        TarArchiveOutputStream tarOut = new TarArchiveOutputStream(gzipOut)) {
-
-      // Add data.json with valid config
-      Config config = createValidDiscoveredConfig(tempDir);
-      ObjectMapper mapper = new ObjectMapper();
-      String configJson = mapper.writeValueAsString(config);
-
-      TarArchiveEntry dataEntry = new TarArchiveEntry("data.json");
-      byte[] dataBytes = configJson.getBytes();
-      dataEntry.setSize(dataBytes.length);
-      tarOut.putArchiveEntry(dataEntry);
-      tarOut.write(dataBytes);
-      tarOut.closeArchiveEntry();
-
-      // Add a .rego file (which should cause rejection)
-      String regoContent = "package discovery\n\nallow = true\n";
-      TarArchiveEntry regoEntry = new TarArchiveEntry("policy.rego");
-      byte[] regoBytes = regoContent.getBytes();
-      regoEntry.setSize(regoBytes.length);
-      tarOut.putArchiveEntry(regoEntry);
-      tarOut.write(regoBytes);
-      tarOut.closeArchiveEntry();
-
-      tarOut.finish();
-    }
-
-    return byteOut.toByteArray();
-  }
-
-  private byte[] createEmptyDiscoveryBundle() throws IOException {
-    ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-
-    try (GZIPOutputStream gzipOut = new GZIPOutputStream(byteOut);
-        TarArchiveOutputStream tarOut = new TarArchiveOutputStream(gzipOut)) {
-
-      // Add only manifest, no data.json
-      String manifestJson = "{\"revision\": \"test-123\"}";
-      TarArchiveEntry manifestEntry = new TarArchiveEntry(".manifest");
-      byte[] manifestBytes = manifestJson.getBytes();
-      manifestEntry.setSize(manifestBytes.length);
-      tarOut.putArchiveEntry(manifestEntry);
-      tarOut.write(manifestBytes);
-      tarOut.closeArchiveEntry();
-
-      tarOut.finish();
-    }
-
-    return byteOut.toByteArray();
-  }
-
   private Config createValidDiscoveredConfig(Path tempDir) {
     Config config = new Config();
 
@@ -448,7 +369,6 @@ class DiscoveryPluginTest {
     // Include discovery config so it can continue polling
     Config.DiscoveryConfig discoveryConfig =
         new Config.DiscoveryConfig()
-            .setName("discovery")
             .setService("test-service")
             .setResource("discovery.tar.gz")
             .setPolling(new Config.PollingConfig().setMinDelaySeconds(1).setMaxDelaySeconds(1));

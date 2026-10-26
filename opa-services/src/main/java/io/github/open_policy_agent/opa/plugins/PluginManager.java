@@ -3,6 +3,8 @@ package io.github.open_policy_agent.opa.plugins;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.storage.Store;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,10 +25,15 @@ public class PluginManager {
   private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
   private final List<PluginStatusListener> statusListeners = new CopyOnWriteArrayList<>();
   private final List<BundleActivationListener> bundleActivationListeners = new CopyOnWriteArrayList<>();
+  private final Map<String, String> statusMessages = new ConcurrentHashMap<>();
+  private final Config bootConfig;
+  private JsonNode bootConfigTree;
   private Config config;
 
   private PluginManager(Builder builder) {
     this.config = builder.config;
+    this.bootConfig = builder.config;
+    this.bootConfigTree = builder.bootConfigTree;
     this.id = builder.id;
     this.store = builder.store;
     this.logger = builder.logger;
@@ -39,6 +46,30 @@ public class PluginManager {
 
   public Status getPluginStatus(String plugin) {
     return this.status.get(plugin);
+  }
+
+  void setPluginStatusMessage(String plugin, String message) {
+    if (message == null) {
+      statusMessages.remove(plugin);
+    } else {
+      statusMessages.put(plugin, message);
+    }
+  }
+
+  String getPluginStatusMessage(String plugin) {
+    return statusMessages.get(plugin);
+  }
+
+  /**
+   * The boot configuration as a JSON tree, which discovery merges over the discovered config. When
+   * the manager was not given the raw tree, it is derived from the typed boot config, so fields
+   * that carry a Java default look as if they were set at boot.
+   */
+  synchronized JsonNode getBootConfigTree() {
+    if (bootConfigTree == null) {
+      bootConfigTree = DiscoveryMerge.stripNulls(JsonMapper.shared().valueToTree(bootConfig));
+    }
+    return bootConfigTree;
   }
 
   public synchronized boolean allPluginsOk() {
@@ -122,13 +153,14 @@ public class PluginManager {
   }
 
   /**
-   * Update the configuration used by plugins.
+   * Replace the configuration returned by {@link #getConfig()} and notify the registered config
+   * update listeners.
    *
-   * <p>This method is called when discovery loads new configuration. It updates the internal config
-   * reference and notifies all registered config update listeners.
-   *
-   * <p>Note: This does NOT automatically restart plugins. Plugins will pick up the new
-   * configuration on their next polling cycle or when they explicitly check the config.
+   * <p>Discovery calls this with the discovered configuration merged under the boot configuration.
+   * Plugins are not restarted or reconfigured: those that read the config when they are initialized
+   * (the bundle, decision log and status plugins) only see a discovery result that arrived before
+   * they started, which is why {@code Opa} runs discovery first. Later discovery updates change
+   * {@link #getConfig()} for readers that consult it again and for listeners, and nothing else.
    *
    * @param newConfig the new configuration to use
    */
@@ -240,12 +272,18 @@ public class PluginManager {
 
   public static class Builder {
     private Config config;
+    private JsonNode bootConfigTree;
     private String id;
     private Store store;
     private Logger logger;
 
     public Builder withConfig(Config config) {
       this.config = config;
+      return this;
+    }
+
+    public Builder withBootConfigTree(JsonNode bootConfigTree) {
+      this.bootConfigTree = bootConfigTree;
       return this;
     }
 
