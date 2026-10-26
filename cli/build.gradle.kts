@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":opa-evaluator"))
     implementation(project(":opa-services"))
     implementation(project(":opa-jackson"))
-    implementation(platform("tools.jackson:jackson-bom:3.2.3"))
+    implementation(platform("tools.jackson:jackson-bom:3.2.4"))
     implementation("tools.jackson.core:jackson-databind")
     implementation("info.picocli:picocli:4.7.7")
     implementation("org.apache.commons:commons-compress:1.28.0")
