@@ -333,6 +333,133 @@ logged unmasked. If the mask policy fails to evaluate, or returns a rule the SDK
 error is logged and the event is dropped rather than logged unmasked (matching OPA's Go
 implementation).
 
+## Discovery
+
+The discovery feature helps you centrally manage the configuration of bundle downloading, status
+reporting and decision logging. When it is enabled, the SDK downloads a _discovery bundle_ from a
+remote service and reads the rest of the configuration from the `data.json` inside it. The bundle,
+decision log and status plugins start with the resulting configuration. If the first download
+fails, `Opa.Builder#build` throws.
+
+If discovery is enabled, other features like bundle downloading and status reporting **can** still
+be configured manually. **In case of conflicts, the boot configuration overrides the discovered
+configuration.**
+
+You can enable discovery with a configuration file similar to the example below. The initial
+configuration provided to the SDK is referred to as the "boot configuration".
+
+```yaml
+services:
+  acmecorp:
+    url: https://example.com/control-plane-api/v1
+    credentials:
+      bearer:
+        token: "bGFza2RqZmxha3NkamZsa2Fqc2Rsa2ZqYWtsc2RqZmtramRmYWxkc2tm"
+
+discovery:
+  service: acmecorp
+  resource: /configuration/example/discovery.tar.gz
+```
+
+Using the boot configuration above, the SDK fetches the discovery bundle from:
+
+```
+https://example.com/control-plane-api/v1/configuration/example/discovery.tar.gz
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+services[discovery.service].url          discovery.resource
+```
+
+The `discovery.resource` field defaults to `bundles/<discovery.name>`. If only one service is
+defined, there is no need to set `discovery.service`.
+
+The subsequent configuration is read from `data` in the discovery bundle. This can be overridden by
+specifying `discovery.decision`:
+
+```yaml
+discovery:
+  service: acmecorp
+  resource: /configuration/example/discovery.tar.gz
+  decision: example/discovery
+```
+
+The SDK then reads the configuration from `data.example.discovery`. If the discovery bundle contains
+the following `data.json`:
+
+```json
+{
+  "example": {
+    "discovery": {
+      "bundles": {
+        "main": {
+          "service": "acmecorp",
+          "resource": "acmecorp/httpauthz"
+        }
+      },
+      "default_decision": "acmecorp/httpauthz/allow"
+    }
+  }
+}
+```
+
+the subsequent configuration is:
+
+```json
+{
+  "bundles": {
+    "main": {
+      "service": "acmecorp",
+      "resource": "acmecorp/httpauthz"
+    }
+  },
+  "default_decision": "acmecorp/httpauthz/allow"
+}
+```
+
+If the path is undefined, the load fails. A failure on the first load makes `Opa.Builder#build`
+throw; on a later update the previous configuration is kept.
+
+The subsequent configuration does not have to specify `services` or include a reference to a service
+in the `bundles`, `status` or `decision_logs` sections. If either the `services` or the references
+to services are missing, the SDK defaults them to the values from the boot configuration.
+
+`${VAR}` references in the discovered configuration are replaced with the value of the environment
+variable. Unlike in the boot configuration, a reference to an undefined variable is left as written.
+
+### Configuration
+
+| Key | Type | Required | Description |
+|-----|------|----------|-------------|
+| `discovery.resource` | `string` | Yes, unless `discovery.name` is set | Resource path to use to download the bundle from the configured service. Defaults to `bundles/<discovery.name>`. |
+| `discovery.service` | `string` | No | Name of the service to use to contact the remote server. If omitted, the configuration must contain exactly one service. |
+| `discovery.decision` | `string` | No | The path of the configuration in the discovery bundle's data, for example `example/discovery`. Defaults to `discovery.name`, and if that is unset, to `data`. |
+| `discovery.name` | `string` | No | Deprecated: use `discovery.resource` and `discovery.decision` instead. Name of the discovery configuration to download. If `discovery.decision` is unset, it defaults to this value. |
+| `discovery.polling.min_delay_seconds` | `int64` | No (default: `60`) | Minimum amount of time to wait between configuration downloads. |
+| `discovery.polling.max_delay_seconds` | `int64` | No (default: `120`) | Maximum amount of time to wait between configuration downloads. |
+
+### Limitations
+
+In practice, discovery services do not change frequently. These configuration sections are treated
+as immutable to avoid accidental configuration errors rendering the SDK unable to discover a new
+configuration. If the discovered configuration changes the `discovery` section, those changes are
+ignored. If the discovered configuration changes the discovery service, an error is logged and the
+configuration is not applied. If the discovered configuration changes the `labels` section, only
+labels that are additional compared to the boot configuration are used; all other changes are
+ignored.
+
+Maps are merged key by key. For any other value, including arrays, the boot configuration's value
+replaces the discovered one. The keys that were replaced are listed in the discovery status message:
+"Keys in the discovered configuration overridden by boot configuration: ...".
+
+The following are not supported:
+
+- Rego files in the discovery bundle. A bundle that contains them is rejected.
+- `discovery.signing` and `discovery.persist`. Unsupported keys in the `discovery` section are
+  ignored and a warning is logged.
+- Services that are only defined in the discovered configuration. Services must be defined in the
+  boot configuration, because the HTTP clients are created before discovery runs.
+- Reconfiguring running plugins. The discovered configuration is applied at startup; later changes
+  to the discovery bundle do not reconfigure plugins that are already running.
+
 ## Decision Options
 
 For fine-grained control over individual decisions:
