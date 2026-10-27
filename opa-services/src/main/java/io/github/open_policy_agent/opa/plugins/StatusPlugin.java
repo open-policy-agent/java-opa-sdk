@@ -308,21 +308,27 @@ public final class StatusPlugin implements Plugin {
         report.set("labels", labels);
       }
 
-      // Add bundle information
+      // Bundle statuses in OPA's shape. `revision` and `active` are kept for existing consumers.
       ObjectNode bundles = MAPPER.createObjectNode();
+      manager.bundleStatuses().forEach((name, bundleStatus) -> bundles.set(name, bundleStatus.toJson()));
       Map<String, Bundle> storeBundles = manager.getStore().getBundles();
       if (storeBundles != null) {
         for (Map.Entry<String, Bundle> entry : storeBundles.entrySet()) {
-          ObjectNode bundleInfo = MAPPER.createObjectNode();
-          if (entry.getValue().manifest != null
-              && entry.getValue().manifest.containsKey("revision")) {
-            bundleInfo.put("revision", String.valueOf(entry.getValue().manifest.get("revision")));
+          ObjectNode bundleInfo =
+              bundles.has(entry.getKey())
+                  ? (ObjectNode) bundles.get(entry.getKey())
+                  : bundles.putObject(entry.getKey());
+          final String revision = BundleStatus.revisionOf(entry.getValue());
+          if (revision != null) {
+            bundleInfo.put("revision", revision);
           }
           bundleInfo.put("active", true);
-          bundles.set(entry.getKey(), bundleInfo);
         }
       }
       report.set("bundles", bundles);
+      if (manager.discoveryStatus() != null) {
+        report.set("discovery", manager.discoveryStatus().toJson());
+      }
 
       // Add plugin statuses (only for registered plugins). The "services" plugin holds REST
       // service clients rather than a status-reporting plugin, so it is excluded to match the

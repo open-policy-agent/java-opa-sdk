@@ -144,6 +144,7 @@ public final class BundlePlugin implements Plugin {
 
     private Bundle(String name, PluginManager manager, ServicePlugin.Service authService) {
       super(name, manager, authService);
+      manager.registerBundleStatus(status);
     }
 
     public String getName() {
@@ -189,10 +190,12 @@ public final class BundlePlugin implements Plugin {
 
         manager.getLogger().info("Bundle '%s': Activated", name);
         manager.notifyBundleActivation(name);
+        status.activated(BundleStatus.revisionOf(manager.getStore().getBundles().get(name)));
 
       } catch (Exception e) {
         manager.getLogger().error("Bundle '%s': Activation failed: %s", name, e.getMessage());
-        throw new RuntimeException(e); // Re-throw to fail initial activation
+        // Re-throw to fail initial activation; the message is what the status reports.
+        throw new RuntimeException(e.getMessage() != null ? e.getMessage() : e.toString(), e);
       }
     }
   }

@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -43,7 +42,7 @@ public final class DiscoveryPlugin implements Plugin {
 
   private static final ObjectMapper MAPPER = JsonMapper.shared();
   private static final Set<String> SUPPORTED_KEYS =
-      Set.of("name", "decision", "service", "resource", "polling");
+      Set.of("name", "decision", "prefix", "service", "resource", "polling");
 
   private PluginManager manager;
   private ScheduledExecutorService scheduler;
@@ -164,7 +163,8 @@ public final class DiscoveryPlugin implements Plugin {
       return discovery.getResource();
     }
     final String name = trimSlashes(discovery.getName());
-    return name.isEmpty() ? null : "bundles/" + name;
+    final String prefix = discovery.getPrefix() != null ? discovery.getPrefix() : "bundles";
+    return name.isEmpty() ? null : trimSlashes(prefix) + "/" + name;
   }
 
   private static List<String> configPath(Config.DiscoveryConfig discovery) {
@@ -233,7 +233,8 @@ public final class DiscoveryPlugin implements Plugin {
 
     private DiscoveryBundle(
         String name, PluginManager manager, ServicePlugin.Service service, List<String> configPath) {
-      super(name, manager, service);
+      super(name, "discovery", manager, service);
+      manager.setDiscoveryStatus(status);
       this.configPath = configPath;
     }
 
@@ -258,95 +259,68 @@ public final class DiscoveryPlugin implements Plugin {
     @Override
     protected void activateBundle(byte[] bundleData) {
       try {
-        // Parse discovery bundle
         DiscoveryBundleContent content = parseDiscoveryBundle(bundleData);
 
         // Validate: discovery bundles should not contain Rego
         if (content.hasRegoFiles) {
-          String errorMsg =
-              "Discovery bundle contains .rego files, which is not allowed. "
-                  + "Discovery bundles should only contain configuration data.";
-          manager.getLogger().error("Discovery '%s': %s", name, errorMsg);
           manager.updatePluginStatus("discovery", PluginManager.Status.WARN);
-          failInitialActivation(errorMsg);
-          return;
+          throw new IllegalStateException(
+              "Discovery bundle contains .rego files, which is not allowed. "
+                  + "Discovery bundles should only contain configuration data.");
         }
-
         if (content.data == null) {
-          String errorMsg = "Discovery bundle does not contain configuration data";
-          manager.getLogger().error("Discovery '%s': %s", name, errorMsg);
-          failInitialActivation(errorMsg);
-          return;
+          throw new IllegalStateException("Discovery bundle does not contain configuration data");
         }
 
         final JsonNode selected = selectConfig(content.data, configPath, System.getenv());
         final DiscoveryMerge.Result merged =
             DiscoveryMerge.merge(manager.getBootConfigTree(), selected, service);
-
-        if (lastMergedTree != null && DiscoveryMerge.sameJson(lastMergedTree, merged.tree())) {
-          manager.getLogger().debug("Discovery '%s': Configuration unchanged", name);
-          return;
-        }
-
-        final Config config = MAPPER.treeToValue(merged.tree(), Config.class);
-        keepBootServices(config, selected.path("services"));
-        discoveredConfig = config;
-        lastMergedTree = merged.tree();
-
-        manager.getLogger().info("Discovery '%s': Configuration loaded successfully", name);
-
         final String overridden =
             merged.overriddenKeys().isEmpty()
                 ? null
                 : "Keys in the discovered configuration overridden by boot configuration: "
                     + String.join(", ", merged.overriddenKeys());
-        manager.setPluginStatusMessage("discovery", overridden);
-        if (overridden != null) {
-          manager.getLogger().debug("Discovery '%s': %s", name, overridden);
+
+        if (lastMergedTree != null && DiscoveryMerge.sameJson(lastMergedTree, merged.tree())) {
+          manager.getLogger().debug("Discovery '%s': Configuration unchanged", name);
+        } else {
+          final Config config = MAPPER.treeToValue(merged.tree(), Config.class);
+          keepBootServices(config, merged.unchangedServices());
+          manager.updateConfig(config);
+          discoveredConfig = config;
+          lastMergedTree = merged.tree();
+          manager.getLogger().info("Discovery '%s': Configuration loaded successfully", name);
+          if (overridden != null) {
+            manager.getLogger().debug("Discovery '%s': %s", name, overridden);
+          }
         }
-        manager.updateConfig(discoveredConfig);
+        status.activated(content.revision);
+        status.setMessage(overridden);
 
       } catch (Exception e) {
-        String errorMsg = "Failed to activate discovery bundle: " + e.getMessage();
-        manager.getLogger().error("Discovery '%s': %s", name, errorMsg);
-
-        // If we have an existing config, keep using it (don't fail)
+        manager.getLogger().error("Discovery '%s': %s", name, "Failed to activate discovery bundle: " + e.getMessage());
         if (discoveredConfig != null) {
           manager.getLogger().warn("Discovery '%s': Continuing with previous configuration", name);
-        } else {
-          failInitialActivation(errorMsg);
         }
-      }
-    }
-
-    private void failInitialActivation(String errorMsg) {
-      if (!initialActivation.isDone()) {
-        initialActivation.completeExceptionally(new RuntimeException(errorMsg));
+        // The downloader records the failure and fails the initial activation if there is none yet.
+        throw e instanceof RuntimeException ? (RuntimeException) e : new RuntimeException(e);
       }
     }
 
     /**
-     * Services that discovery does not mention come back from the tree as plain config, which loses
-     * what a tree cannot hold ({@code SSLContext}, key stores), so those are the boot config's own.
+     * Services that discovery leaves as they are come back from the tree as plain config, which
+     * loses what a tree cannot hold ({@code SSLContext}, key stores), so those are the boot config's.
      */
-    private void keepBootServices(Config config, JsonNode discoveredServices) {
+    private void keepBootServices(Config config, Set<String> unchangedServices) {
       final Map<String, Config.ServiceConfig> bootServices = manager.getBootConfig().getServices();
       if (bootServices == null || config.getServices() == null) {
         return;
       }
-      for (Map.Entry<String, Config.ServiceConfig> boot : bootServices.entrySet()) {
-        if (config.getServices().containsKey(boot.getKey())
-            && !mentions(discoveredServices, boot.getKey())) {
-          config.getServices().put(boot.getKey(), boot.getValue());
+      for (String name : unchangedServices) {
+        if (bootServices.containsKey(name) && config.getServices().containsKey(name)) {
+          config.getServices().put(name, bootServices.get(name));
         }
       }
-    }
-
-    private boolean mentions(JsonNode services, String name) {
-      return services.isObject()
-          ? services.has(name)
-          : StreamSupport.stream(services.spliterator(), false)
-              .anyMatch(service -> name.equals(service.path("name").asString("")));
     }
 
     /**
@@ -377,8 +351,7 @@ public final class DiscoveryPlugin implements Plugin {
             } else if (entryName.equals("data.json")) {
               content.data = MAPPER.readTree(tarIn.readAllBytes());
             } else if (entryName.equals(".manifest")) {
-              // Discovery bundles can have manifests, but we don't need to process them
-              manager.getLogger().debug("Discovery '%s': Found manifest in discovery bundle", name);
+              content.revision = MAPPER.readTree(tarIn.readAllBytes()).path("revision").asString("");
             }
           }
         }
@@ -391,6 +364,7 @@ public final class DiscoveryPlugin implements Plugin {
   /** Container for discovery bundle parsing results. */
   private static class DiscoveryBundleContent {
     JsonNode data;
+    String revision = "";
     boolean hasRegoFiles = false;
   }
 }

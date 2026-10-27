@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -64,6 +65,28 @@ public final class DiscoveryTestSupport {
   /** A bundle with a manifest and no {@code data.json}. */
   public static byte[] emptyBundle() throws IOException {
     return tarGz(Map.of(".manifest", "{\"revision\": \"test-123\"}"));
+  }
+
+  private static final String PLAN =
+      "{\"static\":{\"strings\":[],\"files\":[]},\"plans\":{\"plans\":[{\"name\":\"%s/main\",\"blocks\":[]}]},"
+          + "\"funcs\":{\"funcs\":[]}}";
+
+  /** A valid snapshot bundle with the given root and revision, in the server's absolute-path format. */
+  public static byte[] bundle(String root, String revision) throws IOException {
+    return snapshot(root, revision, String.format(PLAN, root));
+  }
+
+  /** A bundle whose plan cannot be loaded, so activating it fails. */
+  public static byte[] unloadableBundle(String root, String revision) throws IOException {
+    return snapshot(root, revision, "this is not a plan");
+  }
+
+  private static byte[] snapshot(String root, String revision, String plan) throws IOException {
+    final Map<String, String> entries = new LinkedHashMap<>();
+    entries.put("/data.json", "{}");
+    entries.put("/plan.json", plan);
+    entries.put("/.manifest", "{\"revision\":\"" + revision + "\",\"roots\":[\"" + root + "\"]}");
+    return tarGz(entries);
   }
 
   public static void write(Path dir, String relativePath, byte[] bundle) throws IOException {

@@ -1078,6 +1078,7 @@ public class Config {
   public static class DiscoveryConfig {
     private String name;
     private String decision;
+    private String prefix;
     private String service;
     private String resource;
     private PollingConfig polling;
@@ -1098,6 +1099,16 @@ public class Config {
 
     public DiscoveryConfig setDecision(String decision) {
       this.decision = decision;
+      return this;
+    }
+
+    /** Deprecated: directory of the default {@code resource}, which is {@code <prefix>/<name>}. */
+    public String getPrefix() {
+      return prefix;
+    }
+
+    public DiscoveryConfig setPrefix(String prefix) {
+      this.prefix = prefix;
       return this;
     }
 

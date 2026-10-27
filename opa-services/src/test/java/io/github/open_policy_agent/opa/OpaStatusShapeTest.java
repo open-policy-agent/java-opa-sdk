@@ -1,5 +1,7 @@
 package io.github.open_policy_agent.opa;
 
+import static io.github.open_policy_agent.opa.plugins.DiscoveryTestSupport.bundle;
+import static io.github.open_policy_agent.opa.plugins.DiscoveryTestSupport.unloadableBundle;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -16,10 +18,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Stream;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -44,6 +50,7 @@ class OpaStatusShapeTest {
 
   private final Map<String, byte[]> bodies = new ConcurrentHashMap<>();
   private final Map<String, Integer> failures = new ConcurrentHashMap<>();
+  private final Map<String, String> etags = new ConcurrentHashMap<>();
   private final List<String> uploads = new CopyOnWriteArrayList<>();
   private HttpServer server;
   private Opa opa;
@@ -58,7 +65,13 @@ class OpaStatusShapeTest {
           final byte[] request = exchange.getRequestBody().readAllBytes();
           final Integer failure = failures.get(path);
           final byte[] body = bodies.get(path);
-          if ("/status".equals(path)) {
+          final String etag = etags.get(path);
+          if (etag != null) {
+            exchange.getResponseHeaders().add("ETag", etag);
+          }
+          if (etag != null && etag.equals(exchange.getRequestHeaders().getFirst("If-None-Match"))) {
+            exchange.sendResponseHeaders(304, -1);
+          } else if ("/status".equals(path)) {
             uploads.add(new String(request));
             exchange.sendResponseHeaders(200, -1);
           } else if (failure != null) {
@@ -83,18 +96,6 @@ class OpaStatusShapeTest {
   }
 
   // ---- fixtures ----
-
-  private static byte[] bundle(String root, String revision) throws IOException {
-    final Map<String, String> entries = new LinkedHashMap<>();
-    entries.put("/data.json", "{}");
-    entries.put(
-        "/plan.json",
-        "{\"static\":{\"strings\":[],\"files\":[]},\"plans\":{\"plans\":[{\"name\":\""
-            + root
-            + "/main\",\"blocks\":[]}]},\"funcs\":{\"funcs\":[]}}");
-    entries.put("/.manifest", "{\"revision\":\"" + revision + "\",\"roots\":[\"" + root + "\"]}");
-    return DiscoveryTestSupport.tarGz(entries);
-  }
 
   private static byte[] discoveryBundle(String dataJson, String revision) throws IOException {
     final Map<String, String> entries = new LinkedHashMap<>();
@@ -149,6 +150,11 @@ class OpaStatusShapeTest {
         "no matching status report; last: " + (uploads.isEmpty() ? "none" : uploads.get(uploads.size() - 1)));
   }
 
+  private JsonNode latest(String section, String name) throws Exception {
+    final JsonNode report = MAPPER.readTree(uploads.get(uploads.size() - 1));
+    return name == null ? report.path(section) : report.path(section).path(name);
+  }
+
   private JsonNode awaitBundle(String name, Predicate<JsonNode> condition) throws Exception {
     return awaitReport(r -> condition.test(r.path("bundles").path(name))).path("bundles").path(name);
   }
@@ -189,19 +195,27 @@ class OpaStatusShapeTest {
     assertFalse(discovery.has("code"), discovery.toString());
   }
 
-  @Test
-  void aRegoDiscoveryUpdateSetsTheErrorAndKeepsTheActiveRevision() throws Exception {
+  static Stream<Arguments> failingDiscoveryUpdates() throws IOException {
+    final Map<String, String> rego = new LinkedHashMap<>();
+    rego.put("data.json", "{}");
+    rego.put("policy.rego", "package discovery\n");
+    rego.put(".manifest", "{\"revision\":\"disc-2\"}");
+    return Stream.of(
+        Arguments.of(DiscoveryTestSupport.tarGz(rego), ".rego"),
+        Arguments.of(discoveryBundle("{\"labels\":\"not-a-map\"}", "disc-2"), ""));
+  }
+
+  @ParameterizedTest
+  @MethodSource("failingDiscoveryUpdates")
+  void aFailingDiscoveryUpdateSetsTheErrorAndKeepsTheActiveRevision(byte[] update, String messageFragment)
+      throws Exception {
     final JsonNode before = startWithDiscovery("", "{}");
 
-    final Map<String, String> entries = new LinkedHashMap<>();
-    entries.put("data.json", "{}");
-    entries.put("policy.rego", "package discovery\n");
-    entries.put(".manifest", "{\"revision\":\"disc-2\"}");
-    bodies.put("/discovery.tar.gz", DiscoveryTestSupport.tarGz(entries));
+    bodies.put("/discovery.tar.gz", update);
     final JsonNode after = awaitDiscovery(d -> d.has("code"));
 
     assertEquals("bundle_error", after.path("code").asString());
-    assertTrue(after.path("message").asString().contains(".rego"), after.toString());
+    assertTrue(after.path("message").asString().contains(messageFragment), after.toString());
     assertEquals("disc-1", after.path("active_revision").asString());
     assertEquals(before.path("last_successful_activation"), after.path("last_successful_activation"));
   }
@@ -241,10 +255,12 @@ class OpaStatusShapeTest {
 
   @Test
   void aFailingDownloadSetsTheErrorAndDoesNotAdvanceTheSuccessTimestamps() throws Exception {
-    final JsonNode ok = startWithBundleA("rev-1");
+    startWithBundleA("rev-1");
 
     failures.put("/bundles/a.tar.gz", 500);
     final JsonNode failed = awaitBundle("a", b -> b.has("code"));
+    final JsonNode failedAgain =
+        awaitBundle("a", b -> b.has("code") && time(b, "last_request").isAfter(time(failed, "last_request")));
 
     assertEquals("bundle_error", failed.path("code").asString());
     assertEquals(500, failed.path("http_code").asInt());
@@ -252,9 +268,9 @@ class OpaStatusShapeTest {
     assertFalse(failed.has("errors"), failed.toString());
     assertEquals("rev-1", failed.path("active_revision").asString());
     for (String field : SUCCESS_TIMES) {
-      assertEquals(ok.path(field), failed.path(field), field);
+      assertEquals(failed.path(field), failedAgain.path(field), field);
     }
-    assertTrue(time(failed, "last_request").isAfter(time(ok, "last_request")));
+    assertTrue(time(failedAgain, "last_successful_request").isBefore(time(failedAgain, "last_request")));
 
     failures.remove("/bundles/a.tar.gz");
     final JsonNode recovered = awaitBundle("a", b -> activated(b) && !b.has("code"));
@@ -268,7 +284,7 @@ class OpaStatusShapeTest {
     failures.put("/bundles/a.tar.gz", 500);
     start(bundleYaml("a", "bundles/a.tar.gz"), false);
 
-    final JsonNode entry = awaitBundle("a", b -> b.has("last_request"));
+    final JsonNode entry = awaitBundle("a", b -> b.has("last_request") && !ZERO_TIME.equals(b.path("last_request").asString()));
 
     for (String field : SUCCESS_TIMES) {
       assertEquals(ZERO_TIME, entry.path(field).asString(), field + ": " + entry);
@@ -293,5 +309,54 @@ class OpaStatusShapeTest {
     assertFalse(bundles.path("a").has("code"), bundles.toString());
     assertEquals("bundle_error", bundles.path("b").path("code").asString());
     assertEquals(ZERO_TIME, bundles.path("b").path("last_successful_activation").asString());
+  }
+
+  // ---- failures keep the active bundle's state ----
+
+  @Test
+  void aBundleWhoseActivationFailedIsRetriedInsteadOfBeingNotModified() throws Exception {
+    bodies.put("/bundles/a.tar.gz", bundle("a", "rev-1"));
+    etags.put("/bundles/a.tar.gz", "\"e1\"");
+    start(bundleYaml("a", "bundles/a.tar.gz"), false);
+    awaitBundle("a", OpaStatusShapeTest::activated);
+
+    bodies.put("/bundles/a.tar.gz", unloadableBundle("a", "rev-2"));
+    etags.put("/bundles/a.tar.gz", "\"e2\"");
+    awaitBundle("a", b -> b.has("code"));
+    Thread.sleep(3500);
+
+    final JsonNode entry = latest("bundles", "a");
+    assertTrue(entry.has("code"), entry.toString());
+    assertEquals("rev-1", entry.path("active_revision").asString());
+  }
+
+  @Test
+  void aFailedActivationKeepsTheActiveBundleAndReportsTheUnderlyingMessage() throws Exception {
+    final JsonNode ok = startWithBundleA("rev-1");
+    final byte[] unloadable = unloadableBundle("a", "rev-2");
+    assertNotEquals(ok.path("size").asInt(), unloadable.length);
+
+    bodies.put("/bundles/a.tar.gz", unloadable);
+    final JsonNode failed = awaitBundle("a", b -> b.has("code"));
+
+    assertEquals(ok.path("size"), failed.path("size"));
+    assertEquals("rev-1", failed.path("active_revision").asString());
+    assertFalse(failed.path("message").asString().matches("(?s)^[\\w.$]+(Exception|Error): .*"), failed.toString());
+  }
+
+  @Test
+  void aDiscoveryUpdateThatFailedIsRetriedInsteadOfBeingNotModified() throws Exception {
+    bodies.put("/discovery.tar.gz", discoveryBundle("{}", "disc-1"));
+    etags.put("/discovery.tar.gz", "\"d1\"");
+    bodies.put("/bundles/a.tar.gz", bundle("a", "rev-1"));
+    start(DISCOVERY + bundleYaml("a", "bundles/a.tar.gz"), true);
+    awaitDiscovery(OpaStatusShapeTest::activated);
+
+    bodies.put("/discovery.tar.gz", discoveryBundle("{\"labels\":\"not-a-map\"}", "disc-2"));
+    etags.put("/discovery.tar.gz", "\"d2\"");
+    awaitDiscovery(d -> d.has("code"));
+    Thread.sleep(3500);
+
+    assertTrue(latest("discovery", null).has("code"), latest("discovery", null).toString());
   }
 }

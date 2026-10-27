@@ -26,7 +26,8 @@ public class PluginManager {
   private final Map<String, Plugin> plugins = new ConcurrentHashMap<>();
   private final List<PluginStatusListener> statusListeners = new CopyOnWriteArrayList<>();
   private final List<BundleActivationListener> bundleActivationListeners = new CopyOnWriteArrayList<>();
-  private final Map<String, String> statusMessages = new ConcurrentHashMap<>();
+  private final Map<String, BundleStatus> bundleStatuses = new ConcurrentHashMap<>();
+  private volatile BundleStatus discoveryStatus;
   private final Config bootConfig;
   private JsonNode bootConfigTree;
   private Config config;
@@ -49,16 +50,20 @@ public class PluginManager {
     return this.status.get(plugin);
   }
 
-  void setPluginStatusMessage(String plugin, String message) {
-    if (message == null) {
-      statusMessages.remove(plugin);
-    } else {
-      statusMessages.put(plugin, message);
-    }
+  void registerBundleStatus(BundleStatus status) {
+    bundleStatuses.put(status.name(), status);
   }
 
-  String getPluginStatusMessage(String plugin) {
-    return statusMessages.get(plugin);
+  Map<String, BundleStatus> bundleStatuses() {
+    return bundleStatuses;
+  }
+
+  void setDiscoveryStatus(BundleStatus status) {
+    discoveryStatus = status;
+  }
+
+  BundleStatus discoveryStatus() {
+    return discoveryStatus;
   }
 
   /**

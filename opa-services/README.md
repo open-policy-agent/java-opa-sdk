@@ -333,6 +333,35 @@ logged unmasked. If the mask policy fails to evaluate, or returns a rule the SDK
 error is logged and the event is dropped rather than logged unmasked (matching OPA's Go
 implementation).
 
+## Status Reports
+
+The status plugin reports the instance labels, the state of each plugin, and the status of every
+bundle and of discovery. `bundles.<name>` and `discovery` use the fields of the bundle status:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Bundle name, or `discovery`. |
+| `active_revision` | Revision from the manifest of the active bundle. Omitted if the bundle has none. |
+| `type` | `snapshot`. |
+| `size` | Size in bytes of the active bundle. |
+| `last_request` | Time of the last download attempt. |
+| `last_successful_request` | Time of the last attempt the server answered without an error. |
+| `last_successful_download` | Time a bundle was last downloaded. |
+| `last_successful_activation` | Time a bundle was last activated. |
+| `code`, `message`, `http_code` | Set after a failed download or activation: `bundle_error`, the error text, and the HTTP status if the server answered. Cleared by the next success. |
+
+Timestamps are RFC 3339 in UTC. A timestamp that has not happened yet is `0001-01-01T00:00:00Z`, so
+a bundle that has never downloaded successfully is still listed, with its error. For discovery,
+`message` also lists the keys the boot configuration overrode, as described under
+[Discovery](#discovery); a poll that finds nothing new clears it, like any other `message`.
+
+A bundle whose activation failed keeps its previous `active_revision`, `size` and
+`last_successful_activation`, and is downloaded again on the next poll instead of being treated as
+unchanged.
+
+Bundle entries also keep `revision` and `active` from earlier versions. `metrics` and `errors` are
+not reported. The plugin states are plain strings, for example `"plugins": {"discovery": "OK"}`.
+
 ## Discovery
 
 The discovery feature helps you centrally manage the configuration of bundle downloading, status
@@ -429,9 +458,10 @@ variable. Unlike in the boot configuration, a reference to an undefined variable
 
 | Key | Type | Required | Description |
 |-----|------|----------|-------------|
-| `discovery.resource` | `string` | Yes, unless `discovery.name` is set | Resource path to use to download the bundle from the configured service. Defaults to `bundles/<discovery.name>`. |
+| `discovery.resource` | `string` | Yes, unless `discovery.name` is set | Resource path to use to download the bundle from the configured service. Defaults to `<discovery.prefix>/<discovery.name>`, that is `bundles/<discovery.name>`. |
 | `discovery.service` | `string` | No | Name of the service to use to contact the remote server. If omitted, the configuration must contain exactly one service. |
 | `discovery.decision` | `string` | No | The path of the configuration in the discovery bundle's data, for example `example/discovery`. Defaults to `discovery.name`, and if that is unset, to `data`. |
+| `discovery.prefix` | `string` | No | Deprecated: use `discovery.resource` instead. Directory of the default resource, which is `<discovery.prefix>/<discovery.name>`. Defaults to `bundles`. |
 | `discovery.name` | `string` | No | Deprecated: use `discovery.resource` and `discovery.decision` instead. Name of the discovery configuration to download. If `discovery.decision` is unset, it defaults to this value. |
 | `discovery.polling.min_delay_seconds` | `int64` | No (default: `60`) | Minimum amount of time to wait between configuration downloads. |
 | `discovery.polling.max_delay_seconds` | `int64` | No (default: `120`) | Maximum amount of time to wait between configuration downloads. |
@@ -447,8 +477,9 @@ labels that are additional compared to the boot configuration are used; all othe
 ignored.
 
 Maps are merged key by key. For any other value, including arrays, the boot configuration's value
-replaces the discovered one. The keys that were replaced are logged at debug level:
-"Keys in the discovered configuration overridden by boot configuration: ...".
+replaces the discovered one. The keys that were replaced are reported in the `message` of the discovery status (see
+[Status Reports](#status-reports)): "Keys in the discovered configuration overridden by boot
+configuration: ...".
 
 The following are not supported:
 

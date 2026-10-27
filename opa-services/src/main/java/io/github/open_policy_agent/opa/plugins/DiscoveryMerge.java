@@ -3,9 +3,11 @@ package io.github.open_policy_agent.opa.plugins;
 import io.github.open_policy_agent.opa.config.Config;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -21,10 +23,12 @@ final class DiscoveryMerge {
   static final class Result {
     private final ObjectNode tree;
     private final List<String> overriddenKeys;
+    private final Set<String> unchangedServices;
 
-    private Result(ObjectNode tree, List<String> overriddenKeys) {
+    private Result(ObjectNode tree, List<String> overriddenKeys, Set<String> unchangedServices) {
       this.tree = tree;
       this.overriddenKeys = overriddenKeys;
+      this.unchangedServices = unchangedServices;
     }
 
     ObjectNode tree() {
@@ -33,6 +37,10 @@ final class DiscoveryMerge {
 
     List<String> overriddenKeys() {
       return overriddenKeys;
+    }
+
+    Set<String> unchangedServices() {
+      return unchangedServices;
     }
   }
 
@@ -68,7 +76,13 @@ final class DiscoveryMerge {
 
     final List<String> overridden = new ArrayList<>();
     overlay(merged, bootTree, "", overridden);
-    return new Result(merged, overridden);
+    final Set<String> unchanged = new HashSet<>();
+    for (Map.Entry<String, JsonNode> service : merged.path("services").properties()) {
+      if (sameJson(service.getValue(), bootTree.path("services").path(service.getKey()))) {
+        unchanged.add(service.getKey());
+      }
+    }
+    return new Result(merged, overridden, unchanged);
   }
 
   private static void overlay(

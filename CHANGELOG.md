@@ -24,9 +24,22 @@ project adheres to [Semantic Versioning](http://semver.org/).
   when exactly one service is defined ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
 - Substitute `${VAR}` in discovered configuration, leaving undefined variables as
   written ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Log the keys that boot config overrode at debug level, reject discovered
-  config that changes the discovery service, and warn about unsupported keys in the
-  `discovery` block ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
+- Reject discovered config that changes the discovery service, and warn about
+  unsupported keys in the `discovery` block ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
+- Report `discovery` and each `bundles` entry in the status report with the fields of
+  OPA's bundle status: `name`, `active_revision`, `type`, `size`, `last_request`,
+  `last_successful_request`, `last_successful_download`, `last_successful_activation`,
+  and, after a failure, `code`, `message` and `http_code`. Bundle entries keep `revision`
+  and `active`. A bundle that has never been downloaded is now listed, with zero
+  timestamps and its error, instead of being left out
+- Report the keys that boot config overrode in the `message` of the discovery status,
+  not only in a debug log
+- Download a bundle or discovery update again after its activation failed, instead of
+  answering the next poll with "not modified" because the failed download's ETag was
+  already stored. A response without an ETag now also stops the `If-None-Match` header
+  from the earlier bundle being sent
+- Honor `discovery.prefix` in the default discovery `resource`, and keep the typed boot
+  `SSLContext` and key stores of a service that discovery repeats unchanged
 
 ### Docs, Website, Ecosystem
 

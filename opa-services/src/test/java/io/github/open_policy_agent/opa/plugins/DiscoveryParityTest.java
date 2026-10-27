@@ -243,14 +243,14 @@ class DiscoveryParityTest {
   }
 
   @Test
-  void overriddenKeysAreRecordedAndLogged() throws Exception {
+  void overriddenKeysAreInTheDiscoveryStatusAndLogged() throws Exception {
     run(
         SERVICES + discovery("") + "default_decision: boot/decision\n",
         "{'default_decision':'discovered/decision'}");
 
     final String message =
         "Keys in the discovered configuration overridden by boot configuration: default_decision";
-    assertEquals(message, manager.getPluginStatusMessage("discovery"));
+    assertEquals(message, manager.discoveryStatus().message());
     assertLogged(message);
   }
 
@@ -307,9 +307,7 @@ class DiscoveryParityTest {
     }
   }
 
-  @Test
-  void aTypedBootConfigKeepsItsSslContextAndIgnoresJavaFieldDefaults() throws Exception {
-    write("{'default_decision':'discovered/decision','labels':{'k':'v'}}");
+  private Config.ServiceConfig buildTypedBootWithSslContext() throws Exception {
     final Config.ServiceConfig service =
         new Config.ServiceConfig()
             .setName("svc")
@@ -320,10 +318,38 @@ class DiscoveryParityTest {
             .setServices(Map.of("svc", service))
             .setDiscovery(new Config.DiscoveryConfig().setService("svc").setResource(RESOURCE)),
         null);
+    return service;
+  }
+
+  @Test
+  void aTypedBootConfigKeepsItsSslContextAndIgnoresJavaFieldDefaults() throws Exception {
+    write("{'default_decision':'discovered/decision','labels':{'k':'v'}}");
+    final Config.ServiceConfig service = buildTypedBootWithSslContext();
     activate();
 
     assertEquals("v", label("k"));
     assertEquals("discovered/decision", manager.getConfig().getDefaultDecision());
     assertSame(service.getSslContext(), manager.getConfig().getService("svc").getSslContext());
+  }
+
+  @Test
+  void aTypedBootServiceKeepsItsSslContextWhenDiscoveryRepeatsIt() throws Exception {
+    write("{'services':{'svc':{'url':'" + tempDir.toUri() + "'}},'labels':{'k':'v'}}");
+    final Config.ServiceConfig service = buildTypedBootWithSslContext();
+    activate();
+
+    assertEquals("v", label("k"));
+    assertSame(service.getSslContext(), manager.getConfig().getService("svc").getSslContext());
+  }
+
+  @Test
+  void prefixIsUsedForTheDefaultResource() throws Exception {
+    write("custom/disca", DiscoveryTestSupport.dataBundle("{\"disca\":{\"labels\":{\"k\":\"v\"}}}"));
+    build(SERVICES + "discovery:\n  service: svc\n  name: disca\n  prefix: /custom/\n");
+
+    assertTrue(new DiscoveryPlugin().validate(manager).isEmpty());
+    activate();
+    assertEquals("v", label("k"));
+    assertFalse(logger.contains("unsupported configuration key 'prefix'"), logger.lines()::toString);
   }
 }
