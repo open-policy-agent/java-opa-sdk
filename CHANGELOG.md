@@ -24,7 +24,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   when exactly one service is defined ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
 - Substitute `${VAR}` in discovered configuration, leaving undefined variables as
   written ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Report the boot-overridden keys in the discovery status message, reject discovered
+- Log the keys that boot config overrode at debug level, reject discovered
   config that changes the discovery service, and warn about unsupported keys in the
   `discovery` block ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
 

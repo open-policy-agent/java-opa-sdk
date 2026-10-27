@@ -40,6 +40,7 @@ import tools.jackson.databind.json.JsonMapper;
  */
 public final class DiscoveryPlugin implements Plugin {
 
+  private static final ObjectMapper MAPPER = JsonMapper.shared();
   private static final Set<String> SUPPORTED_KEYS =
       Set.of("name", "decision", "service", "resource", "polling");
 
@@ -88,32 +89,46 @@ public final class DiscoveryPlugin implements Plugin {
       warnOnUnsupportedKeys(manager);
       String name = discoveryConfig.getName() != null ? discoveryConfig.getName() : "discovery";
 
+      final String service = resolveService(manager.getConfig());
       ServicePlugin.Service svc = null;
       Plugin raw = manager.getPlugin("services");
       if (raw instanceof ServicePlugin) {
-        svc = ((ServicePlugin) raw).getService(resolveService(manager.getConfig()));
+        svc = ((ServicePlugin) raw).getService(service);
         // Validate caught the missing-service case earlier; assert defensively when the
         // ServicePlugin IS registered but the lookup fails — never silently fall back to the
         // default HTTP client and skip the configured TLS context.
         if (svc == null) {
           throw new PluginInitializationException(
-                  "Discovery plugin: service '"
-                      + resolveService(manager.getConfig())
-                      + "' not found in ServicePlugin")
-              .withContext("serviceName", resolveService(manager.getConfig()));
+                  "Discovery plugin: service '" + service + "' not found in ServicePlugin")
+              .withContext("serviceName", service);
         }
       }
       // raw==null path: tests that wire DiscoveryPlugin directly without a ServicePlugin.
       // svc stays null and BundleDownloader falls back to a default HTTP client.
 
       plugin.discoveryBundle =
-          new DiscoveryBundle(name, manager, svc, resolveService(manager.getConfig()), configPath(discoveryConfig))
-              .setService(resolveService(manager.getConfig()))
+          new DiscoveryBundle(name, manager, svc, configPath(discoveryConfig))
+              .setService(service)
               .setResource(resolveResource(discoveryConfig))
               .setPolling(discoveryConfig.getPolling());
     }
 
     return plugin;
+  }
+
+  /**
+   * Selects the config node by OPA's rule and substitutes {@code ${VAR}} in its string values and
+   * field names (undefined variables stay as written).
+   */
+  static JsonNode selectConfig(JsonNode data, List<String> path, Map<String, String> env) {
+    JsonNode node = data;
+    for (String segment : path) {
+      node = node.path(segment);
+    }
+    if (node.isMissingNode()) {
+      throw new IllegalStateException("undefined configuration");
+    }
+    return EnvInterpolator.interpolateLenient(node, env);
   }
 
   private static void warnOnUnsupportedKeys(PluginManager manager) {
@@ -201,20 +216,13 @@ public final class DiscoveryPlugin implements Plugin {
    * <p>Handles downloading, validation, and activation of discovery configuration.
    */
   private static class DiscoveryBundle extends BundleDownloader {
-    private static final ObjectMapper MAPPER = JsonMapper.shared();
-
-    private final String discoveryService;
     private final List<String> configPath;
     private Config discoveredConfig; // Store the last successfully loaded config
+    private JsonNode lastMergedTree;
 
     private DiscoveryBundle(
-        String name,
-        PluginManager manager,
-        ServicePlugin.Service service,
-        String discoveryService,
-        List<String> configPath) {
+        String name, PluginManager manager, ServicePlugin.Service service, List<String> configPath) {
       super(name, manager, service);
-      this.discoveryService = discoveryService;
       this.configPath = configPath;
     }
 
@@ -257,8 +265,7 @@ public final class DiscoveryPlugin implements Plugin {
           return;
         }
 
-        // Parse configuration from data.json
-        if (content.configData == null) {
+        if (content.data == null) {
           String errorMsg = "Discovery bundle does not contain configuration data";
           manager.getLogger().error("Discovery '%s': %s", name, errorMsg);
 
@@ -269,18 +276,31 @@ public final class DiscoveryPlugin implements Plugin {
           return;
         }
 
+        final JsonNode selected = selectConfig(content.data, configPath, System.getenv());
         final DiscoveryMerge.Result merged =
-            DiscoveryMerge.merge(manager.getBootConfigTree(), content.configData, discoveryService);
-        discoveredConfig = MAPPER.treeToValue(merged.tree(), Config.class);
+            DiscoveryMerge.merge(manager.getBootConfigTree(), selected, service);
+
+        if (lastMergedTree != null && DiscoveryMerge.sameJson(lastMergedTree, merged.tree())) {
+          manager.getLogger().debug("Discovery '%s': Configuration unchanged", name);
+          return;
+        }
+
+        final Config config = MAPPER.treeToValue(merged.tree(), Config.class);
+        keepBootServices(config, selected.path("services"));
+        discoveredConfig = config;
+        lastMergedTree = merged.tree();
 
         manager.getLogger().info("Discovery '%s': Configuration loaded successfully", name);
 
-        manager.setPluginStatusMessage(
-            "discovery",
+        final String overridden =
             merged.overriddenKeys().isEmpty()
                 ? null
                 : "Keys in the discovered configuration overridden by boot configuration: "
-                    + String.join(", ", merged.overriddenKeys()));
+                    + String.join(", ", merged.overriddenKeys());
+        manager.setPluginStatusMessage("discovery", overridden);
+        if (overridden != null) {
+          manager.getLogger().debug("Discovery '%s': %s", name, overridden);
+        }
         manager.updateConfig(discoveredConfig);
 
       } catch (Exception e) {
@@ -300,19 +320,32 @@ public final class DiscoveryPlugin implements Plugin {
     }
 
     /**
-     * Selects the config node by OPA's rule and substitutes {@code ${VAR}} in its JSON text
-     * (undefined variables stay as written).
+     * Services that discovery does not mention come back from the tree as plain config, which loses
+     * what a tree cannot hold ({@code SSLContext}, key stores), so those are the boot config's own.
      */
-    private JsonNode selectConfig(JsonNode data) {
-      JsonNode node = data;
-      for (String segment : configPath) {
-        node = node.path(segment);
+    private void keepBootServices(Config config, JsonNode discoveredServices) {
+      final Map<String, Config.ServiceConfig> bootServices = manager.getBootConfig().getServices();
+      if (bootServices == null || config.getServices() == null) {
+        return;
       }
-      if (node.isMissingNode()) {
-        throw new IllegalStateException("undefined configuration");
+      for (Map.Entry<String, Config.ServiceConfig> boot : bootServices.entrySet()) {
+        if (config.getServices().containsKey(boot.getKey())
+            && !mentions(discoveredServices, boot.getKey())) {
+          config.getServices().put(boot.getKey(), boot.getValue());
+        }
       }
-      return MAPPER.readTree(
-          EnvInterpolator.interpolateLenient(MAPPER.writeValueAsString(node)));
+    }
+
+    private boolean mentions(JsonNode services, String name) {
+      if (services.isObject()) {
+        return services.has(name);
+      }
+      for (JsonNode service : services) {
+        if (name.equals(service.path("name").asString(""))) {
+          return true;
+        }
+      }
+      return false;
     }
 
     /**
@@ -341,7 +374,7 @@ public final class DiscoveryPlugin implements Plugin {
                   .warn(
                       "Discovery '%s': Found .rego file '%s' in discovery bundle", name, entryName);
             } else if (entryName.equals("data.json")) {
-              content.configData = selectConfig(MAPPER.readTree(tarIn.readAllBytes()));
+              content.data = MAPPER.readTree(tarIn.readAllBytes());
             } else if (entryName.equals(".manifest")) {
               // Discovery bundles can have manifests, but we don't need to process them
               manager.getLogger().debug("Discovery '%s': Found manifest in discovery bundle", name);
@@ -356,7 +389,7 @@ public final class DiscoveryPlugin implements Plugin {
 
   /** Container for discovery bundle parsing results. */
   private static class DiscoveryBundleContent {
-    JsonNode configData;
+    JsonNode data;
     boolean hasRegoFiles = false;
   }
 }

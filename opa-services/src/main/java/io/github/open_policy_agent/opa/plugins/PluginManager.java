@@ -5,6 +5,7 @@ import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.storage.Store;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -62,14 +63,22 @@ public class PluginManager {
 
   /**
    * The boot configuration as a JSON tree, which discovery merges over the discovered config. When
-   * the manager was not given the raw tree, it is derived from the typed boot config, so fields
-   * that carry a Java default look as if they were set at boot.
+   * the manager was not given the raw tree, it is derived from the typed boot config, leaving out
+   * values equal to the Java defaults. A boot value that equals its default is therefore treated as
+   * unset, and discovered config can override it.
    */
   synchronized JsonNode getBootConfigTree() {
     if (bootConfigTree == null) {
-      bootConfigTree = DiscoveryMerge.stripNulls(JsonMapper.shared().valueToTree(bootConfig));
+      final JsonMapper mapper = JsonMapper.shared();
+      final ObjectNode boot = DiscoveryMerge.stripNulls(mapper.<ObjectNode>valueToTree(bootConfig));
+      bootConfigTree = DiscoveryMerge.pruneDefaults(boot, mapper.valueToTree(new Config()));
     }
     return bootConfigTree;
+  }
+
+  /** The typed boot config, which keeps values a JSON tree cannot, such as an {@code SSLContext}. */
+  Config getBootConfig() {
+    return bootConfig;
   }
 
   public synchronized boolean allPluginsOk() {

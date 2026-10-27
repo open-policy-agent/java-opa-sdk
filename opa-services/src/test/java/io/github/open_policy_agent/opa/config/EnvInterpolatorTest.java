@@ -77,6 +77,16 @@ class EnvInterpolatorTest {
   @Test
   void interpolateLenient_passesThroughTextWithoutPlaceholders() {
     assertEquals("plain $ text", EnvInterpolator.interpolateLenient("plain $ text", Map.of()));
-    assertEquals(null, EnvInterpolator.interpolateLenient(null, Map.of()));
+    assertEquals(null, EnvInterpolator.interpolateLenient((String) null, Map.of()));
+  }
+
+  @Test
+  void interpolateLenient_leavesAnEmptyReferenceAsWritten() {
+    assertEquals("a${}b", EnvInterpolator.interpolateLenient("a${}b", Map.of("", "x")));
+  }
+
+  @Test
+  void interpolateLenient_substitutesNamesThatAreNotIdentifiers() {
+    assertEquals("1", EnvInterpolator.interpolateLenient("${my.var}", Map.of("my.var", "1")));
   }
 }

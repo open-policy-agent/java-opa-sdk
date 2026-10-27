@@ -120,4 +120,60 @@ class DiscoveryMergeTest {
         IllegalStateException.class,
         () -> DiscoveryMerge.merge(MAPPER.createObjectNode(), MAPPER.createArrayNode(), "svc"));
   }
+
+  @Test
+  void numbersAreComparedByValueNotByNodeType() {
+    final DiscoveryMerge.Result result =
+        DiscoveryMerge.merge(
+            MAPPER.createObjectNode().put("a", 1L).put("b", 2.0),
+            MAPPER.createObjectNode().put("a", 1).put("b", 2),
+            "svc");
+
+    assertEquals(List.of(), result.overriddenKeys());
+  }
+
+  @Test
+  void aServiceRestatedWithDifferentNumericNodeTypesIsNotAChange() {
+    final tools.jackson.databind.node.ObjectNode boot = MAPPER.createObjectNode();
+    boot.putObject("services").putObject("svc").put("timeout", 30L);
+    final tools.jackson.databind.node.ObjectNode discovered = MAPPER.createObjectNode();
+    discovered.putObject("services").putObject("svc").put("timeout", 30);
+
+    assertEquals(List.of(), DiscoveryMerge.merge(boot, discovered, "svc").overriddenKeys());
+  }
+
+  @Test
+  void nullsInsideArrayElementsAreStripped() throws Exception {
+    final DiscoveryMerge.Result result =
+        merge("{\"l\":[{\"b\":1}]}", "{\"l\":[{\"a\":null,\"b\":1}]}");
+
+    assertEquals(List.of(), result.overriddenKeys());
+  }
+
+  @Test
+  void arrayFormServicesWithoutANameAreRejected() {
+    assertThrows(
+        IllegalStateException.class,
+        () -> merge("{\"services\":[{\"url\":\"u\"}]}", "{}"));
+  }
+
+  @Test
+  void restatingTheDiscoveryServiceWithAnExplicitDefaultIsAllowed() throws Exception {
+    final DiscoveryMerge.Result result =
+        merge(
+            "{\"services\":{\"svc\":{\"url\":\"u\"}}}",
+            "{\"services\":{\"svc\":{\"url\":\"u\",\"response_header_timeout_seconds\":10}}}");
+
+    assertEquals(List.of(), result.overriddenKeys());
+  }
+
+  @Test
+  void restatingTheDiscoveryServiceWithANonDefaultValueIsRejected() {
+    assertThrows(
+        IllegalStateException.class,
+        () ->
+            merge(
+                "{\"services\":{\"svc\":{\"url\":\"u\"}}}",
+                "{\"services\":{\"svc\":{\"url\":\"u\",\"response_header_timeout_seconds\":20}}}"));
+  }
 }

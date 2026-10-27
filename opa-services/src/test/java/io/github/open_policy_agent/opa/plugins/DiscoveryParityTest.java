@@ -1,14 +1,21 @@
 package io.github.open_policy_agent.opa.plugins;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.plugins.DiscoveryTestSupport.RecordingLogger;
 import io.github.open_policy_agent.opa.storage.InMem;
+import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.LinkedHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.net.ssl.SSLContext;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -304,5 +311,107 @@ class DiscoveryParityTest {
 
     assertEquals(PluginManager.Status.OK, manager.getPluginStatus("discovery"));
     assertTrue(logger.contains("unsupported configuration key 'persist'"), logger.lines()::toString);
+  }
+
+  @Test
+  void regoFilesAreRejectedEvenWhenTheyComeAfterAnUndefinedConfigPath() throws Exception {
+    final Map<String, String> entries = new LinkedHashMap<>();
+    entries.put("data.json", "{}");
+    entries.put("policy.rego", "package discovery\n");
+    DiscoveryTestSupport.write(tempDir, DISCOVERY_RESOURCE, DiscoveryTestSupport.tarGz(entries));
+    build(SERVICES + discovery("  decision: example/absent\n"));
+    activate();
+
+    assertEquals(PluginManager.Status.ERROR, manager.getPluginStatus("discovery"));
+    assertTrue(logger.contains(".rego files"), logger.lines()::toString);
+    assertFalse(logger.contains("undefined configuration"), logger.lines()::toString);
+  }
+
+  @Test
+  void unchangedDiscoveryPollsDoNotNotifyConfigListeners() throws Exception {
+    final byte[] bundle = DiscoveryTestSupport.dataBundle("{\"labels\":{\"k\":\"v\"}}");
+    final HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+    server.createContext(
+        "/" + DISCOVERY_RESOURCE,
+        exchange -> {
+          exchange.sendResponseHeaders(200, bundle.length);
+          exchange.getResponseBody().write(bundle);
+          exchange.close();
+        });
+    server.start();
+    try {
+      build(
+          "services:\n  svc:\n    url: http://localhost:"
+              + server.getAddress().getPort()
+              + "\n"
+              + discovery(fast()));
+      final AtomicInteger updates = new AtomicInteger();
+      manager.registerConfigUpdateListener((oldConfig, newConfig) -> updates.incrementAndGet());
+      activate();
+      Thread.sleep(2500);
+
+      assertEquals(1, updates.get());
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  private void buildTyped(Config boot) {
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(new InMem())
+            .withConfig(boot)
+            .withLogger(logger)
+            .build();
+  }
+
+  private Config typedBoot() throws Exception {
+    return new Config()
+        .setServices(
+            Map.of(
+                "svc",
+                new Config.ServiceConfig()
+                    .setName("svc")
+                    .setUrl(tempDir.toUri().toString())
+                    .setSslContext(SSLContext.getDefault())))
+        .setDiscovery(new Config.DiscoveryConfig().setService("svc").setResource(DISCOVERY_RESOURCE));
+  }
+
+  @Test
+  void javaFieldDefaultsInATypedBootConfigDoNotOverrideDiscoveredValues() throws Exception {
+    DiscoveryTestSupport.write(
+        tempDir,
+        DISCOVERY_RESOURCE,
+        DiscoveryTestSupport.dataBundle("{\"default_decision\":\"discovered/decision\"}"));
+    buildTyped(typedBoot());
+    activate();
+
+    assertEquals("discovered/decision", manager.getConfig().getDefaultDecision());
+  }
+
+  @Test
+  void aTypedBootConfigKeepsItsSslContextAfterDiscovery() throws Exception {
+    DiscoveryTestSupport.write(
+        tempDir, DISCOVERY_RESOURCE, DiscoveryTestSupport.dataBundle("{\"labels\":{\"k\":\"v\"}}"));
+    final Config boot = typedBoot();
+    buildTyped(boot);
+    activate();
+
+    assertEquals("v", label("k"));
+    assertSame(
+        boot.getService("svc").getSslContext(), manager.getConfig().getService("svc").getSslContext());
+  }
+
+  @Test
+  void overriddenKeysAreLogged() throws Exception {
+    run(
+        SERVICES + discovery("") + "default_decision: boot/decision\n",
+        "{\"default_decision\":\"discovered/decision\"}");
+
+    assertTrue(
+        logger.contains(
+            "Keys in the discovered configuration overridden by boot configuration: default_decision"),
+        logger.lines()::toString);
   }
 }

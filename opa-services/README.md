@@ -447,7 +447,7 @@ labels that are additional compared to the boot configuration are used; all othe
 ignored.
 
 Maps are merged key by key. For any other value, including arrays, the boot configuration's value
-replaces the discovered one. The keys that were replaced are listed in the discovery status message:
+replaces the discovered one. The keys that were replaced are logged at debug level:
 "Keys in the discovered configuration overridden by boot configuration: ...".
 
 The following are not supported:
