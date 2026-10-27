@@ -86,22 +86,26 @@ public final class DiscoveryTestSupport {
 
     @Override
     public void debug(String fmtMessage, Object... args) {
-      lines.add("DEBUG " + String.format(fmtMessage, args));
+      log("DEBUG", fmtMessage, args);
     }
 
     @Override
     public void info(String fmtMessage, Object... args) {
-      lines.add("INFO " + String.format(fmtMessage, args));
+      log("INFO", fmtMessage, args);
     }
 
     @Override
     public void warn(String fmtMessage, Object... args) {
-      lines.add("WARN " + String.format(fmtMessage, args));
+      log("WARN", fmtMessage, args);
     }
 
     @Override
     public void error(String fmtMessage, Object... args) {
-      lines.add("ERROR " + String.format(fmtMessage, args));
+      log("ERROR", fmtMessage, args);
+    }
+
+    private void log(String level, String fmtMessage, Object[] args) {
+      lines.add(level + " " + String.format(fmtMessage, args));
     }
   }
 }

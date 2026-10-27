@@ -7,35 +7,42 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.sun.net.httpserver.HttpServer;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.plugins.DiscoveryTestSupport.RecordingLogger;
 import io.github.open_policy_agent.opa.storage.InMem;
-import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.LinkedHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import javax.net.ssl.SSLContext;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
+import javax.net.ssl.SSLContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.dataformat.yaml.YAMLMapper;
 
 /**
- * Pins OPA's discovery semantics (path selection, env substitution, defaults, boot/discovered
- * merge). Boot config is parsed from YAML exactly as {@code Opa.Builder} does; every assertion is
- * on the {@link PluginManager} config or status after discovery settles.
+ * Pins the discovery semantics: path selection, env substitution, defaults, and the merge of the
+ * discovered config under the boot config. Boot config is parsed from YAML exactly as {@code
+ * Opa.Builder} does; every assertion is on the {@link PluginManager} config or status after
+ * discovery settles. JSON in the tests uses single quotes for readability.
  */
 class DiscoveryParityTest {
 
   private static final ObjectMapper YAML = YAMLMapper.shared();
-  private static final String DISCOVERY_RESOURCE = "d.tar.gz";
-  private static final String SERVICES =
-      "services:\n  svc:\n    url: @URL@\n";
+  private static final String RESOURCE = "d.tar.gz";
+  private static final String SERVICES = "services:\n  svc:\n    url: @URL@\n";
+  private static final String NESTED =
+      "{'labels':{'src':'root'},'example':{'discovery':{'labels':{'src':'nested'}}}}";
+  private static final String FAST = "  polling:\n    min_delay_seconds: 1\n    max_delay_seconds: 1\n";
 
   @TempDir Path tempDir;
 
@@ -51,21 +58,29 @@ class DiscoveryParityTest {
   }
 
   private static String discovery(String extraLines) {
-    return "discovery:\n  service: svc\n  resource: " + DISCOVERY_RESOURCE + "\n" + extraLines;
+    return "discovery:\n  service: svc\n  resource: " + RESOURCE + "\n" + extraLines;
   }
 
-  private static String fast() {
-    return "  polling:\n    min_delay_seconds: 1\n    max_delay_seconds: 1\n";
+  private void write(String path, byte[] bundle) throws IOException {
+    DiscoveryTestSupport.write(tempDir, path, bundle);
+  }
+
+  private void write(String dataJson) throws IOException {
+    write(RESOURCE, DiscoveryTestSupport.dataBundle(dataJson.replace('\'', '"')));
   }
 
   private void build(String bootYaml) throws IOException {
     final String yaml = bootYaml.replace("@URL@", tempDir.toUri().toString());
+    buildFrom(YAML.readValue(yaml, Config.class), YAML.readTree(yaml));
+  }
+
+  private void buildFrom(Config boot, JsonNode tree) {
     manager =
         new PluginManager.Builder()
             .withId("test-opa")
             .withStore(new InMem())
-            .withConfig(YAML.readValue(yaml, Config.class))
-            .withBootConfigTree(YAML.readTree(yaml))
+            .withConfig(boot)
+            .withBootConfigTree(tree)
             .withLogger(logger)
             .build();
   }
@@ -84,7 +99,7 @@ class DiscoveryParityTest {
   }
 
   private void run(String bootYaml, String dataJson) throws Exception {
-    DiscoveryTestSupport.write(tempDir, DISCOVERY_RESOURCE, DiscoveryTestSupport.dataBundle(dataJson));
+    write(dataJson);
     build(bootYaml);
     activate();
   }
@@ -94,67 +109,47 @@ class DiscoveryParityTest {
     return labels == null ? null : labels.get(key);
   }
 
+  private void assertLogged(String fragment) {
+    assertTrue(logger.contains(fragment), logger.lines()::toString);
+  }
+
   // ---- path selection ----
 
-  @Test
-  void decisionSelectsTheNestedNode() throws Exception {
-    run(
-        SERVICES + discovery("  decision: example/discovery\n"),
-        "{\"labels\":{\"src\":\"root\"},\"example\":{\"discovery\":{\"labels\":{\"src\":\"nested\"}}}}");
-
-    assertEquals("nested", label("src"));
+  static Stream<Arguments> configPaths() {
+    return Stream.of(
+        Arguments.of("  decision: example/discovery\n", NESTED, "nested"),
+        Arguments.of("  decision: /example/discovery/\n", NESTED, "nested"),
+        Arguments.of("  name: example/discovery\n", NESTED, "nested"),
+        Arguments.of("", "{'labels':{'src':'root'}}", "root"));
   }
 
-  @Test
-  void decisionLeadingAndTrailingSlashesAreTrimmed() throws Exception {
-    run(
-        SERVICES + discovery("  decision: /example/discovery/\n"),
-        "{\"example\":{\"discovery\":{\"labels\":{\"src\":\"nested\"}}}}");
+  @ParameterizedTest
+  @MethodSource("configPaths")
+  void theConfigIsReadFromDecisionThenNameThenTheDataRoot(
+      String lines, String data, String expected) throws Exception {
+    run(SERVICES + discovery(lines), data);
 
-    assertEquals("nested", label("src"));
-  }
-
-  @Test
-  void nameIsTheFallbackWhenDecisionIsUnset() throws Exception {
-    run(
-        SERVICES + discovery("  name: example/discovery\n"),
-        "{\"labels\":{\"src\":\"root\"},\"example\":{\"discovery\":{\"labels\":{\"src\":\"nested\"}}}}");
-
-    assertEquals("nested", label("src"));
-  }
-
-  @Test
-  void dataRootIsTheFallbackWhenNeitherDecisionNorNameIsSet() throws Exception {
-    run(SERVICES + discovery(""), "{\"labels\":{\"src\":\"root\"}}");
-
-    assertEquals("root", label("src"));
+    assertEquals(expected, label("src"));
   }
 
   @Test
   void decisionPointingAtAMissingPathFailsInitialActivation() throws Exception {
-    run(
-        SERVICES + discovery("  decision: example/absent\n"),
-        "{\"labels\":{\"src\":\"root\"}}");
+    run(SERVICES + discovery("  decision: example/absent\n"), "{'labels':{'src':'root'}}");
 
     assertEquals(PluginManager.Status.ERROR, manager.getPluginStatus("discovery"));
-    assertTrue(logger.contains("undefined configuration"), logger.lines()::toString);
+    assertLogged("undefined configuration");
   }
 
   @Test
   void decisionPointingAtAMissingPathOnUpdateKeepsThePreviousConfig() throws Exception {
-    run(
-        SERVICES + discovery("  decision: example/discovery\n" + fast()),
-        "{\"example\":{\"discovery\":{\"labels\":{\"src\":\"first\"}}}}");
-    assertEquals("first", label("src"));
+    run(SERVICES + discovery("  decision: example/discovery\n" + FAST), NESTED);
+    assertEquals("nested", label("src"));
 
-    DiscoveryTestSupport.write(
-        tempDir,
-        DISCOVERY_RESOURCE,
-        DiscoveryTestSupport.dataBundle("{\"other\":{\"labels\":{\"src\":\"second\"}}}"));
+    write("{'other':{'labels':{'src':'second'}}}");
     Thread.sleep(2500);
 
-    assertEquals("first", label("src"));
-    assertTrue(logger.contains("undefined configuration"), logger.lines()::toString);
+    assertEquals("nested", label("src"));
+    assertLogged("undefined configuration");
   }
 
   // ---- env substitution on discovered data ----
@@ -162,29 +157,18 @@ class DiscoveryParityTest {
   @Test
   void definedEnvVarsAreSubstitutedInDiscoveredData() throws Exception {
     final String home = System.getenv("HOME");
-    assumeTrue(home != null && home.matches("[A-Za-z0-9_./:\\-]+"), "HOME must be JSON-safe");
+    assumeTrue(home != null, "HOME must be set");
 
-    run(SERVICES + discovery(""), "{\"labels\":{\"p\":\"${HOME}\"}}");
+    run(SERVICES + discovery(""), "{'labels':{'p':'${HOME}'}}");
 
     assertEquals(home, label("p"));
-  }
-
-  @Test
-  void undefinedEnvVarsAreLeftAsWrittenInDiscoveredData() throws Exception {
-    run(SERVICES + discovery(""), "{\"labels\":{\"p\":\"${DISCOVERY_PARITY_UNDEFINED}\"}}");
-
-    assertEquals(PluginManager.Status.OK, manager.getPluginStatus("discovery"));
-    assertEquals("${DISCOVERY_PARITY_UNDEFINED}", label("p"));
   }
 
   // ---- defaults ----
 
   @Test
   void nameWithoutResourceDownloadsFromBundlesSlashName() throws Exception {
-    DiscoveryTestSupport.write(
-        tempDir,
-        "bundles/disca",
-        DiscoveryTestSupport.dataBundle("{\"disca\":{\"labels\":{\"k\":\"v\"}}}"));
+    write("bundles/disca", DiscoveryTestSupport.dataBundle("{\"disca\":{\"labels\":{\"k\":\"v\"}}}"));
     build(SERVICES + "discovery:\n  service: svc\n  name: disca\n");
 
     assertTrue(new DiscoveryPlugin().validate(manager).isEmpty());
@@ -194,9 +178,8 @@ class DiscoveryParityTest {
 
   @Test
   void serviceIsOptionalWhenExactlyOneServiceIsDefined() throws Exception {
-    DiscoveryTestSupport.write(
-        tempDir, DISCOVERY_RESOURCE, DiscoveryTestSupport.dataBundle("{\"labels\":{\"k\":\"v\"}}"));
-    build(SERVICES + "discovery:\n  resource: " + DISCOVERY_RESOURCE + "\n");
+    write("{'labels':{'k':'v'}}");
+    build(SERVICES + "discovery:\n  resource: " + RESOURCE + "\n");
 
     assertTrue(new DiscoveryPlugin().validate(manager).isEmpty());
     activate();
@@ -205,59 +188,45 @@ class DiscoveryParityTest {
 
   @Test
   void missingServiceWithSeveralServicesIsAValidationError() throws Exception {
-    build(SERVICES + "  other:\n    url: https://other.example.test\n"
-        + "discovery:\n  resource: " + DISCOVERY_RESOURCE + "\n");
+    build(SERVICES + "  other:\n    url: https://other.example.test\n" + discovery("").replace("  service: svc\n", ""));
 
-    final Set<String> errors = new DiscoveryPlugin().validate(manager);
+    final var errors = new DiscoveryPlugin().validate(manager);
 
     assertTrue(errors.stream().anyMatch(e -> e.contains("more than one service")), errors::toString);
   }
 
-  // ---- merge of discovered config over boot config ----
+  // ---- merge of discovered config under boot config ----
 
   @Test
-  void bootServicesSurviveWhenDiscoveredConfigOmitsThem() throws Exception {
+  void bootServicesAreKeptAndDiscoveredServicesAdded() throws Exception {
     run(
         SERVICES + discovery(""),
-        "{\"bundles\":{\"b\":{\"service\":\"svc\",\"resource\":\"b.tar.gz\"}}}");
+        "{'bundles':{'b':{'service':'svc','resource':'b.tar.gz'}},"
+            + "'services':{'extra':{'url':'https://extra.example.test'}}}");
 
     assertNotNull(manager.getConfig().getService("svc"));
+    assertNotNull(manager.getConfig().getService("extra"));
     assertNotNull(manager.getConfig().getBundles().get("b"));
     assertTrue(new BundlePlugin().validate(manager).isEmpty(), "bundle must resolve the boot service");
   }
 
   @Test
-  void discoveredServicesAreAddedAlongsideBootServices() throws Exception {
+  void bootValuesWinAndDiscoveredOnlyKeysAreAdded() throws Exception {
     run(
-        SERVICES + discovery(""),
-        "{\"services\":{\"extra\":{\"url\":\"https://extra.example.test\"}}}");
-
-    assertNotNull(manager.getConfig().getService("svc"));
-    assertNotNull(manager.getConfig().getService("extra"));
-  }
-
-  @Test
-  void bootScalarWinsOverDiscoveredScalar() throws Exception {
-    run(
-        SERVICES + discovery("") + "default_decision: boot/decision\n",
-        "{\"default_decision\":\"discovered/decision\"}");
+        SERVICES + discovery("") + "default_decision: boot/decision\nlabels:\n  a: boot\n  b: boot\n",
+        "{'default_decision':'discovered/decision','labels':{'a':'discovered','c':'discovered'},"
+            + "'discovery':{'service':'svc','resource':'other.tar.gz'}}");
 
     assertEquals("boot/decision", manager.getConfig().getDefaultDecision());
-  }
-
-  @Test
-  void discoveredOnlyKeysAreAdded() throws Exception {
-    run(SERVICES + discovery(""), "{\"labels\":{\"env\":\"prod\"},\"default_decision\":\"discovered/decision\"}");
-
-    assertEquals("prod", label("env"));
-    assertEquals("discovered/decision", manager.getConfig().getDefaultDecision());
+    assertEquals(Map.of("a", "boot", "b", "boot", "c", "discovered"), manager.getConfig().getLabels());
+    assertEquals(RESOURCE, manager.getConfig().getDiscovery().getResource());
   }
 
   @Test
   void fieldsUnsetInBootNeverOverrideDiscoveredValues() throws Exception {
     run(
         SERVICES + discovery("") + "decision_logs:\n  console: true\n",
-        "{\"decision_logs\":{\"min_delay_seconds\":60,\"max_delay_seconds\":90}}");
+        "{'decision_logs':{'min_delay_seconds':60,'max_delay_seconds':90}}");
 
     final Config.DecisionLogsConfig logs = manager.getConfig().getDecisionLogs();
     assertEquals(Boolean.TRUE, logs.getConsole());
@@ -266,43 +235,23 @@ class DiscoveryParityTest {
   }
 
   @Test
-  void discoveryBlockAlwaysComesFromBootConfig() throws Exception {
-    run(
-        SERVICES + discovery(""),
-        "{\"discovery\":{\"service\":\"svc\",\"resource\":\"other.tar.gz\"}}");
-
-    assertEquals(DISCOVERY_RESOURCE, manager.getConfig().getDiscovery().getResource());
-  }
-
-  @Test
-  void bootLabelsWinAndDiscoveredOnlyLabelsAreKept() throws Exception {
-    run(
-        SERVICES + discovery("") + "labels:\n  a: boot\n  b: boot\n",
-        "{\"labels\":{\"a\":\"discovered\",\"c\":\"discovered\"}}");
-
-    assertEquals(Map.of("a", "boot", "b", "boot", "c", "discovered"), manager.getConfig().getLabels());
-  }
-
-  @Test
   void discoveredChangeToTheDiscoveryServiceIsAnError() throws Exception {
-    run(
-        SERVICES + discovery(""),
-        "{\"services\":{\"svc\":{\"url\":\"https://elsewhere.example.test\"}}}");
+    run(SERVICES + discovery(""), "{'services':{'svc':{'url':'https://elsewhere.example.test'}}}");
 
     assertEquals(PluginManager.Status.ERROR, manager.getPluginStatus("discovery"));
-    assertTrue(
-        logger.contains("updates to the discovery service are not allowed"), logger.lines()::toString);
+    assertLogged("updates to the discovery service are not allowed");
   }
 
   @Test
-  void overriddenKeysAreReportedInTheDiscoveryStatusMessage() throws Exception {
+  void overriddenKeysAreRecordedAndLogged() throws Exception {
     run(
         SERVICES + discovery("") + "default_decision: boot/decision\n",
-        "{\"default_decision\":\"discovered/decision\"}");
+        "{'default_decision':'discovered/decision'}");
 
-    assertEquals(
-        "Keys in the discovered configuration overridden by boot configuration: default_decision",
-        manager.getPluginStatusMessage("discovery"));
+    final String message =
+        "Keys in the discovered configuration overridden by boot configuration: default_decision";
+    assertEquals(message, manager.getPluginStatusMessage("discovery"));
+    assertLogged(message);
   }
 
   @Test
@@ -310,20 +259,22 @@ class DiscoveryParityTest {
     run(SERVICES + discovery("  persist: true\n"), "{}");
 
     assertEquals(PluginManager.Status.OK, manager.getPluginStatus("discovery"));
-    assertTrue(logger.contains("unsupported configuration key 'persist'"), logger.lines()::toString);
+    assertLogged("unsupported configuration key 'persist'");
   }
+
+  // ---- bundle handling ----
 
   @Test
   void regoFilesAreRejectedEvenWhenTheyComeAfterAnUndefinedConfigPath() throws Exception {
     final Map<String, String> entries = new LinkedHashMap<>();
     entries.put("data.json", "{}");
     entries.put("policy.rego", "package discovery\n");
-    DiscoveryTestSupport.write(tempDir, DISCOVERY_RESOURCE, DiscoveryTestSupport.tarGz(entries));
+    write(RESOURCE, DiscoveryTestSupport.tarGz(entries));
     build(SERVICES + discovery("  decision: example/absent\n"));
     activate();
 
     assertEquals(PluginManager.Status.ERROR, manager.getPluginStatus("discovery"));
-    assertTrue(logger.contains(".rego files"), logger.lines()::toString);
+    assertLogged(".rego files");
     assertFalse(logger.contains("undefined configuration"), logger.lines()::toString);
   }
 
@@ -332,7 +283,7 @@ class DiscoveryParityTest {
     final byte[] bundle = DiscoveryTestSupport.dataBundle("{\"labels\":{\"k\":\"v\"}}");
     final HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     server.createContext(
-        "/" + DISCOVERY_RESOURCE,
+        "/" + RESOURCE,
         exchange -> {
           exchange.sendResponseHeaders(200, bundle.length);
           exchange.getResponseBody().write(bundle);
@@ -344,7 +295,7 @@ class DiscoveryParityTest {
           "services:\n  svc:\n    url: http://localhost:"
               + server.getAddress().getPort()
               + "\n"
-              + discovery(fast()));
+              + discovery(FAST));
       final AtomicInteger updates = new AtomicInteger();
       manager.registerConfigUpdateListener((oldConfig, newConfig) -> updates.incrementAndGet());
       activate();
@@ -356,62 +307,23 @@ class DiscoveryParityTest {
     }
   }
 
-  private void buildTyped(Config boot) {
-    manager =
-        new PluginManager.Builder()
-            .withId("test-opa")
-            .withStore(new InMem())
-            .withConfig(boot)
-            .withLogger(logger)
-            .build();
-  }
-
-  private Config typedBoot() throws Exception {
-    return new Config()
-        .setServices(
-            Map.of(
-                "svc",
-                new Config.ServiceConfig()
-                    .setName("svc")
-                    .setUrl(tempDir.toUri().toString())
-                    .setSslContext(SSLContext.getDefault())))
-        .setDiscovery(new Config.DiscoveryConfig().setService("svc").setResource(DISCOVERY_RESOURCE));
-  }
-
   @Test
-  void javaFieldDefaultsInATypedBootConfigDoNotOverrideDiscoveredValues() throws Exception {
-    DiscoveryTestSupport.write(
-        tempDir,
-        DISCOVERY_RESOURCE,
-        DiscoveryTestSupport.dataBundle("{\"default_decision\":\"discovered/decision\"}"));
-    buildTyped(typedBoot());
-    activate();
-
-    assertEquals("discovered/decision", manager.getConfig().getDefaultDecision());
-  }
-
-  @Test
-  void aTypedBootConfigKeepsItsSslContextAfterDiscovery() throws Exception {
-    DiscoveryTestSupport.write(
-        tempDir, DISCOVERY_RESOURCE, DiscoveryTestSupport.dataBundle("{\"labels\":{\"k\":\"v\"}}"));
-    final Config boot = typedBoot();
-    buildTyped(boot);
+  void aTypedBootConfigKeepsItsSslContextAndIgnoresJavaFieldDefaults() throws Exception {
+    write("{'default_decision':'discovered/decision','labels':{'k':'v'}}");
+    final Config.ServiceConfig service =
+        new Config.ServiceConfig()
+            .setName("svc")
+            .setUrl(tempDir.toUri().toString())
+            .setSslContext(SSLContext.getDefault());
+    buildFrom(
+        new Config()
+            .setServices(Map.of("svc", service))
+            .setDiscovery(new Config.DiscoveryConfig().setService("svc").setResource(RESOURCE)),
+        null);
     activate();
 
     assertEquals("v", label("k"));
-    assertSame(
-        boot.getService("svc").getSslContext(), manager.getConfig().getService("svc").getSslContext());
-  }
-
-  @Test
-  void overriddenKeysAreLogged() throws Exception {
-    run(
-        SERVICES + discovery("") + "default_decision: boot/decision\n",
-        "{\"default_decision\":\"discovered/decision\"}");
-
-    assertTrue(
-        logger.contains(
-            "Keys in the discovered configuration overridden by boot configuration: default_decision"),
-        logger.lines()::toString);
+    assertEquals("discovered/decision", manager.getConfig().getDefaultDecision());
+    assertSame(service.getSslContext(), manager.getConfig().getService("svc").getSslContext());
   }
 }

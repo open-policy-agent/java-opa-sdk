@@ -2,6 +2,7 @@ package io.github.open_policy_agent.opa.plugins;
 
 import io.github.open_policy_agent.opa.config.Config;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,12 @@ final class DiscoveryMerge {
       return overriddenKeys;
     }
   }
+
+  private static final Comparator<JsonNode> BY_VALUE =
+      (a, b) ->
+          a.isNumber() && b.isNumber()
+              ? a.decimalValue().compareTo(b.decimalValue())
+              : (a.equals(b) ? 0 : 1);
 
   private DiscoveryMerge() {}
 
@@ -125,33 +132,7 @@ final class DiscoveryMerge {
 
   /** JSON equality that compares numbers by value, so an int and a long (or 2 and 2.0) match. */
   static boolean sameJson(JsonNode a, JsonNode b) {
-    if (a.isNumber() && b.isNumber()) {
-      return a.decimalValue().compareTo(b.decimalValue()) == 0;
-    }
-    if (a.isObject() && b.isObject()) {
-      if (a.size() != b.size()) {
-        return false;
-      }
-      for (Map.Entry<String, JsonNode> entry : a.properties()) {
-        final JsonNode other = b.get(entry.getKey());
-        if (other == null || !sameJson(entry.getValue(), other)) {
-          return false;
-        }
-      }
-      return true;
-    }
-    if (a.isArray() && b.isArray()) {
-      if (a.size() != b.size()) {
-        return false;
-      }
-      for (int i = 0; i < a.size(); i++) {
-        if (!sameJson(a.get(i), b.get(i))) {
-          return false;
-        }
-      }
-      return true;
-    }
-    return a.equals(b);
+    return a.equals(BY_VALUE, b);
   }
 
   /** Removes object fields whose value is null, recursively, including inside arrays. */

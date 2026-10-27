@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.StreamSupport;
 import java.util.zip.GZIPInputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
@@ -117,8 +118,8 @@ public final class DiscoveryPlugin implements Plugin {
   }
 
   /**
-   * Selects the config node by OPA's rule and substitutes {@code ${VAR}} in its string values and
-   * field names (undefined variables stay as written).
+   * Selects the config node by OPA's rule and substitutes {@code ${VAR}} in its JSON text, escaping
+   * the values so they cannot change the document's structure (undefined variables stay as written).
    */
   static JsonNode selectConfig(JsonNode data, List<String> path, Map<String, String> env) {
     JsonNode node = data;
@@ -128,7 +129,17 @@ public final class DiscoveryPlugin implements Plugin {
     if (node.isMissingNode()) {
       throw new IllegalStateException("undefined configuration");
     }
-    return EnvInterpolator.interpolateLenient(node, env);
+    return MAPPER.readTree(
+        EnvInterpolator.interpolateLenient(
+            MAPPER.writeValueAsString(node), name -> jsonEscaped(env.get(name))));
+  }
+
+  private static String jsonEscaped(String value) {
+    if (value == null) {
+      return null;
+    }
+    final String quoted = MAPPER.writeValueAsString(value);
+    return quoted.substring(1, quoted.length() - 1);
   }
 
   private static void warnOnUnsupportedKeys(PluginManager manager) {
@@ -257,22 +268,14 @@ public final class DiscoveryPlugin implements Plugin {
                   + "Discovery bundles should only contain configuration data.";
           manager.getLogger().error("Discovery '%s': %s", name, errorMsg);
           manager.updatePluginStatus("discovery", PluginManager.Status.WARN);
-
-          // If this is initial activation, fail it
-          if (!initialActivation.isDone()) {
-            initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-          }
+          failInitialActivation(errorMsg);
           return;
         }
 
         if (content.data == null) {
           String errorMsg = "Discovery bundle does not contain configuration data";
           manager.getLogger().error("Discovery '%s': %s", name, errorMsg);
-
-          // If this is initial activation, fail it
-          if (!initialActivation.isDone()) {
-            initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-          }
+          failInitialActivation(errorMsg);
           return;
         }
 
@@ -311,11 +314,14 @@ public final class DiscoveryPlugin implements Plugin {
         if (discoveredConfig != null) {
           manager.getLogger().warn("Discovery '%s': Continuing with previous configuration", name);
         } else {
-          // No existing config, fail initial activation
-          if (!initialActivation.isDone()) {
-            initialActivation.completeExceptionally(new RuntimeException(errorMsg));
-          }
+          failInitialActivation(errorMsg);
         }
+      }
+    }
+
+    private void failInitialActivation(String errorMsg) {
+      if (!initialActivation.isDone()) {
+        initialActivation.completeExceptionally(new RuntimeException(errorMsg));
       }
     }
 
@@ -337,15 +343,10 @@ public final class DiscoveryPlugin implements Plugin {
     }
 
     private boolean mentions(JsonNode services, String name) {
-      if (services.isObject()) {
-        return services.has(name);
-      }
-      for (JsonNode service : services) {
-        if (name.equals(service.path("name").asString(""))) {
-          return true;
-        }
-      }
-      return false;
+      return services.isObject()
+          ? services.has(name)
+          : StreamSupport.stream(services.spliterator(), false)
+              .anyMatch(service -> name.equals(service.path("name").asString("")));
     }
 
     /**
