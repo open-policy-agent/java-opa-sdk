@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -172,6 +173,19 @@ class OpaStatusShapeTest {
     return Instant.parse(status.path(field).asString());
   }
 
+  private static void assertSuccessTimesUnchanged(JsonNode failed, JsonNode failedAgain) {
+    for (String field : SUCCESS_TIMES) {
+      assertEquals(failed.path(field), failedAgain.path(field), field);
+    }
+    assertTrue(time(failedAgain, "last_successful_request").isBefore(time(failedAgain, "last_request")));
+  }
+
+  private static void assertNoSuccessAfter(JsonNode status, Instant injected) {
+    for (String field : SUCCESS_TIMES) {
+      assertFalse(time(status, field).isAfter(injected), field + ": " + status + " injected " + injected);
+    }
+  }
+
   private static void assertRfc3339(JsonNode status, List<String> fields) {
     for (String field : fields) {
       assertTrue(status.path(field).asString().matches(RFC3339_UTC), field + ": " + status);
@@ -264,13 +278,10 @@ class OpaStatusShapeTest {
 
     assertEquals("bundle_error", failed.path("code").asString());
     assertEquals(500, failed.path("http_code").asInt());
-    assertTrue(failed.path("message").asString().contains("500"), failed.toString());
+    assertEquals("server replied with Internal Server Error", failed.path("message").asString());
     assertFalse(failed.has("errors"), failed.toString());
     assertEquals("rev-1", failed.path("active_revision").asString());
-    for (String field : SUCCESS_TIMES) {
-      assertEquals(failed.path(field), failedAgain.path(field), field);
-    }
-    assertTrue(time(failedAgain, "last_successful_request").isBefore(time(failedAgain, "last_request")));
+    assertSuccessTimesUnchanged(failed, failedAgain);
 
     failures.remove("/bundles/a.tar.gz");
     final JsonNode recovered = awaitBundle("a", b -> activated(b) && !b.has("code"));
@@ -358,5 +369,83 @@ class OpaStatusShapeTest {
     Thread.sleep(3500);
 
     assertTrue(latest("discovery", null).has("code"), latest("discovery", null).toString());
+  }
+
+  // ---- HTTP failure wording ----
+
+  @ParameterizedTest
+  @CsvSource({"404,Not Found", "401,Unauthorized", "429,Too Many Requests", "503,Service Unavailable", "599,599"})
+  void anHttpFailureUsesTheStatusTextAndFallsBackToTheNumber(int code, String text) throws Exception {
+    failures.put("/bundles/a.tar.gz", code);
+    start(bundleYaml("a", "bundles/a.tar.gz"), false);
+
+    final JsonNode entry = awaitBundle("a", b -> b.has("code"));
+
+    assertEquals("server replied with " + text, entry.path("message").asString());
+    assertEquals(code, entry.path("http_code").asInt());
+    assertEquals("bundle_error", entry.path("code").asString());
+  }
+
+  // ---- a bundle that fails to load is a failed download ----
+
+  @Test
+  void anUnloadableBundleDoesNotAdvanceTheDownloadTimestamps() throws Exception {
+    startWithBundleA("rev-1");
+
+    final Instant injected = Instant.now();
+    bodies.put("/bundles/a.tar.gz", unloadableBundle("a", "rev-2"));
+    final JsonNode failed = awaitBundle("a", b -> b.has("code"));
+    final JsonNode failedAgain =
+        awaitBundle("a", b -> b.has("code") && time(b, "last_request").isAfter(time(failed, "last_request")));
+
+    assertEquals("bundle_error", failed.path("code").asString());
+    assertFalse(failed.path("message").asString().isEmpty(), failed.toString());
+    assertEquals("rev-1", failedAgain.path("active_revision").asString());
+    assertNoSuccessAfter(failedAgain, injected);
+  }
+
+  /** Serves a discovery update whose {@code .manifest} is not JSON, after a good first load. */
+  private void serveMalformedDiscoveryManifest() throws Exception {
+    final Map<String, String> entries = new LinkedHashMap<>();
+    entries.put("data.json", "{\"labels\":{\"k\":\"v2\"}}");
+    entries.put(".manifest", "{this is not json");
+    bodies.put("/discovery.tar.gz", DiscoveryTestSupport.tarGz(entries));
+  }
+
+  @Test
+  void aMalformedDiscoveryManifestRejectsTheUpdateAndKeepsThePreviousConfig() throws Exception {
+    startWithDiscovery("", "{\"labels\":{\"k\":\"v1\"}}");
+
+    serveMalformedDiscoveryManifest();
+    final JsonNode failed = awaitDiscovery(d -> d.has("code"));
+
+    assertEquals("bundle_error", failed.path("code").asString());
+    assertFalse(failed.path("message").asString().isEmpty(), failed.toString());
+    assertEquals("disc-1", failed.path("active_revision").asString());
+    assertEquals("v1", latest("labels", null).path("k").asString());
+  }
+
+  @Test
+  void aDiscoveryBundleThatFailsToLoadDoesNotAdvanceTheDownloadTimestamps() throws Exception {
+    startWithDiscovery("", "{}");
+
+    final Instant injected = Instant.now();
+    serveMalformedDiscoveryManifest();
+    final JsonNode failed = awaitDiscovery(d -> d.has("code"));
+    final JsonNode failedAgain =
+        awaitDiscovery(d -> d.has("code") && time(d, "last_request").isAfter(time(failed, "last_request")));
+
+    assertNoSuccessAfter(failedAgain, injected);
+  }
+
+  @Test
+  void aDiscoveryConfigThatCannotBeAppliedStillCountsAsDownloaded() throws Exception {
+    final JsonNode before = startWithDiscovery("", "{}");
+
+    bodies.put("/discovery.tar.gz", discoveryBundle("{\"labels\":\"not-a-map\"}", "disc-2"));
+    final JsonNode failed = awaitDiscovery(d -> d.has("code"));
+
+    assertTrue(time(failed, "last_successful_download").isAfter(time(before, "last_successful_download")));
+    assertEquals(before.path("last_successful_activation"), failed.path("last_successful_activation"));
   }
 }
