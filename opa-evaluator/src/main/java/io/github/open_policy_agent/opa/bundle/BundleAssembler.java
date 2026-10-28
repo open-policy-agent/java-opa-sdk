@@ -2,12 +2,16 @@ package io.github.open_policy_agent.opa.bundle;
 
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.ir.PolicyReader;
 import io.github.open_policy_agent.opa.spi.Services;
 import io.github.open_policy_agent.opa.storage.Store;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Processes individual bundle files and assembles them into a {@link Bundle}.
@@ -219,7 +223,41 @@ public class BundleAssembler {
       throw new IllegalArgumentException("bundle must contain plan.json and/or data.json");
     }
     Bundle bundle = builder.build();
-    store.write(id, bundle, data != null ? data : new RegoObject());
+    final RegoObject bundleData = data != null ? data : new RegoObject();
+    validateDataWithinRoots(bundle.roots(), bundleData, List.of());
+    store.write(id, bundle, bundleData);
     return bundle;
+  }
+
+  private static void validateDataWithinRoots(List<String> roots, RegoValue node, List<String> path) {
+    if (roots.stream().anyMatch(root -> startsWith(path, segmentsOf(root)))) {
+      return;
+    }
+    if (node instanceof RegoObject && roots.stream().anyMatch(root -> startsWith(segmentsOf(root), path))) {
+      for (Map.Entry<RegoValue, RegoValue> entry : ((RegoObject) node).getProperties().entrySet()) {
+        final String key =
+            entry.getKey() instanceof RegoString
+                ? ((RegoString) entry.getKey()).getValue()
+                : String.valueOf(entry.getKey());
+        final List<String> child = new ArrayList<>(path);
+        child.add(key);
+        validateDataWithinRoots(roots, entry.getValue(), child);
+      }
+      return;
+    }
+    throw new IllegalArgumentException(
+        "manifest roots ["
+            + String.join(" ", roots)
+            + "] do not permit data at path '/"
+            + String.join("/", path)
+            + "' (hint: check bundle directory structure)");
+  }
+
+  private static List<String> segmentsOf(String root) {
+    return root.isEmpty() ? List.of() : List.of(root.split("/"));
+  }
+
+  private static boolean startsWith(List<String> path, List<String> prefix) {
+    return path.size() >= prefix.size() && path.subList(0, prefix.size()).equals(prefix);
   }
 }
