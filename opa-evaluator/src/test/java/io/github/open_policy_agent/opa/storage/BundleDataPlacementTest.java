@@ -88,4 +88,13 @@ class BundleDataPlacementTest {
         ConflictingRootsException.class, () -> store.write("two", bundle("c", "b/x"), new RegoObject()));
     assertDoesNotThrow(() -> store.write("three", bundle("c", "d"), new RegoObject()));
   }
+
+  @Test
+  void anEmptyRootsListOwnsNothing() {
+    store.write("one", bundle(), json("{'x':1}"));
+
+    assertDoesNotThrow(() -> store.write("two", new Bundle.Builder().build(), json("{'y':1}")));
+    assertNull(at("x"));
+    assertNotNull(at("y"));
+  }
 }

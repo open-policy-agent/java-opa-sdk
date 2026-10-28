@@ -7,6 +7,15 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Breaking Changes
 
+- Writing a bundle id again now replaces the data its earlier revision wrote under the
+  bundle's roots, so a key removed in a new revision is no longer visible. Before, the new
+  data was merged into the old, and a removed entry (for example an admin) stayed in force ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
+- Bundle data is now written at the data root, as OPA does, and the manifest `roots` only
+  declare what the bundle owns. Before, the data was nested under the first root, so a
+  bundle with root `authz` and `authz/data.json` put its data at `data.authz.authz`. Data
+  outside the roots is no longer written, conflicting roots are now detected across all
+  roots of both bundles, not just the first, and a manifest with an empty `roots` list owns
+  nothing (only a manifest without `roots` owns the whole document) ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
 - Under `discovery`, `name` now also selects `data.<name>` as the discovered config
   when `decision` is unset. Setups that set `name` and keep the config at the root of
   the discovery bundle's `data.json` must drop `name` or move the config under that

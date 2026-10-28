@@ -1,50 +1,96 @@
 package io.github.open_policy_agent.opa.storage;
 
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.ast.types.RegoString;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
-/** In-memory implementation of the Store interface. */
+/**
+ * In-memory implementation of the Store interface. The data document is never modified in place: a
+ * write builds a new tree that shares the untouched parts and swaps it in, so a reader holding
+ * {@link #currentData()} keeps seeing the data it got.
+ */
 public class InMem extends AbstractStore {
 
-  private RegoObject data = new RegoObject();
+  private volatile RegoObject data = new RegoObject();
 
   @Override
-  protected void writeData(String bundleId, String root, RegoObject value) {
-    // Write data to the appropriate location based on root
-    if (root.isEmpty()) {
-      // Empty root means write to the global data root
-      data = data.merge(value);
-    } else {
-      // Non-empty root: write data under that path (e.g., "example" -> data.example)
-      String[] pathParts = root.split("/");
-      RegoObject current = data;
+  protected void replaceData(List<String> previousRoots, List<String> roots, RegoObject value) {
+    final Set<String> owned = new LinkedHashSet<>(previousRoots);
+    owned.addAll(roots);
 
-      // Navigate/create the path to the root
-      for (int i = 0; i < pathParts.length - 1; i++) {
-        io.github.open_policy_agent.opa.ast.types.RegoString key =
-            new io.github.open_policy_agent.opa.ast.types.RegoString(pathParts[i]);
-        io.github.open_policy_agent.opa.ast.types.RegoValue existing = current.getProperty(key);
-        if (existing instanceof RegoObject) {
-          current = (RegoObject) existing;
-        } else {
-          RegoObject newObj = new RegoObject();
-          current.setProp(key, newObj);
-          current = newObj;
-        }
-      }
-
-      // Set the value at the final path segment
-      io.github.open_policy_agent.opa.ast.types.RegoString finalKey =
-          new io.github.open_policy_agent.opa.ast.types.RegoString(pathParts[pathParts.length - 1]);
-      io.github.open_policy_agent.opa.ast.types.RegoValue existingValue = current.getProperty(finalKey);
-      if (existingValue instanceof RegoObject) {
-        // Merge with existing object
-        current.setProp(finalKey, ((RegoObject) existingValue).merge(value));
-      } else {
-        // Set new value
-        current.setProp(finalKey, value);
+    RegoObject next = data;
+    for (String root : owned) {
+      next = without(next, segments(root), 0);
+    }
+    for (String root : roots) {
+      final RegoValue node = lookup(value, segments(root));
+      if (node != null) {
+        next = (RegoObject) with(next, segments(root), 0, node);
       }
     }
+    data = next;
+  }
+
+  private static String[] segments(String root) {
+    return root.isEmpty() ? new String[0] : root.split("/");
+  }
+
+  private static RegoValue lookup(RegoValue value, String[] path) {
+    RegoValue current = value;
+    for (String segment : path) {
+      if (!(current instanceof RegoObject)) {
+        return null;
+      }
+      current = ((RegoObject) current).getProperty(segment);
+      if (current == null) {
+        return null;
+      }
+    }
+    return current;
+  }
+
+  private static RegoObject without(RegoObject object, String[] path, int depth) {
+    if (path.length == 0) {
+      return new RegoObject();
+    }
+    final RegoString key = new RegoString(path[depth]);
+    final RegoValue child = object.getProperty(key);
+    if (child == null) {
+      return object;
+    }
+    if (depth == path.length - 1) {
+      final RegoObject copy = new RegoObject();
+      object.getProperties().forEach((k, v) -> {
+        if (!k.equals(key)) {
+          copy.setProp(k, v);
+        }
+      });
+      return copy;
+    }
+    if (!(child instanceof RegoObject)) {
+      return object;
+    }
+    return copyWith(object, key, without((RegoObject) child, path, depth + 1));
+  }
+
+  private static RegoValue with(RegoValue current, String[] path, int depth, RegoValue node) {
+    if (depth == path.length) {
+      return node;
+    }
+    final RegoObject object = current instanceof RegoObject ? (RegoObject) current : new RegoObject();
+    final RegoString key = new RegoString(path[depth]);
+    return copyWith(object, key, with(object.getProperty(key), path, depth + 1, node));
+  }
+
+  private static RegoObject copyWith(RegoObject object, RegoString key, RegoValue value) {
+    final RegoObject copy = new RegoObject();
+    object.getProperties().forEach(copy::setProp);
+    copy.setProp(key, value);
+    return copy;
   }
 
   @Override

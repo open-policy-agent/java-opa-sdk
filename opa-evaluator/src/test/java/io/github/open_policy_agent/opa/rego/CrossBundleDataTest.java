@@ -83,10 +83,10 @@ class CrossBundleDataTest {
   void policyFromOneBundleCanReferenceDataFromAnother() throws IOException {
     Store store = new InMem();
 
-    // Data bundle: root "groups", provides {"super": {"privileged": true}}
+    // Data bundle: root "groups", provides {"groups": {"super": {"privileged": true}}}
     Bundle dataBundle = createBundleWithRoot("groups");
     RegoObject groupsData =
-        MAPPER.readValue("{\"super\":{\"privileged\":true}}", RegoObject.class);
+        MAPPER.readValue("{\"groups\":{\"super\":{\"privileged\":true}}}", RegoObject.class);
     store.write("data-bundle", dataBundle, groupsData);
 
     // Policy bundle: root "authz", carries the authz/allow plan, no data
@@ -145,7 +145,7 @@ class CrossBundleDataTest {
 
     // Update data bundle with privileged group — no engine refresh needed
     RegoObject updatedData =
-        MAPPER.readValue("{\"super\":{\"privileged\":true}}", RegoObject.class);
+        MAPPER.readValue("{\"groups\":{\"super\":{\"privileged\":true}}}", RegoObject.class);
     store.write("data-bundle", dataBundle, updatedData);
 
     // Data changes are live
