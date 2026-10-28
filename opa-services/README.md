@@ -360,7 +360,10 @@ A bundle whose activation failed keeps its previous `active_revision`, `size` an
 unchanged.
 
 Bundle entries also keep `revision` and `active` from earlier versions. `metrics` and `errors` are
-not reported. The plugin states are plain strings, for example `"plugins": {"discovery": "OK"}`.
+not reported: a bundle that fails to load, including one with compile errors, is a failed download.
+Its `message` is the load error and the `last_successful_*` times stay as they were. A failed HTTP
+request has the message `server replied with <status text>`, for example `server replied with Not
+Found`, and `http_code` holds the number. The plugin states are plain strings, for example `"plugins": {"discovery": "OK"}`.
 
 ## Discovery
 

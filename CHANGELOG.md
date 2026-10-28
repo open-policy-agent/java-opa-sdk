@@ -34,6 +34,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
   timestamps and its error, instead of being left out
 - Report the keys that boot config overrode in the `message` of the discovery status,
   not only in a debug log
+- A bundle or discovery update that fails to load no longer advances
+  `last_successful_request` or `last_successful_download`, and an HTTP failure reports
+  `server replied with <status text>` as its message. The discovery bundle's `.manifest`
+  is now parsed for its revision, and a malformed one rejects the update
 - Download a bundle or discovery update again after its activation failed, instead of
   answering the next poll with "not modified" because the failed download's ETag was
   already stored. A response without an ETag now also stops the `If-None-Match` header

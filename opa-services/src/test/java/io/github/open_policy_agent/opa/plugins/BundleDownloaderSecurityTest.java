@@ -204,7 +204,7 @@ class BundleDownloaderSecurityTest {
     ExecutionException ex = assertThrows(ExecutionException.class,
         () -> runBundleDownload(server.getAddress().getPort(), 512 * 1024 * 1024L)
             .get(10, TimeUnit.SECONDS));
-    assertTrue(ex.getCause().getMessage().contains("500"));
+    assertEquals("server replied with Internal Server Error", ex.getCause().getMessage());
   }
 
   @Test
@@ -217,7 +217,7 @@ class BundleDownloaderSecurityTest {
     ExecutionException ex = assertThrows(ExecutionException.class,
         () -> runBundleDownload(server.getAddress().getPort(), 512 * 1024 * 1024L)
             .get(10, TimeUnit.SECONDS));
-    assertTrue(ex.getCause().getMessage().contains("404"));
+    assertEquals("server replied with Not Found", ex.getCause().getMessage());
   }
 
   @Test

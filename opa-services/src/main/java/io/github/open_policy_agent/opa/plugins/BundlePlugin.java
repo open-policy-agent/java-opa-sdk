@@ -187,6 +187,7 @@ public final class BundlePlugin implements Plugin {
         // Load bundle using TarballBundleLoader
         TarballBundleLoader loader = new TarballBundleLoader(name, bundleData, maxSizeBytes);
         loader.load(manager.getStore());
+        status.downloaded(bundleData.length);
 
         manager.getLogger().info("Bundle '%s': Activated", name);
         manager.notifyBundleActivation(name);

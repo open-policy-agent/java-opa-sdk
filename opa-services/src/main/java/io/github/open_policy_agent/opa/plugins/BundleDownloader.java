@@ -350,7 +350,6 @@ public abstract class BundleDownloader {
     }
 
     byte[] bundleData = Files.readAllBytes(filePath);
-    status.downloaded(bundleData.length);
     activateBundle(bundleData);
     lastModifiedTime = currentModTimeMillis;
 
@@ -436,7 +435,6 @@ public abstract class BundleDownloader {
         return;
       }
       final String newEtag = response.headers().firstValue("ETag").orElse(null);
-      status.downloaded(body.length);
       try {
         activateBundle(body);
       } catch (Exception e) {
@@ -520,7 +518,7 @@ public abstract class BundleDownloader {
     private final int statusCode;
 
     HttpStatusException(int statusCode) {
-      super("Download failed with status " + statusCode);
+      super("server replied with " + HttpStatusText.of(statusCode));
       this.statusCode = statusCode;
     }
 
@@ -540,6 +538,9 @@ public abstract class BundleDownloader {
    *
    * <p>This method is called when new bundle data is available (either from an HTTP download, or
    * when a local file has been modified).
+   *
+   * <p>Implementations call {@code status.downloaded(...)} once the bundle has parsed, so a bundle
+   * that cannot be loaded does not count as a successful download.
    *
    * @param bundleData the raw bundle bytes (typically a gzipped tarball)
    */

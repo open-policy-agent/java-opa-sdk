@@ -46,7 +46,7 @@ final class BundleStatus {
     clearError();
   }
 
-  /** A bundle of {@code downloadedBytes} bytes arrived; its size is reported once it is active. */
+  /** A bundle of {@code downloadedBytes} bytes arrived and parsed; its size is reported once it is active. */
   synchronized void downloaded(int downloadedBytes) {
     lastSuccessfulRequest = lastRequest;
     lastSuccessfulDownload = lastRequest;

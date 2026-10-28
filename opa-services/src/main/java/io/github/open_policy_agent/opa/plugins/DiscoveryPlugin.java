@@ -271,6 +271,7 @@ public final class DiscoveryPlugin implements Plugin {
         if (content.data == null) {
           throw new IllegalStateException("Discovery bundle does not contain configuration data");
         }
+        status.downloaded(bundleData.length);
 
         final JsonNode selected = selectConfig(content.data, configPath, System.getenv());
         final DiscoveryMerge.Result merged =
