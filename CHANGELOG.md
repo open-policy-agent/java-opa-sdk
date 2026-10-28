@@ -26,6 +26,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Runtime, SDK, Tooling
 
+- Keep `AbstractStore.writeData(bundleId, root, value)` as the one method a store must
+  implement; it is called once per root with that root's slice of the bundle data. A store
+  that does not override `replaceData` keeps merge-only semantics, so it will not remove
+  data on reload. `InMem` overrides it to replace the data atomically ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
 - Add `discovery.decision` to pick the config node in a discovery bundle, falling
   back to `name` and then the data root. An undefined path fails the load and keeps
   the previous configuration ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle

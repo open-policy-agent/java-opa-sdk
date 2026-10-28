@@ -1,6 +1,7 @@
 package io.github.open_policy_agent.opa.bundle;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
 
@@ -8,6 +9,17 @@ public class Bundle {
   public final Policy irPolicy;
   public final Map<String, Object> manifest;
   public final Map<String, String> rego;
+
+  /**
+   * The roots the manifest declares, without surrounding slashes. A manifest without {@code roots}
+   * owns the whole document, {@code [""]}; an empty list owns nothing, as in OPA.
+   */
+  public List<String> roots() {
+    if (manifest != null && manifest.get("roots") instanceof List<?> roots) {
+      return roots.stream().map(root -> String.valueOf(root).replaceAll("^/+|/+$", "")).toList();
+    }
+    return List.of("");
+  }
 
   private Bundle(Builder builder) {
     this.rego = builder.rego;

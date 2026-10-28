@@ -2,9 +2,12 @@ package io.github.open_policy_agent.opa.storage;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.bundle.Bundle;
 
 /**
@@ -20,7 +23,7 @@ import io.github.open_policy_agent.opa.bundle.Bundle;
  *
  * <p>Bundle data is keyed from the data root. A bundle's roots declare what it owns: writing a
  * bundle id again replaces the data under its previous and new roots and leaves other data alone.
- * Subclasses implement {@link #replaceData(List, List, RegoObject)}.
+ * Subclasses implement {@link #writeData(String, String, RegoObject)}.
  */
 public abstract class AbstractStore implements Store {
 
@@ -29,14 +32,14 @@ public abstract class AbstractStore implements Store {
 
   @Override
   public synchronized void write(String id, Bundle bundle, RegoObject value) {
-    final List<String> roots = extractRoots(bundle);
+    final List<String> roots = bundle.roots();
     checkForConflictingRoots(id, roots);
 
     final List<String> previousRoots = bundleRoots.getOrDefault(id, List.of());
     bundles.put(id, bundle);
     bundleRoots.put(id, roots);
 
-    replaceData(previousRoots, roots, value);
+    replaceData(id, previousRoots, roots, value);
   }
 
   @Override
@@ -55,30 +58,63 @@ public abstract class AbstractStore implements Store {
   }
 
   /**
-   * Replace the data a bundle owns.
+   * Replace the data a bundle owns: remove what its earlier revision wrote, then write the new
+   * data. {@code value} is keyed from the data root, so a root {@code "authz"} takes {@code
+   * value.authz} and writes it at {@code data.authz}; an empty root owns the whole document.
    *
-   * <p>Implementations must remove everything under {@code previousRoots} and {@code roots}, then
-   * write, for each of {@code roots}, the part of {@code value} at that path. {@code value} is keyed
-   * from the data root, so a root {@code "authz"} takes {@code value.authz} and writes it at {@code
-   * data.authz}. An empty root owns the whole document. Readers of the current data must see
-   * either the old or the new data, never a mix.
+   * <p>The default removes the previous and new roots with {@link #removeData(List)} and then calls
+   * {@link #writeData(String, String, RegoObject)} once per root that has data. A subclass that
+   * overrides neither {@code removeData} nor this method therefore only merges, and does not remove
+   * data on reload. Override this method to replace the data atomically, as {@link InMem} does.
    *
+   * @param bundleId the ID of the bundle being written
    * @param previousRoots the roots the bundle id was last written with, empty for a new id
    * @param roots the roots of the bundle being written
    * @param value the bundle's data, keyed from the data root
    */
-  protected abstract void replaceData(List<String> previousRoots, List<String> roots, RegoObject value);
+  protected void replaceData(
+      String bundleId, List<String> previousRoots, List<String> roots, RegoObject value) {
+    final Set<String> owned = new LinkedHashSet<>(previousRoots);
+    owned.addAll(roots);
+    removeData(List.copyOf(owned));
+    for (String root : roots) {
+      final RegoValue slice = lookup(value, segments(root));
+      if (slice instanceof RegoObject) {
+        writeData(bundleId, root, (RegoObject) slice);
+      }
+    }
+  }
+
+  /** Remove the data at the given roots. Does nothing by default. */
+  protected void removeData(List<String> roots) {}
 
   /**
-   * The roots from the manifest, without surrounding slashes. Only a manifest without {@code roots}
-   * owns the whole document; an empty list owns nothing, as in OPA.
+   * Write bundle data to the store at the specified root path.
+   *
+   * @param bundleId the ID of the bundle being written
+   * @param root the root path (empty string for the data root)
+   * @param value the data to write at that path
    */
-  private static List<String> extractRoots(Bundle bundle) {
-    if (bundle.manifest != null && bundle.manifest.get("roots") instanceof List<?>) {
-      return ((List<?>) bundle.manifest.get("roots"))
-          .stream().map(root -> String.valueOf(root).replaceAll("^/+|/+$", "")).toList();
+  protected abstract void writeData(String bundleId, String root, RegoObject value);
+
+  /** The path segments of a root; none for the empty root. */
+  protected static String[] segments(String root) {
+    return root.isEmpty() ? new String[0] : root.split("/");
+  }
+
+  /** The value at {@code path} inside {@code value}, or null if there is none. */
+  protected static RegoValue lookup(RegoValue value, String[] path) {
+    RegoValue current = value;
+    for (String segment : path) {
+      if (!(current instanceof RegoObject)) {
+        return null;
+      }
+      current = ((RegoObject) current).getProperty(segment);
+      if (current == null) {
+        return null;
+      }
     }
-    return List.of("");
+    return current;
   }
 
   /**

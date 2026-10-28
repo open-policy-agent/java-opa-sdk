@@ -18,7 +18,8 @@ public class InMem extends AbstractStore {
   private volatile RegoObject data = new RegoObject();
 
   @Override
-  protected void replaceData(List<String> previousRoots, List<String> roots, RegoObject value) {
+  protected void replaceData(
+      String bundleId, List<String> previousRoots, List<String> roots, RegoObject value) {
     final Set<String> owned = new LinkedHashSet<>(previousRoots);
     owned.addAll(roots);
 
@@ -35,22 +36,9 @@ public class InMem extends AbstractStore {
     data = next;
   }
 
-  private static String[] segments(String root) {
-    return root.isEmpty() ? new String[0] : root.split("/");
-  }
-
-  private static RegoValue lookup(RegoValue value, String[] path) {
-    RegoValue current = value;
-    for (String segment : path) {
-      if (!(current instanceof RegoObject)) {
-        return null;
-      }
-      current = ((RegoObject) current).getProperty(segment);
-      if (current == null) {
-        return null;
-      }
-    }
-    return current;
+  @Override
+  protected void writeData(String bundleId, String root, RegoObject value) {
+    data = (RegoObject) with(data, segments(root), 0, value);
   }
 
   private static RegoObject without(RegoObject object, String[] path, int depth) {
