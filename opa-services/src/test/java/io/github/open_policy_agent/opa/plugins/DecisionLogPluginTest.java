@@ -565,6 +565,27 @@ class DecisionLogPluginTest {
             .setResource("/custom/logs");
     config.setDecisionLogs(decisionLogs);
 
+    final java.util.concurrent.atomic.AtomicInteger requests =
+        new java.util.concurrent.atomic.AtomicInteger();
+    final com.sun.net.httpserver.HttpServer server =
+        com.sun.net.httpserver.HttpServer.create(
+            new java.net.InetSocketAddress("localhost", 0), 0);
+    server.createContext(
+        "/custom/logs",
+        exchange -> {
+          exchange.getRequestBody().readAllBytes();
+          requests.incrementAndGet();
+          exchange.sendResponseHeaders(200, -1);
+          exchange.close();
+        });
+    server.start();
+    config.setServices(
+        Collections.singletonMap(
+            "test-service",
+            new Config.ServiceConfig()
+                .setName("test-service")
+                .setUrl("http://localhost:" + server.getAddress().getPort())));
+
     manager =
         new PluginManager.Builder()
             .withId("test-opa")
@@ -604,7 +625,8 @@ class DecisionLogPluginTest {
     // Manually trigger flush
     decisionLogger.flush();
 
-    // Verify debug log for sending to service
+    server.stop(0);
+    assertEquals(1, requests.get());
     verify(mockLogger, atLeastOnce())
         .debug(eq("Sent %d decision logs to service '%s'"), eq(1), eq("test-service"));
   }

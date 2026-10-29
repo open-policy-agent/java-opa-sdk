@@ -171,9 +171,11 @@ public class Config {
     @JsonProperty("drop_decision")
     private String dropDecision = "system/log/drop";
 
+    /** Deprecated Java-only fallback; {@code reporting.min_delay_seconds} wins when both are set. */
     @JsonProperty("min_delay_seconds")
     private Integer minDelaySeconds = 300;
 
+    /** Deprecated Java-only fallback; {@code reporting.max_delay_seconds} wins when both are set. */
     @JsonProperty("max_delay_seconds")
     private Integer maxDelaySeconds = 600;
 
@@ -227,19 +229,39 @@ public class Config {
       return this;
     }
 
+    /**
+     * @deprecated use {@code reporting.min_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public Integer getMinDelaySeconds() {
       return minDelaySeconds;
     }
 
+    /**
+     * @deprecated use {@code reporting.min_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public DecisionLogsConfig setMinDelaySeconds(Integer minDelaySeconds) {
       this.minDelaySeconds = minDelaySeconds;
       return this;
     }
 
+    /**
+     * @deprecated use {@code reporting.max_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public Integer getMaxDelaySeconds() {
       return maxDelaySeconds;
     }
 
+    /**
+     * @deprecated use {@code reporting.max_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public DecisionLogsConfig setMaxDelaySeconds(Integer maxDelaySeconds) {
       this.maxDelaySeconds = maxDelaySeconds;
       return this;

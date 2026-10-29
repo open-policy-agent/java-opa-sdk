@@ -4,13 +4,15 @@ import io.github.open_policy_agent.opa.bundle.Bundle;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.metrics.Metrics;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
@@ -38,7 +40,13 @@ import tools.jackson.databind.node.ObjectNode;
  */
 public final class DecisionLogPlugin implements Plugin {
 
+  private static final int DEFAULT_MIN_DELAY_SECONDS = 300;
+  private static final int DEFAULT_MAX_DELAY_SECONDS = 600;
+  private static final long RETRY_BACKOFF_NANOS = TimeUnit.SECONDS.toNanos(1);
+
   private DecisionLogs decisionLogs;
+  private int resolvedMinDelaySeconds = DEFAULT_MIN_DELAY_SECONDS;
+  private int resolvedMaxDelaySeconds = DEFAULT_MAX_DELAY_SECONDS;
   private PluginManager manager;
   private ScheduledExecutorService scheduler;
   private PluginManager.BundleActivationListener maskListener;
@@ -46,6 +54,7 @@ public final class DecisionLogPlugin implements Plugin {
   public DecisionLogPlugin() {}
 
   @Override
+  @SuppressWarnings("deprecation") // the top-level delays stay supported as a fallback
   public Set<String> validate(PluginManager manager) {
     Set<String> errors = new HashSet<>();
 
@@ -72,7 +81,7 @@ public final class DecisionLogPlugin implements Plugin {
     if (configuredMax != null && configuredMax < 0) {
       errors.add("Decision logs max_delay_seconds must be >= 0");
     }
-    int effectiveMin = configuredMin != null ? configuredMin : 300;
+    int effectiveMin = configuredMin != null ? configuredMin : DEFAULT_MIN_DELAY_SECONDS;
     int effectiveMax =
         configuredMax != null ? configuredMax : effectiveMin * 2;
     if (effectiveMin > effectiveMax) {
@@ -84,7 +93,7 @@ public final class DecisionLogPlugin implements Plugin {
               + ")");
     }
 
-    // Validate reporting config if present (same defaulting as above when used)
+    // Validate reporting config if present: OPA requires both delays or neither
     if (logsConfig.getReporting() != null) {
       Config.ReportingConfig reporting = logsConfig.getReporting();
       Integer rMin = reporting.getMinDelaySeconds();
@@ -95,17 +104,17 @@ public final class DecisionLogPlugin implements Plugin {
       if (rMax != null && rMax < 0) {
         errors.add("Decision logs reporting max_delay_seconds must be >= 0");
       }
-      if (rMin != null || rMax != null) {
-        int rEffectiveMin = rMin != null ? rMin : 300;
-        int rEffectiveMax = rMax != null ? rMax : rEffectiveMin * 2;
-        if (rEffectiveMin > rEffectiveMax) {
-          errors.add(
-              "Decision logs reporting min_delay_seconds ("
-                  + rEffectiveMin
-                  + ") cannot be greater than max_delay_seconds ("
-                  + rEffectiveMax
-                  + ")");
-        }
+      if (rMin != null && rMax == null) {
+        errors.add("Decision logs reporting is missing 'max_delay_seconds'");
+      } else if (rMin == null && rMax != null) {
+        errors.add("Decision logs reporting is missing 'min_delay_seconds'");
+      } else if (rMin != null && rMin > rMax) {
+        errors.add(
+            "Decision logs reporting min_delay_seconds ("
+                + rMin
+                + ") cannot be greater than max_delay_seconds ("
+                + rMax
+                + ")");
       }
     }
 
@@ -113,6 +122,7 @@ public final class DecisionLogPlugin implements Plugin {
   }
 
   @Override
+  @SuppressWarnings("deprecation")
   public Plugin initialize(PluginManager manager) {
     DecisionLogPlugin plugin = new DecisionLogPlugin();
     plugin.manager = manager;
@@ -131,6 +141,10 @@ public final class DecisionLogPlugin implements Plugin {
               .setResource(logsConfig.getResource())
               .setReporting(logsConfig.getReporting());
 
+      final int[] delays = resolveDelays(logsConfig);
+      plugin.resolvedMinDelaySeconds = delays[0];
+      plugin.resolvedMaxDelaySeconds = delays[1];
+
       // A new bundle means a new policy, so the cached mask query has to be rebuilt.
       DecisionLogs logs = plugin.decisionLogs;
       plugin.maskListener = bundleName -> logs.dropMaskQuery();
@@ -147,19 +161,33 @@ public final class DecisionLogPlugin implements Plugin {
       return;
     }
 
-    // Get upload interval bounds (default: 300-600 seconds, matching OPA Go's decision log
-    // defaults). If only a min is configured, default the max to twice the min so the jitter
-    // window stays sensible.
-    int minDelaySeconds =
-        (decisionLogs.getMinDelaySeconds() != null) ? decisionLogs.getMinDelaySeconds() : 300;
-    int maxDelaySeconds =
-        (decisionLogs.getMaxDelaySeconds() != null)
-            ? decisionLogs.getMaxDelaySeconds()
-            : minDelaySeconds * 2;
-
-    scheduleNextFlush(minDelaySeconds, maxDelaySeconds);
+    scheduleNextFlush(resolvedMinDelaySeconds, resolvedMaxDelaySeconds);
 
     manager.updatePluginStatus("decision_logs", PluginManager.Status.OK);
+  }
+
+  @SuppressWarnings("deprecation")
+  private static int[] resolveDelays(Config.DecisionLogsConfig logsConfig) {
+    final Config.ReportingConfig reporting = logsConfig.getReporting();
+    if (reporting != null
+        && reporting.getMinDelaySeconds() != null
+        && reporting.getMaxDelaySeconds() != null) {
+      return new int[] {reporting.getMinDelaySeconds(), reporting.getMaxDelaySeconds()};
+    }
+    final int min =
+        logsConfig.getMinDelaySeconds() != null
+            ? logsConfig.getMinDelaySeconds()
+            : DEFAULT_MIN_DELAY_SECONDS;
+    final int max = logsConfig.getMaxDelaySeconds() != null ? logsConfig.getMaxDelaySeconds() : min * 2;
+    return new int[] {min, max};
+  }
+
+  int resolvedMinDelaySeconds() {
+    return resolvedMinDelaySeconds;
+  }
+
+  int resolvedMaxDelaySeconds() {
+    return resolvedMaxDelaySeconds;
   }
 
   // Re-schedules the next flush with a uniformly random delay in [minDelay, maxDelay], matching
@@ -205,6 +233,11 @@ public final class DecisionLogPlugin implements Plugin {
       // Flush any remaining logs before shutting down
       if (decisionLogs != null) {
         decisionLogs.flush();
+        if (decisionLogs.pending() > 0) {
+          manager
+              .getLogger()
+              .warn("Shutting down with %d undelivered decision log events", decisionLogs.pending());
+        }
       }
 
       scheduler.shutdown();
@@ -269,7 +302,8 @@ public final class DecisionLogPlugin implements Plugin {
 
     private final Logger logger;
     private final PluginManager manager;
-    private final ConcurrentLinkedQueue<ObjectNode> buffer = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedDeque<ObjectNode> buffer = new ConcurrentLinkedDeque<>();
+    private volatile long retryNotBeforeNanos = System.nanoTime();
     private final Object maskLock = new Object();
     private Boolean console;
     private String service;
@@ -315,19 +349,27 @@ public final class DecisionLogPlugin implements Plugin {
       return this;
     }
 
+    /** @deprecated the flush schedule is resolved from {@code reporting}; this is no longer used. */
+    @Deprecated
     public Integer getMinDelaySeconds() {
       return minDelaySeconds;
     }
 
+    /** @deprecated the flush schedule is resolved from {@code reporting}; this is no longer used. */
+    @Deprecated
     public DecisionLogs setMinDelaySeconds(Integer minDelaySeconds) {
       this.minDelaySeconds = minDelaySeconds;
       return this;
     }
 
+    /** @deprecated the flush schedule is resolved from {@code reporting}; this is no longer used. */
+    @Deprecated
     public Integer getMaxDelaySeconds() {
       return maxDelaySeconds;
     }
 
+    /** @deprecated the flush schedule is resolved from {@code reporting}; this is no longer used. */
+    @Deprecated
     public DecisionLogs setMaxDelaySeconds(Integer maxDelaySeconds) {
       this.maxDelaySeconds = maxDelaySeconds;
       return this;
@@ -389,13 +431,8 @@ public final class DecisionLogPlugin implements Plugin {
         // Add to buffer (thread-safe)
         buffer.add(event);
 
-        // Check buffer limits
-        int bufferLimit =
-            (reporting != null && reporting.getBufferSizeLimitEvents() != null)
-                ? reporting.getBufferSizeLimitEvents()
-                : 10000;
-
-        if (buffer.size() >= bufferLimit) {
+        trimToLimit();
+        if (buffer.size() >= bufferLimit() && System.nanoTime() - retryNotBeforeNanos >= 0) {
           flush();
         }
 
@@ -660,27 +697,32 @@ public final class DecisionLogPlugin implements Plugin {
       }
     }
 
-    /** Flush buffered decisions to service. */
-    protected void flush() {
+    /**
+     * Flush buffered decisions to service. Only an accepted upload empties the buffer: a batch the
+     * service did not accept goes back to the front of the buffer for the next flush.
+     */
+    protected synchronized void flush() {
       if (buffer.isEmpty()) {
         return;
       }
 
       try {
-        // Create batch from queue (drain to avoid holding references)
-        ArrayNode batch = MAPPER.createArrayNode();
+        final List<ObjectNode> batch = new ArrayList<>();
         ObjectNode event;
-        while ((event = buffer.poll()) != null) {
+        while ((event = buffer.pollFirst()) != null) {
           batch.add(event);
         }
 
         if (batch.isEmpty()) {
-          return; // Another thread already flushed
+          return;
         }
 
-        // Send to service if configured
-        if (service != null && !service.isEmpty()) {
-          sendToService(batch);
+        if (service != null && !service.isEmpty() && !upload(batch)) {
+          for (int i = batch.size() - 1; i >= 0; i--) {
+            buffer.addFirst(batch.get(i));
+          }
+          trimToLimit();
+          return;
         }
 
         logger.debug("Flushed %d decision log events", batch.size());
@@ -690,33 +732,72 @@ public final class DecisionLogPlugin implements Plugin {
       }
     }
 
-    /** Send decision logs batch to configured service. */
-    private void sendToService(ArrayNode batch) {
-      // Get ServicePlugin from manager
-      Plugin plugin = manager.getPlugin("services");
+    int pending() {
+      return buffer.size();
+    }
+
+    private int bufferLimit() {
+      return reporting != null && reporting.getBufferSizeLimitEvents() != null
+          ? reporting.getBufferSizeLimitEvents()
+          : 10000;
+    }
+
+    /** Drops the oldest events beyond {@code buffer_size_limit_events}. */
+    private void trimToLimit() {
+      final int limit = bufferLimit();
+      int dropped = 0;
+      while (buffer.size() > limit && buffer.pollFirst() != null) {
+        dropped++;
+      }
+      if (dropped > 0) {
+        logger.warn(
+            "Dropped %d oldest decision log events: buffer_size_limit_events (%d) reached",
+            dropped, limit);
+      }
+    }
+
+    /**
+     * Uploads a batch and waits for the answer. Returns false only when the batch should be kept
+     * for another try: a transport failure or a response that is not 2xx. A missing service cannot
+     * be fixed by retrying, so that is logged and treated as done.
+     */
+    private boolean upload(List<ObjectNode> batch) {
+      final Plugin plugin = manager.getPlugin("services");
       if (!(plugin instanceof ServicePlugin)) {
         logger.error("ServicePlugin not found or not initialized");
-        return;
+        return true;
       }
 
-      ServicePlugin servicePlugin = (ServicePlugin) plugin;
-      ServicePlugin.Service svc = servicePlugin.getService(service);
-
+      final ServicePlugin.Service svc = ((ServicePlugin) plugin).getService(service);
       if (svc == null) {
         logger.error("Service '%s' not found for decision logs", service);
-        return;
+        return true;
       }
 
+      final ArrayNode body = MAPPER.createArrayNode();
+      body.addAll(batch);
+      final String path = (resource != null && !resource.isEmpty()) ? resource : "/logs";
       try {
-        // Determine resource path (default: /logs)
-        String path = (resource != null && !resource.isEmpty()) ? resource : "/logs";
-
-        // Send batch to service
-        svc.post(path, batch.toString());
-        logger.debug("Sent %d decision logs to service '%s'", batch.size(), service);
-      } catch (Exception e) {
-        logger.error("Failed to send decision logs to service '%s': %s", service, e.getMessage());
+        final int code = svc.postSync(path, body.toString());
+        if (code / 100 == 2) {
+          logger.debug("Sent %d decision logs to service '%s'", batch.size(), service);
+          return true;
+        }
+        uploadFailed(batch.size(), "status " + code);
+      } catch (IOException e) {
+        uploadFailed(batch.size(), String.valueOf(e.getMessage()));
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        uploadFailed(batch.size(), "interrupted");
       }
+      return false;
+    }
+
+    private void uploadFailed(int events, String reason) {
+      retryNotBeforeNanos = System.nanoTime() + RETRY_BACKOFF_NANOS;
+      logger.warn(
+          "Failed to upload %d decision log events to service '%s': %s; they stay buffered",
+          events, service, reason);
     }
   }
 }

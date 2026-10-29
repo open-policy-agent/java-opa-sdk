@@ -1,5 +1,6 @@
 package io.github.open_policy_agent.opa.plugins;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -133,5 +134,33 @@ class DecisionLogReportingDelayTest {
   @Test
   void reportingWithBothDelaysIsValid() {
     assertTrue(validate(logs().setReporting(reporting(10, 20))).isEmpty());
+  }
+
+  private DecisionLogPlugin initialized(Config.DecisionLogsConfig decisionLogs) {
+    return (DecisionLogPlugin) new DecisionLogPlugin().initialize(manager(decisionLogs));
+  }
+
+  @Test
+  void delaysDefaultTo300And600() {
+    final DecisionLogPlugin plugin = initialized(logs());
+
+    assertEquals(300, plugin.resolvedMinDelaySeconds());
+    assertEquals(600, plugin.resolvedMaxDelaySeconds());
+  }
+
+  @Test
+  void reportingDelaysAreResolvedVerbatim() {
+    final DecisionLogPlugin plugin = initialized(logs().setReporting(reporting(7, 9)));
+
+    assertEquals(7, plugin.resolvedMinDelaySeconds());
+    assertEquals(9, plugin.resolvedMaxDelaySeconds());
+  }
+
+  @Test
+  void topLevelMaxDefaultsToTwiceTheMinWhenOnlyMinIsSet() {
+    final DecisionLogPlugin plugin = initialized(logs().setMinDelaySeconds(10).setMaxDelaySeconds(null));
+
+    assertEquals(10, plugin.resolvedMinDelaySeconds());
+    assertEquals(20, plugin.resolvedMaxDelaySeconds());
   }
 }
