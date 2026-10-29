@@ -30,6 +30,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Runtime, SDK, Tooling
 
+- Report `id` and `version` (the SDK version) in the `labels` of status reports and
+  decision log events, which configured labels cannot override, as in OPA. The top-level
+  `id` is kept. The decision log provenance version is now the SDK version instead of
+  `unknown` ([#259](https://github.com/open-policy-agent/java-opa-sdk/pull/259)) authored by @kroekle
 - Keep `AbstractStore.writeData(bundleId, root, value)` as the one method a store must
   implement; it is called once per root with that root's slice of the bundle data. A store
   that does not override `replaceData` keeps merge-only semantics, so it will not remove

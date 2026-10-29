@@ -55,6 +55,7 @@ class OpaStatusShapeTest {
   private final List<String> uploads = new CopyOnWriteArrayList<>();
   private HttpServer server;
   private Opa opa;
+  private String instanceId;
 
   @BeforeEach
   void startServer() throws IOException {
@@ -114,11 +115,12 @@ class OpaStatusShapeTest {
         "services:\n  svc:\n    url: http://localhost:"
             + server.getAddress().getPort()
             + "\nstatus:\n  service: svc\n  min_delay_seconds: 1\n  max_delay_seconds: 1\n";
-    opa =
-        new Opa.Builder()
-            .withConfig(new StringReader(base + yaml))
-            .withWaitForPlugins(waitForPlugins)
-            .build();
+    final Opa.Builder builder =
+        new Opa.Builder().withConfig(new StringReader(base + yaml)).withWaitForPlugins(waitForPlugins);
+    if (instanceId != null) {
+      builder.withId(instanceId);
+    }
+    opa = builder.build();
   }
 
   private JsonNode startWithBundleA(String revision) throws Exception {
@@ -447,5 +449,42 @@ class OpaStatusShapeTest {
 
     assertTrue(time(failed, "last_successful_download").isAfter(time(before, "last_successful_download")));
     assertEquals(before.path("last_successful_activation"), failed.path("last_successful_activation"));
+  }
+
+  // ---- labels ----
+
+  @Test
+  void labelsCarryTheInstanceIdAndTheSdkVersion() throws Exception {
+    instanceId = "instance-1";
+    startWithBundleA("rev-1");
+
+    final JsonNode report = awaitReport(r -> r.has("labels"));
+
+    assertEquals("instance-1", report.path("labels").path("id").asString());
+    final String version = report.path("labels").path("version").asString();
+    assertFalse(version.isEmpty() || "unknown".equals(version), report.toString());
+    assertEquals("instance-1", report.path("id").asString(), "the top-level id stays");
+  }
+
+  @Test
+  void configuredLabelsAreReportedButCannotOverrideIdAndVersion() throws Exception {
+    instanceId = "instance-1";
+    bodies.put("/bundles/a.tar.gz", bundle("a", "rev-1"));
+    start("labels:\n  region: west\n  id: spoofed\n  version: spoofed\n" + bundleYaml("a", "bundles/a.tar.gz"), false);
+
+    final JsonNode labels = awaitReport(r -> r.path("labels").has("region")).path("labels");
+
+    assertEquals("west", labels.path("region").asString());
+    assertEquals("instance-1", labels.path("id").asString());
+    assertEquals(SdkVersion.get(), labels.path("version").asString());
+  }
+
+  @Test
+  void labelsAreReportedEvenWhenNoneAreConfigured() throws Exception {
+    startWithBundleA("rev-1");
+
+    final JsonNode labels = awaitReport(r -> r.has("labels")).path("labels");
+
+    assertTrue(labels.has("id") && labels.has("version"), labels.toString());
   }
 }

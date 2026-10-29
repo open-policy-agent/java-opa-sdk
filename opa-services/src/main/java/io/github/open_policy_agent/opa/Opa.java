@@ -308,8 +308,7 @@ public class Opa {
 
   private Provenance buildProvenance() {
     Provenance provenance = new Provenance();
-    String version = Opa.class.getPackage().getImplementationVersion();
-    provenance.setVersion(version != null ? version : "unknown");
+    provenance.setVersion(SdkVersion.get());
 
     Map<String, Provenance.ProvenanceBundle> bundleProvenance = new HashMap<>();
     for (Map.Entry<String, Bundle> entry : store.getBundles().entrySet()) {

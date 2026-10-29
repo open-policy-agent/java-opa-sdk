@@ -648,6 +648,53 @@ class DecisionLogPluginTest {
   }
 
   @Test
+  void decisionLogs_labelsCarryIdAndVersionAndConfiguredLabelsCannotOverrideThem() {
+    config.setLabels(new java.util.HashMap<>(java.util.Map.of("region", "west", "id", "spoofed")));
+
+    final JsonNode labels = loggedEvent().path("labels");
+
+    assertEquals("west", labels.path("region").asString());
+    assertEquals("test-opa", labels.path("id").asString());
+    assertEquals(io.github.open_policy_agent.opa.SdkVersion.get(), labels.path("version").asString());
+  }
+
+  @Test
+  void decisionLogs_labelsAreLoggedEvenWhenNoneAreConfigured() {
+    final JsonNode labels = loggedEvent().path("labels");
+
+    assertEquals("test-opa", labels.path("id").asString());
+    assertTrue(labels.has("version"), labels.toString());
+  }
+
+  private JsonNode loggedEvent() {
+    config.setDecisionLogs(new Config.DecisionLogsConfig().setConsole(true));
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+    final DecisionLogPlugin plugin = (DecisionLogPlugin) new DecisionLogPlugin().initialize(manager);
+    plugin.start();
+    plugin
+        .getDecisionLogs()
+        .logDecision(
+            "d1",
+            mapper.createObjectNode(),
+            mapper.createObjectNode(),
+            "data.authz.allow",
+            null,
+            0,
+            null,
+            null);
+
+    final ArgumentCaptor<Object> event = ArgumentCaptor.forClass(Object.class);
+    verify(mockLogger).info(eq("Decision: %s"), event.capture());
+    return mapper.readTree(event.getValue().toString());
+  }
+
+  @Test
   void decisionLogs_fullSignature_includesAllFields() {
     Config.DecisionLogsConfig decisionLogs =
         new Config.DecisionLogsConfig().setConsole(false).setService("test-service");

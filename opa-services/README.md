@@ -336,7 +336,9 @@ implementation).
 ## Status Reports
 
 The status plugin reports the instance labels, the state of each plugin, and the status of every
-bundle and of discovery. `bundles.<name>` and `discovery` use the fields of the bundle status:
+bundle and of discovery. The labels are the configured `labels` plus `id` (the instance id) and
+`version` (the SDK version), which configured labels cannot override. Decision log events carry the same
+labels. The instance id is also kept as the top-level `id` of status reports. `bundles.<name>` and `discovery` use the fields of the bundle status:
 
 | Field | Description |
 |-------|-------------|

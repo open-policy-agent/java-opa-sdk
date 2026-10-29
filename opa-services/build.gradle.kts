@@ -27,8 +27,17 @@ dependencies {
     testImplementation(project(":opa-proto"))
 }
 
+tasks.processResources {
+    val sdkVersion = project.version.toString()
+    inputs.property("sdkVersion", sdkVersion)
+    filesMatching("**/sdk-version.properties") {
+        expand("version" to sdkVersion)
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
+    systemProperty("sdk.version", project.version.toString())
 }
 
 java {

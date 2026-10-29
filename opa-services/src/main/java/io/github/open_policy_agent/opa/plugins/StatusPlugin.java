@@ -301,12 +301,9 @@ public final class StatusPlugin implements Plugin {
         report.put("id", manager.getId());
       }
 
-      // Add labels
-      if (manager.getConfig().getLabels() != null) {
-        ObjectNode labels = MAPPER.createObjectNode();
-        manager.getConfig().getLabels().forEach(labels::put);
-        report.set("labels", labels);
-      }
+      final ObjectNode labels = MAPPER.createObjectNode();
+      manager.getLabels().forEach(labels::put);
+      report.set("labels", labels);
 
       // Bundle statuses in OPA's shape. `revision` and `active` are kept for existing consumers.
       ObjectNode bundles = MAPPER.createObjectNode();

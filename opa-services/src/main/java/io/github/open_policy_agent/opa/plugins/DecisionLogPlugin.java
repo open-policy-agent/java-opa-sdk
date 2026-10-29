@@ -555,11 +555,9 @@ public final class DecisionLogPlugin implements Plugin {
       event.put("timestamp", DateTimeFormatter.ISO_INSTANT.format(ts));
 
       // Add labels from config (if present)
-      if (manager.getConfig().getLabels() != null && !manager.getConfig().getLabels().isEmpty()) {
-        ObjectNode labels = MAPPER.createObjectNode();
-        manager.getConfig().getLabels().forEach(labels::put);
-        event.set("labels", labels);
-      }
+      final ObjectNode labels = MAPPER.createObjectNode();
+      manager.getLabels().forEach(labels::put);
+      event.set("labels", labels);
 
       // Add bundle revisions from store (if present)
       Map<String, Bundle> bundles = manager.getStore().getBundles();
