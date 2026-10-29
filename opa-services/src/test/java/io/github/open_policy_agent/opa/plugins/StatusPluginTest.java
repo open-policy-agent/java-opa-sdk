@@ -7,6 +7,7 @@ import static org.mockito.Mockito.*;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ObjectNode;
 import java.util.Collections;
 import java.util.List;
@@ -17,6 +18,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.storage.InMem;
@@ -554,7 +557,41 @@ class StatusPluginTest {
     ObjectNode plugins = (ObjectNode) report.get("plugins");
 
     assertTrue(plugins.has("custom_plugin"));
-    assertEquals("OK", plugins.get("custom_plugin").asText());
+    assertEquals("OK", plugins.get("custom_plugin").path("state").asString());
+  }
+
+  @ParameterizedTest
+  @EnumSource(PluginManager.Status.class)
+  void statusReport_reportsEachPluginStateAsAnObjectWithoutAMessage(PluginManager.Status state)
+      throws Exception {
+    final JsonNode entry = reportedPlugins("custom_plugin", state).get("custom_plugin");
+
+    assertEquals(state.name(), entry.path("state").asString());
+    assertFalse(entry.has("message"), entry.toString());
+  }
+
+  @Test
+  void statusReport_reportsTheBundlePluginUnderTheBundleKey() throws Exception {
+    final ObjectNode plugins = reportedPlugins("bundles", PluginManager.Status.OK);
+
+    assertEquals("OK", plugins.path("bundle").path("state").asString());
+    assertFalse(plugins.has("bundles"), plugins.toString());
+  }
+
+  private ObjectNode reportedPlugins(String pluginName, PluginManager.Status state)
+      throws Exception {
+    config.setStatus(new Config.StatusConfig().setConsole(true));
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+    manager.registerPlugin(pluginName, new NoopPlugin());
+    manager.updatePluginStatus(pluginName, state);
+    return (ObjectNode)
+        buildStatusReport((StatusPlugin) new StatusPlugin().initialize(manager)).get("plugins");
   }
 
   @Test

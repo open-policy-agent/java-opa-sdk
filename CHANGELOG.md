@@ -7,6 +7,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Breaking Changes
 
+- The status report now lists each plugin as an object, `{"state": "OK"}`, as OPA does, instead
+  of a plain string, and the bundle plugin is keyed `bundle` instead of `bundles`. Consumers
+  that read `plugins.<name>` as a string must read `plugins.<name>.state`, and `plugins.bundle`
+  in place of `plugins.bundles` ([#260](https://github.com/open-policy-agent/java-opa-sdk/pull/260)) authored by @kroekle
 - Writing a bundle id again now replaces the data its earlier revision wrote under the
   bundle's roots, so a key removed in a new revision is no longer visible. Before, the new
   data was merged into the old, and a removed entry (for example an admin) stayed in force ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle

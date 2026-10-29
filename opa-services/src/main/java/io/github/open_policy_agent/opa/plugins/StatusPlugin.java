@@ -29,6 +29,10 @@ import tools.jackson.databind.node.ObjectNode;
  */
 public final class StatusPlugin implements Plugin {
 
+  private static final String BUNDLE_PLUGIN = "bundles";
+  // OPA keys its bundle plugin "bundle" in the report's plugins map.
+  private static final String BUNDLE_REPORT_KEY = "bundle";
+
   private Status status;
   private PluginManager manager;
   private ScheduledExecutorService scheduler;
@@ -349,7 +353,8 @@ public final class StatusPlugin implements Plugin {
     private void addPluginStatusIfRegistered(ObjectNode plugins, String pluginName) {
       PluginManager.Status status = manager.getPluginStatus(pluginName);
       if (status != null) {
-        plugins.put(pluginName, status.toString());
+        final String key = BUNDLE_PLUGIN.equals(pluginName) ? BUNDLE_REPORT_KEY : pluginName;
+        plugins.putObject(key).put("state", status.toString());
       }
       // If status is null, plugin is not registered - don't add to report
     }

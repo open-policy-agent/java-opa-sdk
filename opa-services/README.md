@@ -363,7 +363,9 @@ Bundle entries also keep `revision` and `active` from earlier versions. `metrics
 not reported: a bundle that fails to load, including one with compile errors, is a failed download.
 Its `message` is the load error and the `last_successful_*` times stay as they were. A failed HTTP
 request has the message `server replied with <status text>`, for example `server replied with Not
-Found`, and `http_code` holds the number. The plugin states are plain strings, for example `"plugins": {"discovery": "OK"}`.
+Found`, and `http_code` holds the number.
+Each plugin is reported as an object with a `state` (`NOT_READY`, `OK`, `ERROR` or `WARN`), for example `"plugins": {"discovery": {"state": "OK"}}`.
+The bundle plugin is keyed `bundle`.
 
 ## Discovery
 
