@@ -13,6 +13,8 @@ import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -20,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -33,6 +36,11 @@ class DecisionLogReliabilityTest {
 
   private final RecordingLogger logger = new RecordingLogger();
   private final List<String> accepted = new CopyOnWriteArrayList<>();
+  private final List<String> requestBodies = new CopyOnWriteArrayList<>();
+  private final Queue<Integer> scripted = new ConcurrentLinkedQueue<>();
+  private volatile Long uploadSizeLimit;
+  private volatile String resource = "/logs";
+  private volatile Integer delaySeconds;
   private final List<Integer> responses = new CopyOnWriteArrayList<>();
   private final AtomicInteger status = new AtomicInteger(200);
   private final AtomicInteger completed = new AtomicInteger();
@@ -44,6 +52,7 @@ class DecisionLogReliabilityTest {
   private int port;
   private ServicePlugin services;
   private DecisionLogPlugin plugin;
+  private PluginManager manager;
 
   @BeforeEach
   void startServer() throws IOException {
@@ -71,6 +80,7 @@ class DecisionLogReliabilityTest {
         "/logs",
         exchange -> {
           final String body = new String(exchange.getRequestBody().readAllBytes());
+          requestBodies.add(body);
           arrived.countDown();
           try {
             if (hold != null) {
@@ -80,7 +90,8 @@ class DecisionLogReliabilityTest {
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
           }
-          final int code = status.get();
+          final Integer next = scripted.poll();
+          final int code = next != null ? next : status.get();
           if (code / 100 == 2) {
             accepted.add(body);
           }
@@ -102,17 +113,28 @@ class DecisionLogReliabilityTest {
                 .setName("svc")
                 .setUrl("http://localhost:" + port)
                 .setResponseHeaderTimeoutSeconds(timeoutSeconds)));
-    final Config.DecisionLogsConfig logs = new Config.DecisionLogsConfig().setResource("/logs");
+    final Config.DecisionLogsConfig logs = new Config.DecisionLogsConfig().setResource(resource);
     if (withService) {
       logs.setService("svc");
     } else {
       logs.setConsole(true);
     }
-    if (bufferLimit != null) {
-      logs.setReporting(new Config.ReportingConfig().setBufferSizeLimitEvents(bufferLimit));
+    if (bufferLimit != null || uploadSizeLimit != null || delaySeconds != null) {
+      final Config.ReportingConfig reporting = new Config.ReportingConfig();
+      if (delaySeconds != null) {
+        reporting.setMinDelaySeconds(delaySeconds);
+        reporting.setMaxDelaySeconds(delaySeconds);
+      }
+      if (bufferLimit != null) {
+        reporting.setBufferSizeLimitEvents(bufferLimit);
+      }
+      if (uploadSizeLimit != null) {
+        reporting.setUploadSizeLimitBytes(uploadSizeLimit);
+      }
+      logs.setReporting(reporting);
     }
     config.setDecisionLogs(logs);
-    final PluginManager manager =
+    manager =
         new PluginManager.Builder()
             .withId("test-opa")
             .withStore(new InMem())
@@ -319,5 +341,123 @@ class DecisionLogReliabilityTest {
     final List<String> ids = acceptedIds();
     Collections.sort(ids);
     assertEquals(List.of("d1", "d2", "d3", "d4", "d5"), ids);
+  }
+
+  private static int events(String body) {
+    return MAPPER.readTree(body).size();
+  }
+
+  @Test
+  void anUploadIsSplitIntoChunksOfAtMostTheUploadSizeLimit() throws Exception {
+    uploadSizeLimit = 700L;
+    startPlugin(null, 5, true);
+    log("d1", "d2", "d3", "d4", "d5", "d6");
+
+    plugin.flush();
+    awaitAccepted(6);
+
+    assertTrue(requestBodies.size() > 1, "expected several chunks, got " + requestBodies.size());
+    for (String body : requestBodies) {
+      assertTrue(body.length() <= 700 || events(body) == 1, "chunk of " + body.length() + " bytes");
+    }
+    assertEquals(List.of("d1", "d2", "d3", "d4", "d5", "d6"), acceptedIds());
+  }
+
+  @Test
+  void aChunkThatFailsKeepsItAndEverythingAfterItInOrder() throws Exception {
+    uploadSizeLimit = 700L;
+    scripted.add(200);
+    scripted.add(500);
+    startPlugin(null, 5, true);
+    log("d1", "d2", "d3", "d4", "d5", "d6");
+
+    plugin.flush();
+    settle();
+    final List<String> firstChunk = acceptedIds();
+    assertFalse(firstChunk.isEmpty());
+    assertTrue(firstChunk.size() < 6);
+
+    plugin.flush();
+    awaitAccepted(6);
+
+    assertEquals(List.of("d1", "d2", "d3", "d4", "d5", "d6"), acceptedIds());
+  }
+
+  @Test
+  void reachingTheBufferLimitDoesNotBlockTheLoggingThread() throws Exception {
+    delayMillis = 1500;
+    startPlugin(2, 5, true);
+    log("d1");
+
+    final long start = System.nanoTime();
+    log("d2");
+    final long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+
+    assertTrue(elapsedMillis < 500, "logDecision blocked for " + elapsedMillis + "ms");
+    awaitAccepted(2);
+    assertEquals(List.of("d1", "d2"), acceptedIds());
+  }
+
+  @Test
+  void anUploadThatThrowsKeepsTheEventsBuffered() {
+    resource = "/bad path";
+    startPlugin(null, 5, true);
+    log("d1", "d2");
+
+    plugin.flush();
+
+    assertEquals(2, plugin.getDecisionLogs().pending());
+  }
+
+  @Test
+  void aFailedUploadIsRetriedAfterABackoffInsteadOfTheNextFullInterval() throws Exception {
+    status.set(500);
+    delaySeconds = 4;
+    startPlugin(null, 5, true);
+    log("d1");
+
+    assertTrue(arrived.await(8, TimeUnit.SECONDS), "the first flush never ran");
+    final long failedAt = System.nanoTime();
+    settle();
+    status.set(200);
+    awaitAccepted(1);
+
+    final long retryMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - failedAt);
+    assertEquals(List.of("d1"), acceptedIds());
+    assertTrue(retryMillis < 3000, "retried after " + retryMillis + "ms");
+  }
+
+  @Test
+  void retryDelaysDoubleFromOneSecondAndStopAtTheMaxDelay() {
+    assertEquals(1, DecisionLogPlugin.retryDelaySeconds(0, 600));
+    assertEquals(2, DecisionLogPlugin.retryDelaySeconds(1, 600));
+    assertEquals(8, DecisionLogPlugin.retryDelaySeconds(3, 600));
+    assertEquals(600, DecisionLogPlugin.retryDelaySeconds(30, 600));
+    assertEquals(5, DecisionLogPlugin.retryDelaySeconds(10, 5));
+  }
+
+  @Test
+  void aFullBufferThatCannotBeUploadedWarnsOnceNotPerDecision() {
+    status.set(500);
+    startPlugin(3, 5, true);
+
+    log("d1", "d2", "d3", "d4", "d5", "d6", "d7", "d8", "d9", "d10");
+
+    final long warnings = logger.lines().stream().filter(l -> l.startsWith("WARN") && l.contains("Dropped")).count();
+    assertTrue(warnings <= 1, logger.lines()::toString);
+    assertEquals(3, plugin.getDecisionLogs().pending());
+  }
+
+  @Test
+  void aBatchIsKeptWhenSomethingOutsideTheUploadThrows() {
+    startPlugin(null, 5, true);
+    final ServicePlugin broken = Mockito.mock(ServicePlugin.class);
+    Mockito.when(broken.getService("svc")).thenThrow(new IllegalStateException("boom"));
+    manager.registerPlugin("services", broken);
+    log("d1", "d2");
+
+    plugin.flush();
+
+    assertEquals(2, plugin.getDecisionLogs().pending());
   }
 }

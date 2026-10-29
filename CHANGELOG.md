@@ -15,7 +15,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
   replacing it: the boot `discovery` block, services and labels always win, so
   discovered config no longer needs to repeat the boot services ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
 - Setting only one of `decision_logs.reporting.min_delay_seconds` and
-  `decision_logs.reporting.max_delay_seconds` is now a validation error
+  `decision_logs.reporting.max_delay_seconds`, or a `decision_logs.reporting.buffer_size_limit_events`
+  below 1, is now a validation error
 
 ### Runtime, SDK, Tooling
 
@@ -51,8 +52,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `max_delay_seconds` stay as a deprecated fallback that `reporting` overrides
 - Upload decision logs reliably: `stop()` waits for the final batch, bounded by the service's
   `response_header_timeout_seconds`, and a batch that fails (transport error or a status
-  other than 2xx) stays buffered for the next flush instead of being dropped. "Sent" is
-  only logged for a 2xx response, and a full buffer drops its oldest events
+  other than 2xx) stays buffered for the next flush instead of being dropped. Uploads are
+  split into chunks of `decision_logs.reporting.upload_size_limit_bytes` (default 32768),
+  reaching the buffer limit starts the upload in the background, "Sent" is only logged for
+  a 2xx response, and a full buffer drops its oldest events
 
 ### Docs, Website, Ecosystem
 

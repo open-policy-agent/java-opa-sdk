@@ -421,7 +421,8 @@ class DecisionLogPluginTest {
         "decision-3", input, result, "data.authz.allow", null, 0, null, null);
 
     // Verify debug log for flush
-    verify(mockLogger, atLeastOnce()).debug(eq("Flushed %d decision log events"), anyInt());
+    verify(mockLogger, timeout(2000).atLeastOnce())
+        .debug(eq("Flushed %d decision log events"), anyInt());
   }
 
   @Test

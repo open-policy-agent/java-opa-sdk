@@ -5,6 +5,7 @@ import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.metrics.Metrics;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -13,10 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import io.github.open_policy_agent.opa.ir.policy.Policy;
 import io.github.open_policy_agent.opa.rego.Engine;
 import io.github.open_policy_agent.opa.storage.Store;
@@ -40,13 +44,12 @@ import tools.jackson.databind.node.ObjectNode;
  */
 public final class DecisionLogPlugin implements Plugin {
 
-  private static final int DEFAULT_MIN_DELAY_SECONDS = 300;
-  private static final int DEFAULT_MAX_DELAY_SECONDS = 600;
+  private static final long DEFAULT_UPLOAD_SIZE_LIMIT_BYTES = 32768;
   private static final long RETRY_BACKOFF_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private DecisionLogs decisionLogs;
-  private int resolvedMinDelaySeconds = DEFAULT_MIN_DELAY_SECONDS;
-  private int resolvedMaxDelaySeconds = DEFAULT_MAX_DELAY_SECONDS;
+  private int resolvedMinDelaySeconds = Config.DecisionLogsConfig.DEFAULT_MIN_DELAY_SECONDS;
+  private int resolvedMaxDelaySeconds = Config.DecisionLogsConfig.DEFAULT_MAX_DELAY_SECONDS;
   private PluginManager manager;
   private ScheduledExecutorService scheduler;
   private PluginManager.BundleActivationListener maskListener;
@@ -81,7 +84,8 @@ public final class DecisionLogPlugin implements Plugin {
     if (configuredMax != null && configuredMax < 0) {
       errors.add("Decision logs max_delay_seconds must be >= 0");
     }
-    int effectiveMin = configuredMin != null ? configuredMin : DEFAULT_MIN_DELAY_SECONDS;
+    int effectiveMin =
+        configuredMin != null ? configuredMin : Config.DecisionLogsConfig.DEFAULT_MIN_DELAY_SECONDS;
     int effectiveMax =
         configuredMax != null ? configuredMax : effectiveMin * 2;
     if (effectiveMin > effectiveMax) {
@@ -104,6 +108,10 @@ public final class DecisionLogPlugin implements Plugin {
       if (rMax != null && rMax < 0) {
         errors.add("Decision logs reporting max_delay_seconds must be >= 0");
       }
+      final Integer eventLimit = reporting.getBufferSizeLimitEvents();
+      if (eventLimit != null && eventLimit < 1) {
+        errors.add("Decision logs reporting buffer_size_limit_events must be higher than 0");
+      }
       if (rMin != null && rMax == null) {
         errors.add("Decision logs reporting is missing 'max_delay_seconds'");
       } else if (rMin == null && rMax != null) {
@@ -122,7 +130,6 @@ public final class DecisionLogPlugin implements Plugin {
   }
 
   @Override
-  @SuppressWarnings("deprecation")
   public Plugin initialize(PluginManager manager) {
     DecisionLogPlugin plugin = new DecisionLogPlugin();
     plugin.manager = manager;
@@ -136,12 +143,12 @@ public final class DecisionLogPlugin implements Plugin {
               .setService(logsConfig.getService())
               .setMaskDecision(logsConfig.getMaskDecision())
               .setDropDecision(logsConfig.getDropDecision())
-              .setMinDelaySeconds(logsConfig.getMinDelaySeconds())
-              .setMaxDelaySeconds(logsConfig.getMaxDelaySeconds())
               .setResource(logsConfig.getResource())
               .setReporting(logsConfig.getReporting());
 
-      final int[] delays = resolveDelays(logsConfig);
+      plugin.decisionLogs.setFlushExecutor(plugin.scheduler);
+
+      final int[] delays = logsConfig.flushDelaysSeconds();
       plugin.resolvedMinDelaySeconds = delays[0];
       plugin.resolvedMaxDelaySeconds = delays[1];
 
@@ -161,25 +168,9 @@ public final class DecisionLogPlugin implements Plugin {
       return;
     }
 
-    scheduleNextFlush(resolvedMinDelaySeconds, resolvedMaxDelaySeconds);
+    scheduleNextFlush(0);
 
     manager.updatePluginStatus("decision_logs", PluginManager.Status.OK);
-  }
-
-  @SuppressWarnings("deprecation")
-  private static int[] resolveDelays(Config.DecisionLogsConfig logsConfig) {
-    final Config.ReportingConfig reporting = logsConfig.getReporting();
-    if (reporting != null
-        && reporting.getMinDelaySeconds() != null
-        && reporting.getMaxDelaySeconds() != null) {
-      return new int[] {reporting.getMinDelaySeconds(), reporting.getMaxDelaySeconds()};
-    }
-    final int min =
-        logsConfig.getMinDelaySeconds() != null
-            ? logsConfig.getMinDelaySeconds()
-            : DEFAULT_MIN_DELAY_SECONDS;
-    final int max = logsConfig.getMaxDelaySeconds() != null ? logsConfig.getMaxDelaySeconds() : min * 2;
-    return new int[] {min, max};
   }
 
   int resolvedMinDelaySeconds() {
@@ -190,27 +181,37 @@ public final class DecisionLogPlugin implements Plugin {
     return resolvedMaxDelaySeconds;
   }
 
-  // Re-schedules the next flush with a uniformly random delay in [minDelay, maxDelay], matching
-  // Go-OPA's jittered reporting interval (mirrors BundleDownloader.scheduleNextPoll).
-  // ScheduledExecutorService has no built-in jitter, so the task chains itself.
-  // RejectedExecutionException after a shutdown breaks the chain cleanly.
-  private void scheduleNextFlush(int minDelay, int maxDelay) {
-    long delay =
-        minDelay >= maxDelay
-            ? minDelay
-            : ThreadLocalRandom.current().nextLong(minDelay, (long) maxDelay + 1);
+  /** Seconds before retry number {@code failures} + 1: 1s doubling, capped at the max delay. */
+  static int retryDelaySeconds(int failures, int maxDelaySeconds) {
+    return (int) Math.min(1L << Math.min(failures, 30), maxDelaySeconds);
+  }
+
+  // After a successful flush the next one comes after a uniformly random delay in [min, max],
+  // matching Go-OPA's jittered reporting interval; after a failed one it is a backoff retry
+  // (mirrors BundleDownloader.scheduleNextPoll). The task chains itself because
+  // ScheduledExecutorService has no jitter. RejectedExecutionException after a shutdown ends it.
+  private void scheduleNextFlush(int failures) {
+    final long delay =
+        failures > 0
+            ? retryDelaySeconds(failures - 1, resolvedMaxDelaySeconds)
+            : resolvedMinDelaySeconds >= resolvedMaxDelaySeconds
+                ? resolvedMinDelaySeconds
+                : ThreadLocalRandom.current()
+                    .nextLong(resolvedMinDelaySeconds, (long) resolvedMaxDelaySeconds + 1);
     try {
       scheduler.schedule(
           () -> {
+            int nextFailures = failures + 1;
             try {
-              decisionLogs.flush();
+              if (decisionLogs.flush()) {
+                nextFailures = 0;
+              }
             } catch (Exception e) {
               // flush() handles its own logging; swallow so the chain keeps flushing. Only
-              // Exception is caught here — Errors (OOM, etc.) propagate and let the executor's
-              // uncaught-exception handler tear down the pool, which is the right outcome for
-              // unrecoverable conditions.
+              // Exception is caught here: Errors (OOM, etc.) propagate and let the executor's
+              // uncaught-exception handler tear down the pool.
             } finally {
-              scheduleNextFlush(minDelay, maxDelay);
+              scheduleNextFlush(nextFailures);
             }
           },
           delay,
@@ -303,7 +304,14 @@ public final class DecisionLogPlugin implements Plugin {
     private final Logger logger;
     private final PluginManager manager;
     private final ConcurrentLinkedDeque<ObjectNode> buffer = new ConcurrentLinkedDeque<>();
+    // ConcurrentLinkedDeque.size() walks the list, which is too slow to call per decision.
+    private final AtomicInteger buffered = new AtomicInteger();
+    private final AtomicBoolean dropWarned = new AtomicBoolean();
     private volatile long retryNotBeforeNanos = System.nanoTime();
+    // The buffer limit starts its flush here instead of on the logging thread, which would
+    // otherwise wait for the upload.
+    private final AtomicBoolean flushQueued = new AtomicBoolean();
+    private Executor flushExecutor = Runnable::run;
     private final Object maskLock = new Object();
     private Boolean console;
     private String service;
@@ -430,10 +438,11 @@ public final class DecisionLogPlugin implements Plugin {
 
         // Add to buffer (thread-safe)
         buffer.add(event);
+        buffered.incrementAndGet();
 
         trimToLimit();
-        if (buffer.size() >= bufferLimit() && System.nanoTime() - retryNotBeforeNanos >= 0) {
-          flush();
+        if (buffered.get() >= bufferLimit() && System.nanoTime() - retryNotBeforeNanos >= 0) {
+          flushInBackground();
         }
 
         // Log to console if enabled
@@ -701,39 +710,61 @@ public final class DecisionLogPlugin implements Plugin {
      * Flush buffered decisions to service. Only an accepted upload empties the buffer: a batch the
      * service did not accept goes back to the front of the buffer for the next flush.
      */
-    protected synchronized void flush() {
+    protected synchronized boolean flush() {
       if (buffer.isEmpty()) {
-        return;
+        return true;
       }
 
+      final List<ObjectNode> batch = new ArrayList<>();
+      ObjectNode event;
+      while ((event = buffer.pollFirst()) != null) {
+        batch.add(event);
+      }
+      buffered.addAndGet(-batch.size());
+
+      int delivered = 0;
       try {
-        final List<ObjectNode> batch = new ArrayList<>();
-        ObjectNode event;
-        while ((event = buffer.pollFirst()) != null) {
-          batch.add(event);
+        delivered = service != null && !service.isEmpty() ? upload(batch) : batch.size();
+      } catch (RuntimeException e) {
+        logger.error("Failed to flush decision logs: %s", describe(e));
+      }
+
+      if (delivered < batch.size()) {
+        final List<ObjectNode> undelivered = batch.subList(delivered, batch.size());
+        for (int i = undelivered.size() - 1; i >= 0; i--) {
+          buffer.addFirst(undelivered.get(i));
         }
+        buffered.addAndGet(undelivered.size());
+        trimToLimit();
+        return false;
+      }
 
-        if (batch.isEmpty()) {
-          return;
-        }
+      dropWarned.set(false);
+      logger.debug("Flushed %d decision log events", batch.size());
+      return true;
+    }
 
-        if (service != null && !service.isEmpty() && !upload(batch)) {
-          for (int i = batch.size() - 1; i >= 0; i--) {
-            buffer.addFirst(batch.get(i));
-          }
-          trimToLimit();
-          return;
-        }
+    void setFlushExecutor(Executor flushExecutor) {
+      this.flushExecutor = flushExecutor;
+    }
 
-        logger.debug("Flushed %d decision log events", batch.size());
-
-      } catch (Exception e) {
-        logger.error("Failed to flush decision logs: %s", e.getMessage());
+    private void flushInBackground() {
+      if (!flushQueued.compareAndSet(false, true)) {
+        return;
+      }
+      try {
+        flushExecutor.execute(
+            () -> {
+              flushQueued.set(false);
+              flush();
+            });
+      } catch (RejectedExecutionException stopped) {
+        flushQueued.set(false);
       }
     }
 
     int pending() {
-      return buffer.size();
+      return buffered.get();
     }
 
     private int bufferLimit() {
@@ -746,51 +777,86 @@ public final class DecisionLogPlugin implements Plugin {
     private void trimToLimit() {
       final int limit = bufferLimit();
       int dropped = 0;
-      while (buffer.size() > limit && buffer.pollFirst() != null) {
+      while (buffered.get() > limit && buffer.pollFirst() != null) {
+        buffered.decrementAndGet();
         dropped++;
       }
       if (dropped > 0) {
-        logger.warn(
-            "Dropped %d oldest decision log events: buffer_size_limit_events (%d) reached",
-            dropped, limit);
+        // Warn once per overflow; a service that stays down would otherwise log per decision.
+        final String message =
+            "Dropped %d oldest decision log events: buffer_size_limit_events (%d) reached";
+        if (dropWarned.compareAndSet(false, true)) {
+          logger.warn(message, dropped, limit);
+        } else {
+          logger.debug(message, dropped, limit);
+        }
       }
     }
 
     /**
-     * Uploads a batch and waits for the answer. Returns false only when the batch should be kept
-     * for another try: a transport failure or a response that is not 2xx. A missing service cannot
-     * be fixed by retrying, so that is logged and treated as done.
+     * Uploads the batch in chunks of at most {@code upload_size_limit_bytes} and waits for each
+     * answer. Returns how many events from the start of the batch were delivered; the rest are to
+     * be kept for another try after a transport failure or a response that is not 2xx. A missing
+     * service cannot be fixed by retrying, so that is logged and the whole batch counts as done.
      */
-    private boolean upload(List<ObjectNode> batch) {
+    private int upload(List<ObjectNode> batch) {
       final Plugin plugin = manager.getPlugin("services");
       if (!(plugin instanceof ServicePlugin)) {
         logger.error("ServicePlugin not found or not initialized");
-        return true;
+        return batch.size();
       }
 
       final ServicePlugin.Service svc = ((ServicePlugin) plugin).getService(service);
       if (svc == null) {
         logger.error("Service '%s' not found for decision logs", service);
-        return true;
+        return batch.size();
       }
 
-      final ArrayNode body = MAPPER.createArrayNode();
-      body.addAll(batch);
       final String path = (resource != null && !resource.isEmpty()) ? resource : "/logs";
-      try {
-        final int code = svc.postSync(path, body.toString());
-        if (code / 100 == 2) {
-          logger.debug("Sent %d decision logs to service '%s'", batch.size(), service);
-          return true;
+      final List<String> json = batch.stream().map(ObjectNode::toString).toList();
+      int sent = 0;
+      while (sent < json.size()) {
+        final int end = chunkEnd(json, sent);
+        final String body = "[" + String.join(",", json.subList(sent, end)) + "]";
+        try {
+          final int code = svc.postSync(path, body);
+          if (code / 100 != 2) {
+            uploadFailed(json.size() - sent, "status " + code);
+            return sent;
+          }
+        } catch (IOException | RuntimeException e) {
+          uploadFailed(json.size() - sent, String.valueOf(e.getMessage()));
+          return sent;
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          uploadFailed(json.size() - sent, "interrupted");
+          return sent;
         }
-        uploadFailed(batch.size(), "status " + code);
-      } catch (IOException e) {
-        uploadFailed(batch.size(), String.valueOf(e.getMessage()));
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        uploadFailed(batch.size(), "interrupted");
+        logger.debug("Sent %d decision logs to service '%s'", end - sent, service);
+        sent = end;
       }
-      return false;
+      return sent;
+    }
+
+    /** The end of the chunk that starts at {@code start}: as many events as fit the size limit. */
+    private int chunkEnd(List<String> json, int start) {
+      final long limit =
+          reporting != null
+                  && reporting.getUploadSizeLimitBytes() != null
+                  && reporting.getUploadSizeLimitBytes() > 0
+              ? reporting.getUploadSizeLimitBytes()
+              : DEFAULT_UPLOAD_SIZE_LIMIT_BYTES;
+      long size = 2;
+      int end = start;
+      while (end < json.size()) {
+        final long eventSize = json.get(end).getBytes(StandardCharsets.UTF_8).length + 1L;
+        if (end > start && size + eventSize > limit) {
+          break;
+        }
+        size += eventSize;
+        end++;
+      }
+      return end;
     }
 
     private void uploadFailed(int events, String reason) {

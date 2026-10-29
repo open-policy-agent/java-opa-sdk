@@ -12,6 +12,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Pins OPA's {@code decision_logs.reporting.min_delay_seconds}/{@code max_delay_seconds}
@@ -29,6 +30,18 @@ class DecisionLogReportingDelayTest {
 
   private static Config.DecisionLogsConfig logs() {
     return new Config.DecisionLogsConfig().setService("test-service");
+  }
+
+  /** Sets the deprecated top-level delays the way a config file does. */
+  private static Config.DecisionLogsConfig topLevel(Integer min, Integer max) {
+    return JsonMapper.shared()
+        .readValue(
+            "{\"service\":\"test-service\",\"min_delay_seconds\":"
+                + min
+                + ",\"max_delay_seconds\":"
+                + max
+                + "}",
+            Config.DecisionLogsConfig.class);
   }
 
   private static Config.ReportingConfig reporting(Integer min, Integer max) {
@@ -85,13 +98,13 @@ class DecisionLogReportingDelayTest {
 
   @Test
   void topLevelDelaysAreUsedWhenReportingIsAbsent() throws Exception {
-    assertTrue(flushesWithin(logs().setMinDelaySeconds(1).setMaxDelaySeconds(1), 2500));
+    assertTrue(flushesWithin(topLevel(1, 1), 2500));
   }
 
   @Test
   void reportingWinsOverTopLevelWhenBothAreSet() throws Exception {
     final Config.DecisionLogsConfig both =
-        logs().setMinDelaySeconds(300).setMaxDelaySeconds(600).setReporting(reporting(1, 1));
+        topLevel(300, 600).setReporting(reporting(1, 1));
 
     assertTrue(flushesWithin(both, 2500));
   }
@@ -99,7 +112,7 @@ class DecisionLogReportingDelayTest {
   @Test
   void reportingWinsEvenWhenItIsLonger() throws Exception {
     final Config.DecisionLogsConfig both =
-        logs().setMinDelaySeconds(1).setMaxDelaySeconds(1).setReporting(reporting(300, 600));
+        topLevel(1, 1).setReporting(reporting(300, 600));
 
     assertFalse(flushesWithin(both, 2000));
   }
@@ -158,9 +171,21 @@ class DecisionLogReportingDelayTest {
 
   @Test
   void topLevelMaxDefaultsToTwiceTheMinWhenOnlyMinIsSet() {
-    final DecisionLogPlugin plugin = initialized(logs().setMinDelaySeconds(10).setMaxDelaySeconds(null));
+    final DecisionLogPlugin plugin = initialized(topLevel(10, null));
 
     assertEquals(10, plugin.resolvedMinDelaySeconds());
     assertEquals(20, plugin.resolvedMaxDelaySeconds());
+  }
+
+  @Test
+  void aBufferSizeLimitBelowOneIsAValidationError() {
+    for (int limit : new int[] {0, -5}) {
+      final Set<String> errors =
+          validate(logs().setReporting(new Config.ReportingConfig().setBufferSizeLimitEvents(limit)));
+
+      assertTrue(
+          errors.stream().anyMatch(e -> e.contains("buffer_size_limit_events") && e.contains("higher than 0")),
+          errors::toString);
+    }
   }
 }

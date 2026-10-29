@@ -352,12 +352,13 @@ deprecated. They are only used when `reporting` does not set both delays.
 
 ### Decision log delivery
 
-An upload counts as delivered when the service answers with a 2xx status. A batch the service does
-not accept, because of a transport error or any other status, stays in the buffer and is sent again
-with the next upload, ahead of newer events. The buffer holds at most
-`decision_logs.reporting.buffer_size_limit_events` events (default `10000`); beyond that, the oldest
-are dropped. Reaching the limit starts an upload, and after a failed one that does not happen again
-for a second.
+An upload counts as delivered when the service answers with a 2xx status. Events are sent in chunks
+of at most `decision_logs.reporting.upload_size_limit_bytes` (default `32768`). A chunk the service
+does not accept, because of a transport error or any other status, stays in the buffer with every
+event after it and is sent again with the next upload, ahead of newer events. The buffer holds at
+most `decision_logs.reporting.buffer_size_limit_events` events (default `10000`, must be higher than
+0); beyond that, the oldest are dropped. Reaching the limit starts an upload in the background, and
+after a failed upload that does not happen again for a second.
 
 When the instance is closed, the plugin uploads what is still buffered and waits for the service to
 answer, for at most the service's `response_header_timeout_seconds`. Events that cannot be delivered
