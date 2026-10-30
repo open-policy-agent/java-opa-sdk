@@ -16,97 +16,82 @@ reworked, several of them as breaking changes. It also adds the `units.parse` an
   of a plain string, and the bundle plugin is keyed `bundle` instead of `bundles`. Consumers
   that read `plugins.<name>` as a string must read `plugins.<name>.state`, and `plugins.bundle`
   in place of `plugins.bundles` ([#260](https://github.com/open-policy-agent/java-opa-sdk/pull/260)) authored by @kroekle
-- Writing a bundle id again now replaces the data its earlier revision wrote under the
-  bundle's roots, so a key removed in a new revision is no longer visible. Before, the new
-  data was merged into the old, and a removed entry (for example an admin) stayed in force ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
-- Bundle data is now written at the data root, as OPA does, and the manifest `roots` only
-  declare what the bundle owns. Before, the data was nested under the first root, so a
-  bundle with root `authz` and `authz/data.json` put its data at `data.authz.authz`.
-  Conflicting roots are now detected across all roots of both bundles, not just the first,
-  and a manifest with an empty `roots` list owns nothing (only a manifest without `roots`
-  owns the whole document) ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
-- A bundle whose data lies outside its manifest `roots` now fails to load with `manifest
+- Bundle data is now replaced on reload and written at the data root, as OPA does.
+  Writing a bundle id again replaces the data its earlier revision wrote under the bundle's
+  roots, so a key removed in a new revision is no longer visible; before, the new data was
+  merged into the old, and a removed entry (for example an admin) stayed in force. The
+  manifest `roots` now only declare what the bundle owns; before, the data was nested under
+  the first root, so a bundle with root `authz` and `authz/data.json` put its data at
+  `data.authz.authz`. Conflicting roots are detected across all roots of both bundles, and a
+  manifest with an empty `roots` list owns nothing (only a manifest without `roots` owns the
+  whole document). A bundle whose data lies outside its `roots` fails to load with `manifest
   roots [authz] do not permit data at path '/other' (hint: check bundle directory
-  structure)`, as in OPA. An object that only leads to a root is allowed. A bundle with
-  `roots: []` fails to load, with or without data ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
-- Under `discovery`, `name` now also selects `data.<name>` as the discovered config
-  when `decision` is unset. Setups that set `name` and keep the config at the root of
-  the discovery bundle's `data.json` must drop `name` or move the config under that
-  path ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Discovered configuration is now merged under the boot configuration instead of
-  replacing it: the boot `discovery` block, services and labels always win, so
-  discovered config no longer needs to repeat the boot services ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Setting only one of `decision_logs.reporting.min_delay_seconds` and
-  `decision_logs.reporting.max_delay_seconds`, or a `decision_logs.reporting.buffer_size_limit_events`
-  below 1, is now a validation error ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
+  structure)`, as does a bundle with `roots: []`, with or without data. A store that does not
+  override `replaceData` keeps merge-only semantics and will not remove data on reload;
+  `InMem` overrides it to replace the data atomically, and `AbstractStore.writeData(bundleId,
+  root, value)` stays the one method a store must implement ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
+- Discovery is reworked to match OPA. `name` now also selects `data.<name>` as the discovered
+  config when the new `decision` option is unset, so setups that set `name` and keep the
+  config at the root of the discovery bundle's `data.json` must drop `name` or move the
+  config under that path. Discovered configuration is merged under the boot configuration
+  instead of replacing it: the boot `discovery` block, services and labels always win, so
+  discovered config no longer needs to repeat the boot services. `discovery.decision` picks
+  the config node, falling back to `name` and then the data root, and an undefined path fails
+  the load and keeps the previous configuration. The `resource` defaults to
+  `bundles/<name>`, `service` is optional when exactly one service is defined, `${VAR}` is
+  substituted in discovered configuration (undefined variables stay as written), discovered
+  config that changes the discovery service is rejected, and unsupported keys in the
+  `discovery` block are warned about. Discovery and its limitations are documented in the
+  `opa-services` README ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
+- Decision log uploads are scheduled from `decision_logs.reporting.min_delay_seconds` and
+  `max_delay_seconds` (defaults 300 and 600), with the top-level `min_delay_seconds` and
+  `max_delay_seconds` kept as a deprecated fallback that `reporting` overrides. Setting only
+  one of the two, or a `decision_logs.reporting.buffer_size_limit_events` below 1, is now a
+  validation error. Delivery is more reliable: `stop()` waits for the final batch, bounded by
+  the service's `response_header_timeout_seconds`, and a batch that fails (transport error or
+  a status other than 2xx) stays buffered for the next flush instead of being dropped.
+  Uploads are split into chunks of `decision_logs.reporting.upload_size_limit_bytes` (default
+  32768), reaching the buffer limit starts the upload in the background, "Sent" is only
+  logged for a 2xx response, and a full buffer drops its oldest events. The delays and
+  delivery are documented in the `opa-services` README ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
 - `opa-jackson`'s `MetricsModule` now writes `Metrics.Timer` as whole nanoseconds instead
   of Jackson's fractional-seconds `Duration` format, matching the `timer_<name>_ns` keys
-  written by `DecisionLogPlugin` ([#253](https://github.com/open-policy-agent/java-opa-sdk/pull/253)) authored by @cvas22
+  written by `DecisionLogPlugin`. `opa-gson` gains `MetricsTypeAdapterFactory`, which writes
+  `Metrics.Timer` as nanoseconds, `Metrics.Counter` as its value and `Metrics.Histogram` as
+  its stats, so Gson users get the same metrics JSON as `opa-jackson` users ([#253](https://github.com/open-policy-agent/java-opa-sdk/pull/253)) authored by @cvas22
 
 ### Runtime, SDK, Tooling
 
 - Implement the `units.parse` and `units.parse_bytes` builtins, with OPA's handling of
   byte truncation, quoted values, and exponent limits ([#225](https://github.com/open-policy-agent/java-opa-sdk/pull/225)) authored by @Aayush10016
-- Add `MetricsTypeAdapterFactory` to `opa-gson`, which writes `Metrics.Timer` as
-  nanoseconds, `Metrics.Counter` as its value and `Metrics.Histogram` as its stats, so
-  Gson users get the same metrics JSON as `opa-jackson` users ([#253](https://github.com/open-policy-agent/java-opa-sdk/pull/253)) authored by @cvas22
+- Report the discovery and bundle status as OPA does. `discovery` and each `bundles` entry
+  carry the fields of OPA's bundle status: `name`, `active_revision`, `type`, `size`,
+  `last_request`, `last_successful_request`, `last_successful_download`,
+  `last_successful_activation`, and, after a failure, `code`, `message` and `http_code`, and
+  bundle entries keep `revision` and `active`. A bundle that has never been downloaded is now
+  listed, with zero timestamps and its error, and the keys that boot config overrode are
+  reported in the `message` of the discovery status. A failed update no longer advances
+  `last_successful_request` or `last_successful_download`, an HTTP failure reports `server
+  replied with <status text>`, and the discovery bundle's `.manifest` is parsed for its
+  revision, with a malformed one rejecting the update. A bundle or discovery update is
+  downloaded again after its activation failed, instead of the next poll answering "not
+  modified" from the stored ETag, and a response without an ETag stops the `If-None-Match`
+  header from the earlier bundle being sent. `discovery.prefix` is honored in the default
+  discovery `resource`, and the typed boot `SSLContext` and key stores of a service that
+  discovery repeats unchanged are kept ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
 - Report `id` and `version` (the SDK version) in the `labels` of status reports and
   decision log events, which configured labels cannot override, as in OPA. The top-level
   `id` is kept. The decision log provenance version is now the SDK version instead of
   `unknown` ([#259](https://github.com/open-policy-agent/java-opa-sdk/pull/259)) authored by @kroekle
-- Keep `AbstractStore.writeData(bundleId, root, value)` as the one method a store must
-  implement; it is called once per root with that root's slice of the bundle data. A store
-  that does not override `replaceData` keeps merge-only semantics, so it will not remove
-  data on reload. `InMem` overrides it to replace the data atomically ([#257](https://github.com/open-policy-agent/java-opa-sdk/pull/257)) authored by @kroekle
-- Add `discovery.decision` to pick the config node in a discovery bundle, falling
-  back to `name` and then the data root. An undefined path fails the load and keeps
-  the previous configuration ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Default the discovery `resource` to `bundles/<name>`, and make `service` optional
-  when exactly one service is defined ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Substitute `${VAR}` in discovered configuration, leaving undefined variables as
-  written ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Reject discovered config that changes the discovery service, and warn about
-  unsupported keys in the `discovery` block ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Report `discovery` and each `bundles` entry in the status report with the fields of
-  OPA's bundle status: `name`, `active_revision`, `type`, `size`, `last_request`,
-  `last_successful_request`, `last_successful_download`, `last_successful_activation`,
-  and, after a failure, `code`, `message` and `http_code`. Bundle entries keep `revision`
-  and `active`. A bundle that has never been downloaded is now listed, with zero
-  timestamps and its error, instead of being left out ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
-- Report the keys that boot config overrode in the `message` of the discovery status,
-  not only in a debug log ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
-- A bundle or discovery update that fails to load no longer advances
-  `last_successful_request` or `last_successful_download`, and an HTTP failure reports
-  `server replied with <status text>` as its message. The discovery bundle's `.manifest`
-  is now parsed for its revision, and a malformed one rejects the update ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
-- Download a bundle or discovery update again after its activation failed, instead of
-  answering the next poll with "not modified" because the failed download's ETag was
-  already stored. A response without an ETag now also stops the `If-None-Match` header
-  from the earlier bundle being sent ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
-- Honor `discovery.prefix` in the default discovery `resource`, and keep the typed boot
-  `SSLContext` and key stores of a service that discovery repeats unchanged ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
-- Schedule decision log uploads from `decision_logs.reporting.min_delay_seconds` and
-  `max_delay_seconds` (defaults 300 and 600). The top-level `min_delay_seconds` and
-  `max_delay_seconds` stay as a deprecated fallback that `reporting` overrides ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
-- Upload decision logs reliably: `stop()` waits for the final batch, bounded by the service's
-  `response_header_timeout_seconds`, and a batch that fails (transport error or a status
-  other than 2xx) stays buffered for the next flush instead of being dropped. Uploads are
-  split into chunks of `decision_logs.reporting.upload_size_limit_bytes` (default 32768),
-  reaching the buffer limit starts the upload in the background, "Sent" is only logged for
-  a 2xx response, and a full buffer drops its oldest events ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
-
-### Docs, Website, Ecosystem
-
-- Document discovery and its limitations in the `opa-services` README ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Document the decision log delays and delivery in the `opa-services` README ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
 
 ### Miscellaneous
 
 - Dependency updates; notably:
-    - Bump tools.jackson:jackson-bom from 3.1.7 to 3.2.4 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245), [#249](https://github.com/open-policy-agent/java-opa-sdk/pull/249)) authored by @dependabot
-    - Bump Gradle from 9.8.0 to 9.8.1 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245)) authored by @dependabot
+    - Bump tools.jackson:jackson-bom from 3.1.7 to 3.2.3 and Gradle from 9.8.0 to 9.8.1 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245)) authored by @dependabot
+    - Bump github/codeql-action from 4.38.2 to 4.38.3 ([#246](https://github.com/open-policy-agent/java-opa-sdk/pull/246)) authored by @dependabot
+    - Bump tools.jackson:jackson-bom from 3.2.3 to 3.2.4 ([#249](https://github.com/open-policy-agent/java-opa-sdk/pull/249)) authored by @dependabot
+    - Bump actions/setup-java from 6.0.1 to 6.1.0 and github/codeql-action from 4.38.3 to 4.39.0 ([#250](https://github.com/open-policy-agent/java-opa-sdk/pull/250)) authored by @dependabot
     - Bump github.com/open-policy-agent/opa from 1.21.1 to 1.21.2 in the compliance-test generator ([#251](https://github.com/open-policy-agent/java-opa-sdk/pull/251)) authored by @dependabot
-    - Bump actions/setup-java to 6.1.0 and github/codeql-action to 4.39.0 ([#246](https://github.com/open-policy-agent/java-opa-sdk/pull/246), [#250](https://github.com/open-policy-agent/java-opa-sdk/pull/250)) authored by @dependabot
 
 ## 0.6.0
 
