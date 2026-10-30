@@ -187,13 +187,14 @@ class DecisionLogPluginMaskTest {
     ServicePlugin services = mock(ServicePlugin.class);
     ServicePlugin.Service service = mock(ServicePlugin.Service.class);
     when(services.getService("test-service")).thenReturn(service);
+    when(service.postSync(eq("/logs"), anyString())).thenReturn(200);
     manager.registerPlugin("services", services);
 
     logDecision(plugin, input(), result());
     plugin.flush();
 
     ArgumentCaptor<String> body = ArgumentCaptor.forClass(String.class);
-    verify(service).post(eq("/logs"), body.capture());
+    verify(service).postSync(eq("/logs"), body.capture());
     JsonNode batch = MAPPER.readTree(body.getValue());
     assertEquals(1, batch.size());
     assertFalse(batch.get(0).get("input").has("password"), "password should have been erased");

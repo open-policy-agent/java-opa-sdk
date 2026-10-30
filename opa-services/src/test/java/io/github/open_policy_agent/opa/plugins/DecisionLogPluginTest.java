@@ -421,7 +421,8 @@ class DecisionLogPluginTest {
         "decision-3", input, result, "data.authz.allow", null, 0, null, null);
 
     // Verify debug log for flush
-    verify(mockLogger, atLeastOnce()).debug(eq("Flushed %d decision log events"), anyInt());
+    verify(mockLogger, timeout(2000).atLeastOnce())
+        .debug(eq("Flushed %d decision log events"), anyInt());
   }
 
   @Test
@@ -565,6 +566,27 @@ class DecisionLogPluginTest {
             .setResource("/custom/logs");
     config.setDecisionLogs(decisionLogs);
 
+    final java.util.concurrent.atomic.AtomicInteger requests =
+        new java.util.concurrent.atomic.AtomicInteger();
+    final com.sun.net.httpserver.HttpServer server =
+        com.sun.net.httpserver.HttpServer.create(
+            new java.net.InetSocketAddress("localhost", 0), 0);
+    server.createContext(
+        "/custom/logs",
+        exchange -> {
+          exchange.getRequestBody().readAllBytes();
+          requests.incrementAndGet();
+          exchange.sendResponseHeaders(200, -1);
+          exchange.close();
+        });
+    server.start();
+    config.setServices(
+        Collections.singletonMap(
+            "test-service",
+            new Config.ServiceConfig()
+                .setName("test-service")
+                .setUrl("http://localhost:" + server.getAddress().getPort())));
+
     manager =
         new PluginManager.Builder()
             .withId("test-opa")
@@ -604,7 +626,8 @@ class DecisionLogPluginTest {
     // Manually trigger flush
     decisionLogger.flush();
 
-    // Verify debug log for sending to service
+    server.stop(0);
+    assertEquals(1, requests.get());
     verify(mockLogger, atLeastOnce())
         .debug(eq("Sent %d decision logs to service '%s'"), eq(1), eq("test-service"));
   }
@@ -645,6 +668,53 @@ class DecisionLogPluginTest {
 
     // Labels should be included in the logged event (verified by no error)
     verify(mockLogger, never()).error(anyString(), any());
+  }
+
+  @Test
+  void decisionLogs_labelsCarryIdAndVersionAndConfiguredLabelsCannotOverrideThem() {
+    config.setLabels(new java.util.HashMap<>(java.util.Map.of("region", "west", "id", "spoofed")));
+
+    final JsonNode labels = loggedEvent().path("labels");
+
+    assertEquals("west", labels.path("region").asString());
+    assertEquals("test-opa", labels.path("id").asString());
+    assertEquals(io.github.open_policy_agent.opa.SdkVersion.get(), labels.path("version").asString());
+  }
+
+  @Test
+  void decisionLogs_labelsAreLoggedEvenWhenNoneAreConfigured() {
+    final JsonNode labels = loggedEvent().path("labels");
+
+    assertEquals("test-opa", labels.path("id").asString());
+    assertTrue(labels.has("version"), labels.toString());
+  }
+
+  private JsonNode loggedEvent() {
+    config.setDecisionLogs(new Config.DecisionLogsConfig().setConsole(true));
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+    final DecisionLogPlugin plugin = (DecisionLogPlugin) new DecisionLogPlugin().initialize(manager);
+    plugin.start();
+    plugin
+        .getDecisionLogs()
+        .logDecision(
+            "d1",
+            mapper.createObjectNode(),
+            mapper.createObjectNode(),
+            "data.authz.allow",
+            null,
+            0,
+            null,
+            null);
+
+    final ArgumentCaptor<Object> event = ArgumentCaptor.forClass(Object.class);
+    verify(mockLogger).info(eq("Decision: %s"), event.capture());
+    return mapper.readTree(event.getValue().toString());
   }
 
   @Test

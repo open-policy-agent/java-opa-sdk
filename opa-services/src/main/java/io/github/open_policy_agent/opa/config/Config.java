@@ -158,6 +158,11 @@ public class Config {
 
   public static class DecisionLogsConfig {
 
+    /** Default flush delay bounds in seconds, as in OPA. */
+    public static final int DEFAULT_MIN_DELAY_SECONDS = 300;
+
+    public static final int DEFAULT_MAX_DELAY_SECONDS = 600;
+
     /** Default {@code mask_decision} path, applied when the configuration does not set one. */
     public static final String DEFAULT_MASK_DECISION = "system/log/mask";
 
@@ -171,11 +176,13 @@ public class Config {
     @JsonProperty("drop_decision")
     private String dropDecision = "system/log/drop";
 
+    /** Deprecated Java-only fallback; {@code reporting.min_delay_seconds} wins when both are set. */
     @JsonProperty("min_delay_seconds")
-    private Integer minDelaySeconds = 300;
+    private Integer minDelaySeconds = DEFAULT_MIN_DELAY_SECONDS;
 
+    /** Deprecated Java-only fallback; {@code reporting.max_delay_seconds} wins when both are set. */
     @JsonProperty("max_delay_seconds")
-    private Integer maxDelaySeconds = 600;
+    private Integer maxDelaySeconds = DEFAULT_MAX_DELAY_SECONDS;
 
     @JsonProperty("resource")
     private String resource = "/logs";
@@ -193,6 +200,21 @@ public class Config {
 
     public ReportingConfig getReporting() {
       return reporting;
+    }
+
+    /**
+     * The flush delay bounds in seconds, min first. {@code reporting.min_delay_seconds} and {@code
+     * max_delay_seconds} win when both are set; otherwise the deprecated top-level fields apply, with
+     * a max that defaults to twice the min.
+     */
+    public int[] flushDelaysSeconds() {
+      if (reporting != null
+          && reporting.getMinDelaySeconds() != null
+          && reporting.getMaxDelaySeconds() != null) {
+        return new int[] {reporting.getMinDelaySeconds(), reporting.getMaxDelaySeconds()};
+      }
+      final int min = minDelaySeconds != null ? minDelaySeconds : DEFAULT_MIN_DELAY_SECONDS;
+      return new int[] {min, maxDelaySeconds != null ? maxDelaySeconds : min * 2};
     }
 
     public DecisionLogsConfig setReporting(ReportingConfig reporting) {
@@ -227,19 +249,39 @@ public class Config {
       return this;
     }
 
+    /**
+     * @deprecated use {@code reporting.min_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public Integer getMinDelaySeconds() {
       return minDelaySeconds;
     }
 
+    /**
+     * @deprecated use {@code reporting.min_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public DecisionLogsConfig setMinDelaySeconds(Integer minDelaySeconds) {
       this.minDelaySeconds = minDelaySeconds;
       return this;
     }
 
+    /**
+     * @deprecated use {@code reporting.max_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public Integer getMaxDelaySeconds() {
       return maxDelaySeconds;
     }
 
+    /**
+     * @deprecated use {@code reporting.max_delay_seconds}; this applies only when {@code reporting}
+     *     does not set both delays
+     */
+    @Deprecated
     public DecisionLogsConfig setMaxDelaySeconds(Integer maxDelaySeconds) {
       this.maxDelaySeconds = maxDelaySeconds;
       return this;

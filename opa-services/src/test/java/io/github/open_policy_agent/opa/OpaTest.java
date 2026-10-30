@@ -242,7 +242,8 @@ class OpaTest {
             + "decision_logs:\n"
             + "  service: acmecorp\n"
             + "  reporting:\n"
-            + "    min_delay_seconds: 300\n";
+            + "    min_delay_seconds: 300\n"
+            + "    max_delay_seconds: 600\n";
 
     Opa opa =
         new Opa.Builder()

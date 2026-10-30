@@ -31,9 +31,16 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Discovered configuration is now merged under the boot configuration instead of
   replacing it: the boot `discovery` block, services and labels always win, so
   discovered config no longer needs to repeat the boot services ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
+- Setting only one of `decision_logs.reporting.min_delay_seconds` and
+  `decision_logs.reporting.max_delay_seconds`, or a `decision_logs.reporting.buffer_size_limit_events`
+  below 1, is now a validation error
 
 ### Runtime, SDK, Tooling
 
+- Report `id` and `version` (the SDK version) in the `labels` of status reports and
+  decision log events, which configured labels cannot override, as in OPA. The top-level
+  `id` is kept. The decision log provenance version is now the SDK version instead of
+  `unknown` ([#259](https://github.com/open-policy-agent/java-opa-sdk/pull/259)) authored by @kroekle
 - Keep `AbstractStore.writeData(bundleId, root, value)` as the one method a store must
   implement; it is called once per root with that root's slice of the bundle data. A store
   that does not override `replaceData` keeps merge-only semantics, so it will not remove
@@ -65,10 +72,20 @@ project adheres to [Semantic Versioning](http://semver.org/).
   from the earlier bundle being sent
 - Honor `discovery.prefix` in the default discovery `resource`, and keep the typed boot
   `SSLContext` and key stores of a service that discovery repeats unchanged
+- Schedule decision log uploads from `decision_logs.reporting.min_delay_seconds` and
+  `max_delay_seconds` (defaults 300 and 600). The top-level `min_delay_seconds` and
+  `max_delay_seconds` stay as a deprecated fallback that `reporting` overrides
+- Upload decision logs reliably: `stop()` waits for the final batch, bounded by the service's
+  `response_header_timeout_seconds`, and a batch that fails (transport error or a status
+  other than 2xx) stays buffered for the next flush instead of being dropped. Uploads are
+  split into chunks of `decision_logs.reporting.upload_size_limit_bytes` (default 32768),
+  reaching the buffer limit starts the upload in the background, "Sent" is only logged for
+  a 2xx response, and a full buffer drops its oldest events
 
 ### Docs, Website, Ecosystem
 
 - Document discovery and its limitations in the `opa-services` README ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
+- Document the decision log delays and delivery in the `opa-services` README
 
 ## 0.6.0
 

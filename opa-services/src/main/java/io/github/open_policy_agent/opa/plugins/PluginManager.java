@@ -1,5 +1,6 @@
 package io.github.open_policy_agent.opa.plugins;
 
+import io.github.open_policy_agent.opa.SdkVersion;
 import io.github.open_policy_agent.opa.config.Config;
 import io.github.open_policy_agent.opa.logging.Logger;
 import io.github.open_policy_agent.opa.storage.Store;
@@ -10,6 +11,7 @@ import tools.jackson.databind.node.ObjectNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -128,6 +130,19 @@ public class PluginManager {
 
   public Config getConfig() {
     return config;
+  }
+
+  /** The configured labels plus {@code id} and {@code version}, which configured labels cannot override. */
+  public Map<String, String> getLabels() {
+    final Map<String, String> labels = new LinkedHashMap<>();
+    if (config.getLabels() != null) {
+      labels.putAll(config.getLabels());
+    }
+    if (id != null) {
+      labels.put("id", id);
+    }
+    labels.put("version", SdkVersion.get());
+    return labels;
   }
 
   public Store getStore() {

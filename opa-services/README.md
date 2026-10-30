@@ -333,10 +333,43 @@ logged unmasked. If the mask policy fails to evaluate, or returns a rule the SDK
 error is logged and the event is dropped rather than logged unmasked (matching OPA's Go
 implementation).
 
+### Decision log upload delays
+
+Decision logs are uploaded after a random delay between `decision_logs.reporting.min_delay_seconds`
+(default `300`) and `decision_logs.reporting.max_delay_seconds` (default `600`). If you set one of
+them, you must set both.
+
+```yaml
+decision_logs:
+  service: acmecorp
+  reporting:
+    min_delay_seconds: 10
+    max_delay_seconds: 30
+```
+
+The top-level `decision_logs.min_delay_seconds` and `decision_logs.max_delay_seconds` are
+deprecated. They are only used when `reporting` does not set both delays.
+
+### Decision log delivery
+
+An upload counts as delivered when the service answers with a 2xx status. Events are sent in chunks
+of at most `decision_logs.reporting.upload_size_limit_bytes` (default `32768`). A chunk the service
+does not accept, because of a transport error or any other status, stays in the buffer with every
+event after it and is sent again with the next upload, ahead of newer events. The buffer holds at
+most `decision_logs.reporting.buffer_size_limit_events` events (default `10000`, must be higher than
+0); beyond that, the oldest are dropped. Reaching the limit starts an upload in the background, and
+after a failed upload that does not happen again for a second.
+
+When the instance is closed, the plugin uploads what is still buffered and waits for the service to
+answer, for at most the service's `response_header_timeout_seconds`. Events that cannot be delivered
+by then are lost: unlike OPA, nothing is written to disk, so the retry is in memory only.
+
 ## Status Reports
 
 The status plugin reports the instance labels, the state of each plugin, and the status of every
-bundle and of discovery. `bundles.<name>` and `discovery` use the fields of the bundle status:
+bundle and of discovery. The labels are the configured `labels` plus `id` (the instance id) and
+`version` (the SDK version), which configured labels cannot override. Decision log events carry the same
+labels. The instance id is also kept as the top-level `id` of status reports. `bundles.<name>` and `discovery` use the fields of the bundle status:
 
 | Field | Description |
 |-------|-------------|

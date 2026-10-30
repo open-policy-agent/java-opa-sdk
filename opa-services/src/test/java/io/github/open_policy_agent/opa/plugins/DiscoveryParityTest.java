@@ -352,4 +352,18 @@ class DiscoveryParityTest {
     assertEquals("v", label("k"));
     assertFalse(logger.contains("unsupported configuration key 'prefix'"), logger.lines()::toString);
   }
+
+  @Test
+  void discoveredKeysTheSdkDoesNotModelAreIgnored() throws Exception {
+    run(
+        SERVICES + discovery(""),
+        "{'labels':{'k':'v'},'caching':{'inter_query_builtin_cache':{'max_size_bytes':1}},"
+            + "'keys':{'k1':{'key':'x'}},'server':{'encoding':{'gzip':{}}},"
+            + "'distributed_tracing':{'type':'grpc'},'persistence_directory':'/tmp/x',"
+            + "'plugins':{'p':{}},'bundles':{'b':{'service':'svc','resource':'b.tar.gz','persist':true,"
+            + "'signing':{'keyid':'k1'},'trigger':'manual'}}}");
+
+    assertEquals(PluginManager.Status.OK, manager.getPluginStatus("discovery"));
+    assertEquals("v", label("k"));
+  }
 }
