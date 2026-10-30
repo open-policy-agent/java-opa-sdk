@@ -38,7 +38,7 @@ reworked, several of them as breaking changes. It also adds the `units.parse` an
   discovered config no longer needs to repeat the boot services ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
 - Setting only one of `decision_logs.reporting.min_delay_seconds` and
   `decision_logs.reporting.max_delay_seconds`, or a `decision_logs.reporting.buffer_size_limit_events`
-  below 1, is now a validation error
+  below 1, is now a validation error ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
 - `opa-jackson`'s `MetricsModule` now writes `Metrics.Timer` as whole nanoseconds instead
   of Jackson's fractional-seconds `Duration` format, matching the `timer_<name>_ns` keys
   written by `DecisionLogPlugin` ([#253](https://github.com/open-policy-agent/java-opa-sdk/pull/253)) authored by @cvas22
@@ -50,7 +50,6 @@ reworked, several of them as breaking changes. It also adds the `units.parse` an
 - Add `MetricsTypeAdapterFactory` to `opa-gson`, which writes `Metrics.Timer` as
   nanoseconds, `Metrics.Counter` as its value and `Metrics.Histogram` as its stats, so
   Gson users get the same metrics JSON as `opa-jackson` users ([#253](https://github.com/open-policy-agent/java-opa-sdk/pull/253)) authored by @cvas22
-
 - Report `id` and `version` (the SDK version) in the `labels` of status reports and
   decision log events, which configured labels cannot override, as in OPA. The top-level
   `id` is kept. The decision log provenance version is now the SDK version instead of
@@ -73,41 +72,41 @@ reworked, several of them as breaking changes. It also adds the `units.parse` an
   `last_successful_request`, `last_successful_download`, `last_successful_activation`,
   and, after a failure, `code`, `message` and `http_code`. Bundle entries keep `revision`
   and `active`. A bundle that has never been downloaded is now listed, with zero
-  timestamps and its error, instead of being left out
+  timestamps and its error, instead of being left out ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
 - Report the keys that boot config overrode in the `message` of the discovery status,
-  not only in a debug log
+  not only in a debug log ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
 - A bundle or discovery update that fails to load no longer advances
   `last_successful_request` or `last_successful_download`, and an HTTP failure reports
   `server replied with <status text>` as its message. The discovery bundle's `.manifest`
-  is now parsed for its revision, and a malformed one rejects the update
+  is now parsed for its revision, and a malformed one rejects the update ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
 - Download a bundle or discovery update again after its activation failed, instead of
   answering the next poll with "not modified" because the failed download's ETag was
   already stored. A response without an ETag now also stops the `If-None-Match` header
-  from the earlier bundle being sent
+  from the earlier bundle being sent ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
 - Honor `discovery.prefix` in the default discovery `resource`, and keep the typed boot
-  `SSLContext` and key stores of a service that discovery repeats unchanged
+  `SSLContext` and key stores of a service that discovery repeats unchanged ([#256](https://github.com/open-policy-agent/java-opa-sdk/pull/256)) authored by @kroekle
 - Schedule decision log uploads from `decision_logs.reporting.min_delay_seconds` and
   `max_delay_seconds` (defaults 300 and 600). The top-level `min_delay_seconds` and
-  `max_delay_seconds` stay as a deprecated fallback that `reporting` overrides
+  `max_delay_seconds` stay as a deprecated fallback that `reporting` overrides ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
 - Upload decision logs reliably: `stop()` waits for the final batch, bounded by the service's
   `response_header_timeout_seconds`, and a batch that fails (transport error or a status
   other than 2xx) stays buffered for the next flush instead of being dropped. Uploads are
   split into chunks of `decision_logs.reporting.upload_size_limit_bytes` (default 32768),
   reaching the buffer limit starts the upload in the background, "Sent" is only logged for
-  a 2xx response, and a full buffer drops its oldest events
+  a 2xx response, and a full buffer drops its oldest events ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
 
 ### Docs, Website, Ecosystem
 
 - Document discovery and its limitations in the `opa-services` README ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
-- Document the decision log delays and delivery in the `opa-services` README
+- Document the decision log delays and delivery in the `opa-services` README ([#258](https://github.com/open-policy-agent/java-opa-sdk/pull/258)) authored by @kroekle
 
 ### Miscellaneous
 
 - Dependency updates; notably:
-    - Bump tools.jackson:jackson-bom from 3.1.7 to 3.2.4 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245), [#249](https://github.com/open-policy-agent/java-opa-sdk/pull/249))
-    - Bump Gradle from 9.8.0 to 9.8.1 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245))
-    - Bump github.com/open-policy-agent/opa from 1.21.1 to 1.21.2 in the compliance-test generator ([#251](https://github.com/open-policy-agent/java-opa-sdk/pull/251))
-    - Bump actions/setup-java to 6.1.0 and github/codeql-action to 4.39.0 ([#246](https://github.com/open-policy-agent/java-opa-sdk/pull/246), [#250](https://github.com/open-policy-agent/java-opa-sdk/pull/250))
+    - Bump tools.jackson:jackson-bom from 3.1.7 to 3.2.4 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245), [#249](https://github.com/open-policy-agent/java-opa-sdk/pull/249)) authored by @dependabot
+    - Bump Gradle from 9.8.0 to 9.8.1 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245)) authored by @dependabot
+    - Bump github.com/open-policy-agent/opa from 1.21.1 to 1.21.2 in the compliance-test generator ([#251](https://github.com/open-policy-agent/java-opa-sdk/pull/251)) authored by @dependabot
+    - Bump actions/setup-java to 6.1.0 and github/codeql-action to 4.39.0 ([#246](https://github.com/open-policy-agent/java-opa-sdk/pull/246), [#250](https://github.com/open-policy-agent/java-opa-sdk/pull/250)) authored by @dependabot
 
 ## 0.6.0
 
