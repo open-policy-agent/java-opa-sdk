@@ -3,7 +3,12 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 0.7.0
+
+This release makes the `opa-services` runtime behave more like OPA: discovery,
+bundle and discovery status, bundle data loading, and decision log delivery are
+reworked, several of them as breaking changes. It also adds the `units.parse` and
+`units.parse_bytes` builtins, bringing the builtin surface to 158.
 
 ### Breaking Changes
 
@@ -34,8 +39,17 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Setting only one of `decision_logs.reporting.min_delay_seconds` and
   `decision_logs.reporting.max_delay_seconds`, or a `decision_logs.reporting.buffer_size_limit_events`
   below 1, is now a validation error
+- `opa-jackson`'s `MetricsModule` now writes `Metrics.Timer` as whole nanoseconds instead
+  of Jackson's fractional-seconds `Duration` format, matching the `timer_<name>_ns` keys
+  written by `DecisionLogPlugin` ([#253](https://github.com/open-policy-agent/java-opa-sdk/pull/253)) authored by @cvas22
 
 ### Runtime, SDK, Tooling
+
+- Implement the `units.parse` and `units.parse_bytes` builtins, with OPA's handling of
+  byte truncation, quoted values, and exponent limits ([#225](https://github.com/open-policy-agent/java-opa-sdk/pull/225)) authored by @Aayush10016
+- Add `MetricsTypeAdapterFactory` to `opa-gson`, which writes `Metrics.Timer` as
+  nanoseconds, `Metrics.Counter` as its value and `Metrics.Histogram` as its stats, so
+  Gson users get the same metrics JSON as `opa-jackson` users ([#253](https://github.com/open-policy-agent/java-opa-sdk/pull/253)) authored by @cvas22
 
 - Report `id` and `version` (the SDK version) in the `labels` of status reports and
   decision log events, which configured labels cannot override, as in OPA. The top-level
@@ -86,6 +100,14 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 - Document discovery and its limitations in the `opa-services` README ([#254](https://github.com/open-policy-agent/java-opa-sdk/pull/254)) authored by @kroekle
 - Document the decision log delays and delivery in the `opa-services` README
+
+### Miscellaneous
+
+- Dependency updates; notably:
+    - Bump tools.jackson:jackson-bom from 3.1.7 to 3.2.4 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245), [#249](https://github.com/open-policy-agent/java-opa-sdk/pull/249))
+    - Bump Gradle from 9.8.0 to 9.8.1 ([#245](https://github.com/open-policy-agent/java-opa-sdk/pull/245))
+    - Bump github.com/open-policy-agent/opa from 1.21.1 to 1.21.2 in the compliance-test generator ([#251](https://github.com/open-policy-agent/java-opa-sdk/pull/251))
+    - Bump actions/setup-java to 6.1.0 and github/codeql-action to 4.39.0 ([#246](https://github.com/open-policy-agent/java-opa-sdk/pull/246), [#250](https://github.com/open-policy-agent/java-opa-sdk/pull/250))
 
 ## 0.6.0
 
