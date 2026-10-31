@@ -397,6 +397,26 @@
       }
     }
   }, {
+    "name" : "crypto.x509.parse_certificates",
+    "description" : "Returns zero or more certificates from the given string, which holds one or more concatenated PEM blocks, optionally base64 encoded as a whole, or base64 encoded DER certificate data.",
+    "categories" : [ "crypto" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "certs",
+        "description" : "base64 encoded DER or PEM data containing one or more certificates or a PEM string of one or more certificates"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "output",
+        "description" : "parsed X.509 certificates represented as objects",
+        "dynamic" : {
+          "type" : "object"
+        }
+      }
+    }
+  }, {
     "name" : "div",
     "description" : "Divides the first number by the second number",
     "categories" : [ "numbers" ],
