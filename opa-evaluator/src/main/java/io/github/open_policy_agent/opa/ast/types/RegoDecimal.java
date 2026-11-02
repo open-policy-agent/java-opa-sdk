@@ -1,7 +1,7 @@
 package io.github.open_policy_agent.opa.ast.types;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Objects;
 
 public class RegoDecimal implements RegoValue, RegoNumber {
   private Double value;
@@ -54,7 +54,7 @@ public class RegoDecimal implements RegoValue, RegoNumber {
       return i.getValue().doubleValue() == value;
         } else if (o instanceof RegoBigInt) {
             RegoBigInt i = (RegoBigInt) o;
-      return i.getValue().doubleValue() == value;
+      return equalsInteger(value, i.getValue());
         } else if (o instanceof RegoDecimal) {
             RegoDecimal l = (RegoDecimal) o;
             return l.getValue().equals(value);
@@ -71,8 +71,34 @@ public class RegoDecimal implements RegoValue, RegoNumber {
     }
 
     @Override
+    @SuppressWarnings("PMD.AvoidDecimalLiteralsInBigDecimalConstructor")
     public int hashCode() {
-        return Objects.hashCode(value);
+        // Whole values hash like the RegoInt32/RegoBigInt they equal, so hash lookups agree with equals().
+        double d = value;
+        if (d == Math.rint(d) && d >= Long.MIN_VALUE && d < 0x1p63) {
+            // Same result as BigInteger.hashCode() for this value, without allocating.
+            long v = (long) d;
+            long mag = Math.abs(v);
+            int h = 31 * (int) (mag >>> 32) + (int) mag;
+            return v < 0 ? -h : h;
+        }
+        if (Double.isFinite(d) && d == Math.rint(d)) {
+            // Exact conversion. BigDecimal.valueOf would round through Double.toString.
+            return new BigDecimal(d).toBigInteger().hashCode();
+        }
+        return Double.hashCode(d);
+    }
+
+    // Exact comparison, like OPA. Converting v to a double would round above 2^53.
+    @SuppressWarnings("PMD.AvoidDecimalLiteralsInBigDecimalConstructor")
+    static boolean equalsInteger(double d, BigInteger v) {
+        if (d != Math.rint(d)) {
+            return false;
+        }
+        if (d >= Long.MIN_VALUE && d < 0x1p63) {
+            return v.bitLength() < 64 && v.longValue() == (long) d;
+        }
+        return Double.isFinite(d) && new BigDecimal(d).toBigInteger().equals(v);
     }
 
     @Override
