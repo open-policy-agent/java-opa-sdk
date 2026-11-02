@@ -18,6 +18,7 @@ The opa-builtins module is a convenience aggregator — it has no source code of
 | **[opa-builtins-crypto](../opa-builtins-crypto/)** | CryptoBuiltins | Hashing and HMAC | `crypto.md5`, `crypto.sha256`, `crypto.hmac.sha256`, `crypto.hmac.equal` |
 | **[opa-builtins-json](../opa-builtins-json/)** | JsonBuiltins | JSON operations | `json.filter`, `json.remove`, `json.patch`, `json.match_schema` |
 | **[opa-builtins-providers-aws](../opa-builtins-providers-aws/)** | ProvidersAwsBuiltins | AWS request signing | `providers.aws.sign_req` |
+| **[opa-builtins-http](../opa-builtins-http/)** | HttpBuiltins | HTTP client | `http.send` |
 
 Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) are core builtins included directly in **opa-evaluator**.
 
@@ -101,12 +102,14 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | `semver.compare`, `semver.is_valid` | Yes |
 | **Providers** (opa-builtins-providers-aws) | |
 | `providers.aws.sign_req` | Yes |
+| **HTTP** (opa-builtins-http) | |
+| `http.send` | Yes |
 | **Runtime** | |
 | `opa.runtime` | Yes |
 | **Comparison** | |
 | `equal`, `neq`, `lt`, `lte`, `gt`, `gte` | Yes |
 | **Not Yet Implemented** | |
-| `bits.*`, `units.*`, `http.send` | No |
+| `bits.*`, `units.*` | No |
 | `uuid.*`, `graphql.*`, `rego.*` | No |
 
 ## Adding Custom Builtins
