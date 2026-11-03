@@ -25,8 +25,7 @@ import java.util.stream.Collectors;
 /**
  * A port of Go 1.27's {@code crypto/x509} certificate parser ({@code parser.go}). It accepts and
  * rejects the same inputs, reports the same error messages and fills the same fields, so that the
- * builtins return what OPA returns. Cryptographic checks are not done here; see {@link
- * X509Verifier}.
+ * builtins return what OPA returns. Cryptographic checks are not done here.
  */
 final class X509Parser {
 

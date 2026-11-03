@@ -191,11 +191,6 @@ class CryptoX509BuiltinsTest {
     assertEquals("eval_type_error: operand 1 must be string but got number", e.getMessage());
   }
 
-  // Like OPA, input that cannot be parsed is reported as an invalid chain rather than an error.
-
-  // Go verifies P-224 signatures, but Java 17 no longer provides the curve, so such chains are
-  // reported as invalid rather than accepted without verification.
-
   private RegoArray parse(String input) {
     return builtins.x509ParseCertificates(ctx, new RegoValue[] {new RegoString(input)});
   }

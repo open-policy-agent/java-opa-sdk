@@ -44,8 +44,9 @@ final class X509Input {
    */
   static List<X509Cert> parseCertificates(String input) {
     byte[] data = input.getBytes(StandardCharsets.UTF_8);
-    if (X509Strings.latin1(data).startsWith(PEM_BEGIN)) {
-      return parseDer(certificatesFromPem(X509Strings.latin1(data)));
+    String raw = X509Strings.latin1(data);
+    if (raw.startsWith(PEM_BEGIN)) {
+      return parseDer(certificatesFromPem(raw));
     }
     int[] errOffset = new int[1];
     byte[] decoded = decodeBase64(data, errOffset);

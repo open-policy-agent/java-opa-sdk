@@ -7,6 +7,7 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /**
  * A parsed URI from a certificate SAN, as Go's {@code net/url.Parse} produces it. Go's {@code
@@ -26,6 +27,9 @@ final class X509Url {
   private static final int ENCODE_ZONE = 4;
   private static final int ENCODE_USER_PASSWORD = 5;
   private static final int ENCODE_FRAGMENT = 7;
+  private static final Pattern PORT = Pattern.compile(":[0-9]*");
+  private static final Pattern USERINFO = Pattern.compile("[A-Za-z0-9\\-._:~!  private static final int ENCODE_FRAGMENT = 7;
+'()*+,;=%@]*");
 
   String scheme = "";
   String opaque = "";
@@ -218,11 +222,11 @@ final class X509Url {
   }
 
   private static boolean validOptionalPort(String port) {
-    return port.isEmpty() || port.matches(":[0-9]*");
+    return port.isEmpty() || PORT.matcher(port).matches();
   }
 
   private static boolean validUserinfo(String s) {
-    return s.matches("[A-Za-z0-9\\-._:~!$&'()*+,;=%@]*");
+    return USERINFO.matcher(s).matches();
   }
 
   private static boolean isHex(int c) {
