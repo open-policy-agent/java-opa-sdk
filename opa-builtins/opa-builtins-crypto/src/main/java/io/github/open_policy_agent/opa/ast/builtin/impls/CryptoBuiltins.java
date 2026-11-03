@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import javax.crypto.Mac;
@@ -11,7 +12,9 @@ import javax.crypto.spec.SecretKeySpec;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
+import io.github.open_policy_agent.opa.ast.builtin.OpaDynamic;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
@@ -33,7 +36,8 @@ public class CryptoBuiltins implements BuiltinProvider {
         Map.entry("crypto.hmac.sha1", instance::hmacSha1),
         Map.entry("crypto.hmac.sha256", instance::hmacSha256),
         Map.entry("crypto.hmac.sha512", instance::hmacSha512),
-        Map.entry("crypto.hmac.equal", instance::hmacEqual));
+        Map.entry("crypto.hmac.equal", instance::hmacEqual),
+        Map.entry("crypto.x509.parse_certificates", instance::x509ParseCertificates));
     // @formatter:on
   }
 
@@ -142,6 +146,39 @@ public class CryptoBuiltins implements BuiltinProvider {
         MessageDigest.isEqual(
             mac1.getBytes(StandardCharsets.UTF_8), mac2.getBytes(StandardCharsets.UTF_8));
     return RegoBoolean.of(equal);
+  }
+
+  @OpaBuiltin(
+      name = "crypto.x509.parse_certificates",
+      description =
+          "Returns zero or more certificates from the given string, which holds one or more concatenated PEM"
+              + " blocks, optionally base64 encoded as a whole, or base64 encoded DER certificate data.",
+      categories = {"crypto"},
+      args = {
+        @OpaType(
+            type = "string",
+            name = "certs",
+            description =
+                "base64 encoded DER or PEM data containing one or more certificates or a PEM string of one or more certificates")
+      },
+      result =
+          @OpaType(
+              type = "array",
+              name = "output",
+              description = "parsed X.509 certificates represented as objects",
+              dynamic = @OpaDynamic(type = "object")))
+  public RegoArray x509ParseCertificates(EvaluationContext ctx, RegoValue[] args) {
+    String certs = getArg(args, 0, RegoString.class).getValue();
+    return x509Values(X509Input.parseCertificates(certs));
+  }
+
+  private static RegoArray x509Values(List<X509Cert> certs) {
+    try {
+      return X509Values.certificates(certs);
+    } catch (IllegalArgumentException e) {
+      // Go's JSON encoding of the certificate failed (e.g. an out-of-range time zone offset).
+      throw new BuiltinError(e.getMessage());
+    }
   }
 
   /**
