@@ -28,8 +28,7 @@ final class X509Url {
   private static final int ENCODE_USER_PASSWORD = 5;
   private static final int ENCODE_FRAGMENT = 7;
   private static final Pattern PORT = Pattern.compile(":[0-9]*");
-  private static final Pattern USERINFO = Pattern.compile("[A-Za-z0-9\\-._:~!  private static final int ENCODE_FRAGMENT = 7;
-'()*+,;=%@]*");
+  private static final Pattern USERINFO = Pattern.compile("[A-Za-z0-9\\-._:~!$&'()*+,;=%@]*");
 
   String scheme = "";
   String opaque = "";
