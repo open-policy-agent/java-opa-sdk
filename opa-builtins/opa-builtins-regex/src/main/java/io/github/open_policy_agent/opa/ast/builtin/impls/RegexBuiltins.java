@@ -14,12 +14,12 @@ import io.github.open_policy_agent.opa.ast.builtin.OpaType;
 import io.github.open_policy_agent.opa.ast.builtin.impls.utils.GoRegexCompatibilityValidator;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
-import io.github.open_policy_agent.opa.ast.types.RegoInt32;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
+import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getIntArg;
 
 public class RegexBuiltins implements BuiltinProvider {
 
@@ -125,7 +125,7 @@ public class RegexBuiltins implements BuiltinProvider {
   public RegoArray find(EvaluationContext ctx, RegoValue[] args) {
     String pattern = getArg(args, 0, RegoString.class).getValue();
     String value = getArg(args, 1, RegoString.class).getValue();
-    int number = getArg(args, 2, RegoInt32.class).getValue();
+    int number = getIntArg(args, 2);
     if (number == -1) {
       number = Integer.MAX_VALUE;
     }
@@ -154,7 +154,7 @@ public class RegexBuiltins implements BuiltinProvider {
   public RegoArray findSubstringMatch(EvaluationContext ctx, RegoValue[] args) {
     String pattern = getArg(args, 0, RegoString.class).getValue();
     String value = getArg(args, 1, RegoString.class).getValue();
-    int number = getArg(args, 2, RegoInt32.class).getValue();
+    int number = getIntArg(args, 2);
     if (number == -1) {
       number = Integer.MAX_VALUE;
     }

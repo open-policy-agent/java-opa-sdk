@@ -2,6 +2,7 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.assertArgType;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
+import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getIntArg;
 
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
@@ -385,8 +386,8 @@ public class StringBuiltins {
               description = "substring of `value` from `offset`, of length `length`"))
   public RegoValue substring(EvaluationContext ctx, RegoValue[] args) {
     String value = getArg(args, 0, RegoString.class).getValue();
-    int offset = getArg(args, 1, RegoInt32.class).getValue();
-    int length = getArg(args, 2, RegoInt32.class).getValue();
+    int offset = getIntArg(args, 1);
+    int length = getIntArg(args, 2);
 
     if (offset < 0) {
       throw new BuiltinError("negative offset");
@@ -588,7 +589,7 @@ public class StringBuiltins {
       },
       result = @OpaType(type = "string", name = "output", description = "formatted number"))
   public RegoValue formatInt(EvaluationContext ctx, RegoValue[] args) {
-    int base = getArg(args, 1, RegoInt32.class).getValue();
+    int base = getIntArg(args, 1);
     if (base != 2 && base != 8 && base != 10 && base != 16) {
       throw new TypeError("operand 2 must be one of {2, 8, 10, 16}");
     }
