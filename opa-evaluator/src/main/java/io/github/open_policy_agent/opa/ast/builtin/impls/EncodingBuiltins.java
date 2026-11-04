@@ -68,6 +68,10 @@ public class EncodingBuiltins {
               description = "`true` if `x` is valid base64 encoded value, `false` otherwise"))
   public RegoBoolean isValid(EvaluationContext ctx, RegoValue[] args) {
     RegoString x = getArg(args, 0, RegoString.class);
+    // Go's StdEncoding requires padding; java.util.Base64 does not.
+    if (x.getValue().length() % 4 != 0) {
+      return RegoBoolean.FALSE;
+    }
     try {
       DECODER.decode(x.getValue());
       return RegoBoolean.TRUE;

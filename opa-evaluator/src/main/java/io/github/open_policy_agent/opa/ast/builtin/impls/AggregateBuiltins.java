@@ -13,7 +13,6 @@ import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
 import io.github.open_policy_agent.opa.ast.types.RegoCollection;
 import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
 import io.github.open_policy_agent.opa.ast.types.RegoInt32;
-import io.github.open_policy_agent.opa.ast.types.RegoNull;
 import io.github.open_policy_agent.opa.ast.types.RegoNumber;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoSet;
@@ -51,7 +50,7 @@ public class AggregateBuiltins {
     public RegoValue min(EvaluationContext ctx, RegoValue[] args) {
         RegoCollection collection = (RegoCollection) args[0];
 
-        return collection.valueStream().min(RegoValue::compareTo).orElse(RegoNull.INSTANCE);
+        return collection.valueStream().min(RegoValue::compareTo).orElse(null);
     }
 
     @OpaBuiltin(
@@ -68,7 +67,7 @@ public class AggregateBuiltins {
     public RegoValue max(EvaluationContext ctx, RegoValue[] args) {
         RegoCollection collection = ((RegoCollection) args[0]);
 
-        return collection.valueStream().max(RegoValue::compareTo).orElse(RegoNull.INSTANCE);
+        return collection.valueStream().max(RegoValue::compareTo).orElse(null);
     }
 
     @OpaBuiltin(

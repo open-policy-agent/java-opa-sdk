@@ -296,8 +296,8 @@ public class JsonBuiltins implements BuiltinProvider {
     String jsonInput = ((RegoString) args[0]).getValue();
 
     try {
-      JSON_MAPPER.readTree(jsonInput);
-      return RegoBoolean.TRUE;
+      // Empty or blank input yields a missing node instead of an error.
+      return JSON_MAPPER.readTree(jsonInput).isMissingNode() ? RegoBoolean.FALSE : RegoBoolean.TRUE;
     } catch (JacksonException e) {
       return RegoBoolean.FALSE;
     }
