@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
+import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
 import io.github.open_policy_agent.opa.ast.types.RegoInt32;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
@@ -107,6 +109,28 @@ class RegexBuiltinsTest {
     };
 
     assertThrows(BuiltinError.class, () -> builtins.templateMatch(null, args));
+  }
+
+  // Integers computed by arithmetic (plus, minus) are RegoBigInt, not RegoInt32.
+  @Test
+  void findNAcceptsComputedCount() {
+    RegoValue[] args = {new RegoString("a."), new RegoString("aaaa"), new RegoBigInt(2L)};
+
+    assertEquals(
+        new RegoArray(java.util.List.<RegoValue>of(new RegoString("aa"), new RegoString("aa"))),
+        builtins.find(null, args));
+  }
+
+  @Test
+  void findAllStringSubmatchNAcceptsComputedCount() {
+    RegoValue[] args = {new RegoString("a(.)"), new RegoString("abac"), new RegoBigInt(2L)};
+
+    assertEquals(
+        new RegoArray(
+            java.util.List.<RegoValue>of(
+                new RegoArray(java.util.List.<RegoValue>of(new RegoString("ab"), new RegoString("b"))),
+                new RegoArray(java.util.List.<RegoValue>of(new RegoString("ac"), new RegoString("c"))))),
+        builtins.findSubstringMatch(null, args));
   }
 
   private RegoBoolean match(String pattern, String value) {
