@@ -8,10 +8,17 @@ repositories {
 
 dependencies {
     api(project(":opa-evaluator"))
+
+    testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.3")
 }
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(17)
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
