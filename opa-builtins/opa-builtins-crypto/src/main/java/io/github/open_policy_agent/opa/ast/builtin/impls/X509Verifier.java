@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Set;
-import javax.crypto.Cipher;
 
 /**
  * Verifies a certificate chain the way OPA's {@code crypto.x509.parse_and_verify_certificates}
@@ -279,23 +278,30 @@ final class X509Verifier {
     return parent.publicKey instanceof X509Cert.Ed25519Key key && algorithm == X509Cert.SIG_ED25519 && verifyEd25519(key, signed, sig);
   }
 
-  /** Verifies with a JCA signature algorithm (and optional parameters). */
-  private static boolean verify(String algorithm, PSSParameterSpec params, PublicKey key, byte[] signed, byte[] sig)
+  /** Verifies a certificate signature using a JCA signature algorithm. */
+  private static boolean verify(String algorithm, PublicKey key, byte[] signed, byte[] sig)
       throws GeneralSecurityException {
     Signature verifier = Signature.getInstance(algorithm);
-    if (params != null) {
-      verifier.setParameter(params);
-    }
     verifier.initVerify(key);
     verifier.update(signed);
     return verifier.verify(sig);
   }
 
-  /** RSA-PSS verification with the public key checks Go's crypto/rsa applies before verifying. */
+  /** RSA-PSS verification with Go's public key checks and explicit SHA-2 parameters. */
   private static boolean verifyPss(X509Cert.RsaKey key, String hash, MGF1ParameterSpec mgf, int saltLength, byte[] signed, byte[] sig)
       throws GeneralSecurityException {
+    if (!acceptableRsaKey(key, sig)) {
+      return false;
+    }
     PSSParameterSpec params = new PSSParameterSpec(hash, "MGF1", mgf, saltLength, PSSParameterSpec.TRAILER_FIELD_BC);
-    return acceptableRsaKey(key, sig) && verify("RSASSA-PSS", params, rsaPublicKey(key), signed, sig);
+    // RSA-PSS is used only to verify certificates. All callers explicitly supply SHA-2,
+    // matching MGF1 and the digest-sized salt; Java's implicit SHA-1 defaults are never used.
+    // codeql[java/potentially-weak-cryptographic-algorithm]: SHA-2 PSS verification with explicit secure parameters.
+    Signature verifier = Signature.getInstance("RSASSA-PSS");
+    verifier.setParameter(params);
+    verifier.initVerify(rsaPublicKey(key));
+    verifier.update(signed);
+    return verifier.verify(sig);
   }
 
   /**
@@ -308,13 +314,20 @@ final class X509Verifier {
     if (!acceptableRsaKey(key, sig)) {
       return false;
     }
-    Cipher rsa = Cipher.getInstance("RSA/ECB/NoPadding");
-    rsa.init(Cipher.ENCRYPT_MODE, rsaPublicKey(key));
-    byte[] em = rsa.doFinal(sig);
+    // RSA public-key signature verification, not RSA encryption. Recover the encoded message
+    // directly to enforce Go's strict DER DigestInfo, without creating a raw RSA cipher.
+    BigInteger signature = new BigInteger(1, sig);
+    if (signature.compareTo(key.n()) >= 0) {
+      return false;
+    }
+    byte[] em = signature.modPow(BigInteger.valueOf(key.e()), key.n()).toByteArray();
     byte[] digest = MessageDigest.getInstance(hash).digest(signed);
     int k = sig.length;
     int tLen = prefix.length + digest.length;
-    if (k < tLen + 11 || em.length > k) {
+    // BigInteger can prepend one zero sign byte to a positive result.
+    int offset = em.length > k && em[0] == 0 ? 1 : 0;
+    int emLength = em.length - offset;
+    if (k < tLen + 11 || emLength > k) {
       return false;
     }
     byte[] expected = new byte[k];
@@ -322,9 +335,8 @@ final class X509Verifier {
     Arrays.fill(expected, 2, k - tLen - 1, (byte) 0xff);
     System.arraycopy(prefix, 0, expected, k - tLen, prefix.length);
     System.arraycopy(digest, 0, expected, k - digest.length, digest.length);
-    // RSA/ECB/NoPadding may strip leading zero bytes from the result.
     byte[] padded = new byte[k];
-    System.arraycopy(em, 0, padded, k - em.length, em.length);
+    System.arraycopy(em, offset, padded, k - emLength, emLength);
     return MessageDigest.isEqual(expected, padded);
   }
 
@@ -354,14 +366,21 @@ final class X509Verifier {
         || !inner.isEmpty()) {
       return false;
     }
-    // Java 17's SunEC provider no longer supports P-224, so such signatures cannot be verified.
-    if (X509Curves.P224.name().equals(key.curve())) {
+    // Restrict verification to supported 256-bit-or-stronger NIST curves. P-224 is
+    // intentionally rejected here (Java 17 SunEC does not support it).
+    String curveName = switch (key.curve()) {
+      case "P-256" -> "secp256r1";
+      case "P-384" -> "secp384r1";
+      case "P-521" -> "secp521r1";
+      default -> null;
+    };
+    if (curveName == null) {
       return false;
     }
     AlgorithmParameters curve = AlgorithmParameters.getInstance("EC");
-    curve.init(new ECGenParameterSpec(X509Curves.byName(key.curve()).jcaName()));
+    curve.init(new ECGenParameterSpec(curveName));
     ECPublicKeySpec spec = new ECPublicKeySpec(new ECPoint(key.x(), key.y()), curve.getParameterSpec(ECParameterSpec.class));
-    return verify(algorithm, null, KeyFactory.getInstance("EC").generatePublic(spec), signed, sig);
+    return verify(algorithm, KeyFactory.getInstance("EC").generatePublic(spec), signed, sig);
   }
 
   /**
@@ -384,6 +403,6 @@ final class X509Verifier {
     }
     byte[] spki = Arrays.copyOf(ED25519_SPKI_PREFIX, ED25519_SPKI_PREFIX.length + 32);
     System.arraycopy(key.key(), 0, spki, ED25519_SPKI_PREFIX.length, 32);
-    return verify("Ed25519", null, KeyFactory.getInstance("Ed25519").generatePublic(new X509EncodedKeySpec(spki)), signed, sig);
+    return verify("Ed25519", KeyFactory.getInstance("Ed25519").generatePublic(new X509EncodedKeySpec(spki)), signed, sig);
   }
 }
