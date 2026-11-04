@@ -7,6 +7,7 @@
 // The translation and the rest of this file are licensed under the Apache License 2.0.
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
+import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.AlgorithmParameters;
@@ -15,12 +16,12 @@ import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.PublicKey;
 import java.security.Signature;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.ECParameterSpec;
 import java.security.spec.ECPoint;
 import java.security.spec.ECPublicKeySpec;
-import java.security.spec.MGF1ParameterSpec;
-import java.security.spec.PSSParameterSpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
@@ -248,13 +249,13 @@ final class X509Verifier {
       return false;
     }
     try {
-      return checkSignature(child.signatureAlgorithm, child.rawTbsCertificate, child.signature, parent);
+      return checkSignature(child.signatureAlgorithm, child.rawTbsCertificate, child.signature, child.raw, parent);
     } catch (GeneralSecurityException | RuntimeException e) {
       return false;
     }
   }
 
-  private static boolean checkSignature(int algorithm, byte[] signed, byte[] sig, X509Cert parent)
+  private static boolean checkSignature(int algorithm, byte[] signed, byte[] sig, byte[] certificate, X509Cert parent)
       throws GeneralSecurityException {
     // MD5 and SHA-1 are insecure, DSA is unsupported by Go, and ML-DSA needs Java 24+, so those fail.
     if (parent.publicKey instanceof X509Cert.RsaKey key) {
@@ -262,9 +263,9 @@ final class X509Verifier {
         case X509Cert.SIG_SHA256_RSA -> verifyPkcs1v15(key, "SHA-256", DIGEST_INFO_SHA256, signed, sig);
         case X509Cert.SIG_SHA384_RSA -> verifyPkcs1v15(key, "SHA-384", DIGEST_INFO_SHA384, signed, sig);
         case X509Cert.SIG_SHA512_RSA -> verifyPkcs1v15(key, "SHA-512", DIGEST_INFO_SHA512, signed, sig);
-        case X509Cert.SIG_SHA256_RSAPSS -> verifyPss(key, "SHA-256", MGF1ParameterSpec.SHA256, 32, signed, sig);
-        case X509Cert.SIG_SHA384_RSAPSS -> verifyPss(key, "SHA-384", MGF1ParameterSpec.SHA384, 48, signed, sig);
-        case X509Cert.SIG_SHA512_RSAPSS -> verifyPss(key, "SHA-512", MGF1ParameterSpec.SHA512, 64, signed, sig);
+        case X509Cert.SIG_SHA256_RSAPSS -> verifyPss(key, certificate, sig);
+        case X509Cert.SIG_SHA384_RSAPSS -> verifyPss(key, certificate, sig);
+        case X509Cert.SIG_SHA512_RSAPSS -> verifyPss(key, certificate, sig);
         default -> false;
       };
     } else if (parent.publicKey instanceof X509Cert.EcKey key) {
@@ -287,21 +288,23 @@ final class X509Verifier {
     return verifier.verify(sig);
   }
 
-  /** RSA-PSS verification with Go's public key checks and explicit SHA-2 parameters. */
-  private static boolean verifyPss(X509Cert.RsaKey key, String hash, MGF1ParameterSpec mgf, int saltLength, byte[] signed, byte[] sig)
+  /**
+   * Verifies RSA-PSS using the JDK's X.509 certificate verifier. The certificate's checked
+   * AlgorithmIdentifier supplies the exact SHA-2, MGF1 and salt-length parameters; no implicit
+   * Signature defaults are used. This also rejects signatures whose salt length differs from
+   * the one declared in the certificate.
+   */
+  private static boolean verifyPss(X509Cert.RsaKey key, byte[] certificate, byte[] sig)
       throws GeneralSecurityException {
     if (!acceptableRsaKey(key, sig)) {
       return false;
     }
-    PSSParameterSpec params = new PSSParameterSpec(hash, "MGF1", mgf, saltLength, PSSParameterSpec.TRAILER_FIELD_BC);
-    // RSA-PSS is used only to verify certificates. All callers explicitly supply SHA-2,
-    // matching MGF1 and the digest-sized salt; Java's implicit SHA-1 defaults are never used.
-    // codeql[java/potentially-weak-cryptographic-algorithm]: SHA-2 PSS verification with explicit secure parameters.
-    Signature verifier = Signature.getInstance("RSASSA-PSS");
-    verifier.setParameter(params);
-    verifier.initVerify(rsaPublicKey(key));
-    verifier.update(signed);
-    return verifier.verify(sig);
+    X509Certificate parsed =
+        (X509Certificate)
+            CertificateFactory.getInstance("X.509")
+                .generateCertificate(new ByteArrayInputStream(certificate));
+    parsed.verify(rsaPublicKey(key));
+    return true;
   }
 
   /**
