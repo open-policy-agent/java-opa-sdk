@@ -459,19 +459,26 @@ public class TimeBuiltins implements BuiltinProvider {
         return instant.atZone(zoneId);
     }
 
+    // Nanosecond values may be any integer representation: small literals are RegoInt32,
+    // computed ones and large literals are RegoBigInt.
+    private long nanosOf(RegoValue value) {
+        if (value instanceof RegoNumber && !((RegoNumber) value).isDecimal()) {
+            return ((RegoNumber) value).getBigIntValue().longValueExact();
+        }
+        throw new BuiltinError("invalid argument type: " + value.getTypeName());
+    }
+
     private ZonedDateTime getZonedDateTime(RegoValue arg) {
         ZonedDateTime ns;
         try {
-            if (arg instanceof RegoBigInt) {
-                ns = zonedDateTimeFromNano(((RegoBigInt) arg).getValue().longValueExact(), "UTC");
-            } else if (arg instanceof RegoArray) {
+            if (arg instanceof RegoArray) {
                 String timezone = ((RegoString) ((RegoArray) arg).getValue().get(1)).getValue();
                 ns = zonedDateTimeFromNano(
-                        ((RegoBigInt) ((RegoArray) arg).getValue().get(0)).getValue().longValueExact(),
+                        nanosOf(((RegoArray) arg).getValue().get(0)),
                         timezone.isEmpty() ? "UTC" : timezone
                 );
             } else {
-        throw new BuiltinError("invalid argument type: " + arg.getTypeName());
+                ns = zonedDateTimeFromNano(nanosOf(arg), "UTC");
             }
         }catch (ArithmeticException ignore) {
             throw new BuiltinError("timestamp too big");
