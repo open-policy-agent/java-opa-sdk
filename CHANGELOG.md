@@ -10,6 +10,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Implement the `crypto.x509.parse_certificates` builtin in
   `opa-builtins-crypto`, following Go's `crypto/x509` as OPA does
   ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129))
+- `regoj eval --metrics` prints counters and histograms instead of blank cells,
+  and the value column is now headed `VALUE` instead of `TIME`
+  ([#221](https://github.com/open-policy-agent/java-opa-sdk/issues/221))
 
 ## 0.7.0
 
