@@ -37,4 +37,16 @@ class JsonBuiltinsTest {
 
     assertEquals(RegoBoolean.FALSE, builtins.yamlIsValid(null, args));
   }
+
+  @Test
+  void isValidReturnsFalseForEmptyAndBlankInput() {
+    assertEquals(RegoBoolean.FALSE, builtins.is_valid(null, new RegoValue[] {new RegoString("")}));
+    assertEquals(RegoBoolean.FALSE, builtins.is_valid(null, new RegoValue[] {new RegoString("  ")}));
+  }
+
+  @Test
+  void isValidReturnsTrueForValidJson() {
+    assertEquals(RegoBoolean.TRUE, builtins.is_valid(null, new RegoValue[] {new RegoString("{\"a\": 1}")}));
+    assertEquals(RegoBoolean.TRUE, builtins.is_valid(null, new RegoValue[] {new RegoString("null")}));
+  }
 }

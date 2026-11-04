@@ -232,6 +232,9 @@ public class StringBuiltins {
   public RegoValue indexOf(EvaluationContext ctx, RegoValue[] args) {
     String haystack = getArg(args, 0, RegoString.class).getValue();
     String needle = getArg(args, 1, RegoString.class).getValue();
+    if (needle.isEmpty()) {
+      throw new BuiltinError("empty search character");
+    }
 
     int idx = haystack.indexOf(needle);
     return RegoInt32.of(idx < 0 ? idx : haystack.codePointCount(0, idx));
@@ -673,6 +676,9 @@ public class StringBuiltins {
   public RegoValue indexOfN(EvaluationContext ctx, RegoValue[] args) {
     String haystack = getArg(args, 0, RegoString.class).getValue();
     String needle = getArg(args, 1, RegoString.class).getValue();
+    if (needle.isEmpty()) {
+      throw new BuiltinError("empty search character");
+    }
 
     List<RegoValue> indices = new ArrayList<>();
     int lastIdx = 0;
