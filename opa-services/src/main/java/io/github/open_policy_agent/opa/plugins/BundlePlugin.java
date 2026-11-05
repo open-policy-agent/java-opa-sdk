@@ -45,6 +45,12 @@ public final class BundlePlugin implements Plugin {
           errors.add("Bundle '" + name + "' has missing or empty resource path");
         }
         errors.addAll(BundleDownloader.validatePolling(bundle.getPolling(), "Bundle '" + name + "'"));
+        String trigger = bundle.getTrigger();
+        if (!Config.TRIGGER_PERIODIC.equals(trigger) && !Config.TRIGGER_MANUAL.equals(trigger)) {
+          errors.add("Bundle '" + name + "' has invalid trigger '" + trigger + "', expected 'periodic' or 'manual'");
+        } else if (Config.TRIGGER_MANUAL.equals(trigger) && bundle.getPolling() != null) {
+          errors.add("Bundle '" + name + "' must not set polling with trigger 'manual'");
+        }
       }
     }
     return errors;
@@ -78,6 +84,7 @@ public final class BundlePlugin implements Plugin {
                 .setService(bundleConfig.getService())
                 .setResource(bundleConfig.getResource())
                 .setPolling(bundleConfig.getPolling());
+        bundle.setManualTrigger(Config.TRIGGER_MANUAL.equals(bundleConfig.getTrigger()));
         bundle.setMaxSizeBytes(bundleConfig.getMaxSizeBytes());
         plugin.bundles.put(name, bundle);
       }
