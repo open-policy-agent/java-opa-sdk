@@ -194,15 +194,32 @@ public class AggregateBuiltins {
         RegoValue x = args[0];
         RegoValue y = args[1];
 
-        if (y instanceof RegoCollection) {
-            if (((RegoCollection) y).valueStream().anyMatch(v -> v.equals(x))) {
-                return RegoBoolean.TRUE;
+        if (y instanceof RegoSet) {
+            RegoSet set = (RegoSet) y;
+            // Note: We do not use RegoSet.contains because it compares search keys via sorted copies,
+            // which is slower in many common cases than just linear searching. In the future, doing a
+            // size check and then RegoSet.contains could be worth trying out for larger set sizes.
+            if (x instanceof RegoSet) {
+                for (RegoValue v : set) {
+                    if (v.equals(x)) {
+                        return RegoBoolean.TRUE;
+                    }
+                }
+                return RegoBoolean.FALSE;
+            }
+            return RegoBoolean.of(set.contains(x));
+        } else if (y instanceof RegoArray) {
+            for (RegoValue v : ((RegoArray) y).getValues()) {
+                if (v.equals(x)) {
+                    return RegoBoolean.TRUE;
+                }
             }
         } else if (y instanceof RegoObject) {
             // For objects, check if x is a value in the object
-            RegoObject obj = (RegoObject) y;
-            if (obj.getProperties().values().stream().anyMatch(v -> v.equals(x))) {
-                return RegoBoolean.TRUE;
+            for (RegoValue v : ((RegoObject) y).getProperties().values()) {
+                if (v.equals(x)) {
+                    return RegoBoolean.TRUE;
+                }
             }
         }
         // For non-collections (string, number, etc.), return false

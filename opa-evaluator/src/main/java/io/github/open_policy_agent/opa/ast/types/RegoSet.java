@@ -2,6 +2,7 @@ package io.github.open_policy_agent.opa.ast.types;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class RegoSet implements RegoValue, RegoCollection {
+public class RegoSet implements RegoValue, RegoCollection, Iterable<RegoValue> {
   private final Set<RegoValue> value;
   private final boolean sorted;
 
@@ -131,6 +132,12 @@ public class RegoSet implements RegoValue, RegoCollection {
 
     public Stream<RegoValue> valueStream() {
         return value.stream();
+    }
+
+    /** Iterates in insertion order, without the sorted copy that {@link #getValue()} makes. */
+    @Override
+    public Iterator<RegoValue> iterator() {
+        return value.iterator();
     }
 
     public String getTypeName() { return "set";}

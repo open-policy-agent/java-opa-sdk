@@ -56,7 +56,7 @@ public class RegoBigInt implements RegoValue, RegoNumber {
             return l.getValue().equals(value);
         } else if (o instanceof RegoDecimal) {
             RegoDecimal d = (RegoDecimal) o;
-            return value.floatValue() == d.getValue();
+            return RegoDecimal.equalsInteger(d.getValue(), value);
         } else if (o instanceof RegoString) {
             RegoString s = (RegoString) o;
             try {
