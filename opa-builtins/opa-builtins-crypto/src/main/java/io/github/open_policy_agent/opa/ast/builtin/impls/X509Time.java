@@ -6,16 +6,22 @@
 // The translation and the rest of this file are licensed under the Apache License 2.0.
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.Locale;
 
 /**
  * An ASN.1 UTCTime/GeneralizedTime value as parsed by Go's cryptobyte. The offset is kept as a
- * number of seconds rather than a {@link java.time.ZoneOffset}, because Go accepts offsets up to +/-24:00,
+ * number of seconds rather than a {@link ZoneOffset}, because Go accepts offsets up to +/-24:00,
  * beyond what {@code ZoneOffset} can represent.
  */
 record X509Time(LocalDateTime local, int offsetSeconds, boolean utc) {
+
+  Instant instant() {
+    return local.toInstant(ZoneOffset.UTC).minusSeconds(offsetSeconds);
+  }
 
   /**
    * Formats the time as Go's {@code time.Time.MarshalJSON} (RFC 3339 with nanoseconds omitted when

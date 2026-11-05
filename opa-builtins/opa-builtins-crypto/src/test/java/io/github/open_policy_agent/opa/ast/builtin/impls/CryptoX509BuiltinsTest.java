@@ -1,6 +1,7 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -29,7 +31,7 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for crypto.x509.parse_certificates.
+ * Tests for crypto.x509.parse_certificates and crypto.x509.parse_and_verify_certificates.
  *
  * <p>The fixtures in {@code src/test/resources/x509} were generated with Go 1.27.2 (the toolchain
  * OPA is built with), and each {@code .json} file holds OPA's output for the {@code .pem} file of
@@ -37,16 +39,23 @@ import org.junit.jupiter.api.Test;
  */
 class CryptoX509BuiltinsTest {
 
+  /** All fixture certificates are valid from 2020-01-01 to 2120-01-01 unless stated otherwise. */
+  private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
+
   private final CryptoBuiltins builtins = new CryptoBuiltins();
   private final EvaluationContext ctx = new EvaluationContext.Builder().build();
 
   @Test
-  void providerRegistersX509Builtin() {
+  void providerRegistersX509Builtins() {
     boolean found =
         ServiceLoader.load(BuiltinProvider.class, CryptoBuiltins.class.getClassLoader()).stream()
             .anyMatch(p -> p.type().equals(CryptoBuiltins.class));
     assertTrue(found, "CryptoBuiltins should be registered as a BuiltinProvider");
-    assertTrue(builtins.builtins().containsKey("crypto.x509.parse_certificates"));
+    assertTrue(
+        builtins
+            .builtins()
+            .keySet()
+            .containsAll(List.of("crypto.x509.parse_certificates", "crypto.x509.parse_and_verify_certificates")));
   }
 
   // The full certificate object must match Go's json.Marshal of x509.Certificate, field by field.
@@ -191,8 +200,118 @@ class CryptoX509BuiltinsTest {
     assertEquals("eval_type_error: operand 1 must be string but got number", e.getMessage());
   }
 
+  @Test
+  void parseAndVerifyCertificatesMatchesOpa() {
+    RegoArray result = CryptoBuiltins.x509ParseAndVerify(resource("verify-valid.pem"), NOW);
+    assertEquals(resource("verify-valid.json").trim(), canonicalJson(result));
+  }
+
+  /**
+   * Each fixture name describes the case; the expected outcome and the verified chain (leaf first,
+   * by subject common name) are those of Go's x509.Certificate.Verify as called by OPA.
+   */
+  @Test
+  void parseAndVerifyCertificatesFollowsGoVerification() {
+    Object[][] cases = {
+      {"verify-valid", true, List.of("leaf.example.com", "Test Intermediate", "Test Root")},
+      {"verify-valid-without-intermediate", true, List.of("direct.example.com", "Test Root")},
+      // Unused certificates between the root and the leaf are offered as intermediates only.
+      {"verify-valid-extra-intermediate", true, List.of("leaf.example.com", "Test Intermediate", "Test Root")},
+      {"verify-same-cert-twice", true, List.of("Test Root")},
+      {"verify-ed25519-leaf", true, List.of("ed.example.com", "Test Intermediate", "Test Root")},
+      {"verify-rsa-pkcs1", true, List.of("rsa.example.com", "RSA Root")},
+      {"verify-rsa-pss", true, List.of("pss.example.com", "RSA Root")},
+      // The first certificate is the only trust anchor; nothing else is trusted.
+      {"verify-wrong-order", false, List.of()},
+      {"verify-missing-intermediate", false, List.of()},
+      {"verify-untrusted-root", false, List.of()},
+      {"verify-bad-signature", false, List.of()},
+      // Validity periods apply to every certificate, including the root.
+      {"verify-expired-leaf", false, List.of()},
+      {"verify-not-yet-valid-leaf", false, List.of()},
+      {"verify-expired-root", false, List.of()},
+      // Without explicit key usages, Go requires a chain usable for server authentication.
+      {"verify-client-auth-only-leaf", false, List.of()},
+      {"verify-no-eku-leaf", true, List.of("noeku.example.com", "Test Intermediate", "Test Root")},
+      {"verify-intermediate-eku-mismatch", false, List.of()},
+      // Issuers must be CAs allowed to sign certificates, within their path length.
+      {"verify-intermediate-not-ca", false, List.of()},
+      {"verify-intermediate-no-cert-sign", false, List.of()},
+      {"verify-path-length-exceeded", false, List.of()},
+      {"verify-v1-root", true, List.of("t.example.com", "Test Root")},
+      {"verify-unhandled-critical-extension", false, List.of()},
+      // SHA-1 signatures and RSA keys under 1024 bits are rejected; the root's own signature is
+      // never checked.
+      {"verify-sha1-signature", false, List.of()},
+      {"verify-rsa-sha1-signature", false, List.of()},
+      {"verify-sha1-root-self-signature", true, List.of("leaf.example.com", "Test Intermediate", "Test Root")},
+      {"verify-rsa-512-intermediate", false, List.of()},
+      // Signature encodings Go rejects even though the signature value itself checks out. The JDK's
+      // SHA256withRSA accepts a DigestInfo without NULL parameters; Go does not.
+      {"verify-rsa-digest-info-without-null", false, List.of()},
+      {"verify-rsa-pss-wrong-salt-length", false, List.of()},
+      {"verify-ecdsa-signature-trailing-data", false, List.of()},
+      {"verify-ed25519-non-canonical-signature", false, List.of()},
+      {"verify-signature-algorithm-key-mismatch", false, List.of()},
+      // Name constraints of every CA apply to all names of the certificates below it.
+      {"verify-name-constraints-permitted", true, List.of("nc", "Constrained CA", "Test Root")},
+      {"verify-name-constraints-dns-not-permitted", false, List.of()},
+      {"verify-name-constraints-dns-excluded", false, List.of()},
+      {"verify-name-constraints-ip-excluded", false, List.of()},
+      {"verify-name-constraints-email-not-permitted", false, List.of()},
+      {"verify-name-constraints-uri-ip-host", false, List.of()},
+      {"verify-name-constraints-wildcard-excluded", false, List.of()},
+      // RFC 5280 policy processing, as updated by RFC 9618.
+      {"verify-policy-required-present", true, List.of("n.example.com", "Policy Intermediate", "Test Root")},
+      {"verify-policy-required-missing", false, List.of()},
+      {"verify-policy-mapping-to-any-policy", false, List.of()},
+    };
+    for (Object[] c : cases) {
+      String name = (String) c[0];
+      RegoArray result = CryptoBuiltins.x509ParseAndVerify(resource(name + ".pem"), NOW);
+      assertEquals(RegoBoolean.of((Boolean) c[1]), result.getValues().get(0), name);
+      assertEquals(c[2], commonNames((RegoArray) result.getValues().get(1)), name);
+    }
+  }
+
+  // Like OPA, input that cannot be parsed is reported as an invalid chain rather than an error.
+  @Test
+  void parseAndVerifyCertificatesReturnsFalseForUnusableInput() {
+    String leafOnly = resource("parse-ed25519.pem");
+    for (String input : List.of("", "foobar", "YmFkc3RyaW5n", leafOnly, resource("error-negative-serial.pem") + leafOnly)) {
+      RegoArray result = CryptoBuiltins.x509ParseAndVerify(input, NOW);
+      assertEquals(new RegoArray(List.of(RegoBoolean.FALSE, new RegoArray())), result, input);
+    }
+  }
+
+  @Test
+  void parseAndVerifyCertificatesUsesTheCurrentTime() {
+    assertEquals(RegoBoolean.TRUE, verify(resource("verify-valid.pem")).getValues().get(0));
+    assertEquals(RegoBoolean.FALSE, verify(resource("verify-expired-leaf.pem")).getValues().get(0));
+  }
+
+  @Test
+  void parseAndVerifyCertificatesRejectsNonStringInput() {
+    TypeError e =
+        assertThrows(
+            TypeError.class, () -> builtins.x509ParseAndVerifyCertificates(ctx, new RegoValue[] {RegoBoolean.TRUE}));
+    assertEquals("eval_type_error: operand 1 must be string but got boolean", e.getMessage());
+  }
+
+  // Go verifies P-224 signatures, but Java 17 no longer provides the curve, so such chains are
+  // reported as invalid rather than accepted without verification.
+  @Test
+  void parseAndVerifyCertificatesFailsClosedForP224Signatures() {
+    RegoArray result = CryptoBuiltins.x509ParseAndVerify(resource("verify-p224-root.pem"), NOW);
+    assertFalse(((RegoBoolean) result.getValues().get(0)).getValue());
+  }
+
   private RegoArray parse(String input) {
     return builtins.x509ParseCertificates(ctx, new RegoValue[] {new RegoString(input)});
+  }
+
+  private RegoArray verify(String input) {
+    return builtins.x509ParseAndVerifyCertificates(ctx, new RegoValue[] {new RegoString(input)});
   }
 
   private static List<String> commonNames(RegoArray certs) {

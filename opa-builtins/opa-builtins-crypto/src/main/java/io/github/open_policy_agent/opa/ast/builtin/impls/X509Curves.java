@@ -19,6 +19,7 @@ final class X509Curves {
   static final Curve P224 =
       new Curve(
           "P-224",
+          "secp224r1",
           new int[] {1, 3, 132, 0, 33},
           "ffffffffffffffffffffffffffffffff000000000000000000000001",
           "b4050a850c04b3abf54132565044b0b7d7bfd8ba270b39432355ffb4",
@@ -26,6 +27,7 @@ final class X509Curves {
   static final Curve P256 =
       new Curve(
           "P-256",
+          "secp256r1",
           new int[] {1, 2, 840, 10045, 3, 1, 7},
           "ffffffff00000001000000000000000000000000ffffffffffffffffffffffff",
           "5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b",
@@ -34,6 +36,7 @@ final class X509Curves {
   static final Curve P384 =
       new Curve(
           "P-384",
+          "secp384r1",
           new int[] {1, 3, 132, 0, 34},
           "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff",
           "b3312fa7e23ee7e4988e056be3f82d19181d9c6efe8141120314088f5013875ac656398d8a2ed19d2a85c8edd3ec2aef",
@@ -41,6 +44,7 @@ final class X509Curves {
   static final Curve P521 =
       new Curve(
           "P-521",
+          "secp521r1",
           new int[] {1, 3, 132, 0, 35},
           "01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
           "0051953eb9618e1c9a1f929a21a0b68540eea2da725b99b315f3b8b489918ef109e156193951ec7e937b1652c0bd3bb1bf073573df883d2c34f1ef451fd46b503f00",
@@ -59,12 +63,20 @@ final class X509Curves {
     return null;
   }
 
+  static Curve byName(String name) {
+    for (Curve c : CURVES) {
+      if (c.name().equals(name)) {
+        return c;
+      }
+    }
+    return null;
+  }
 
   /** A short Weierstrass curve y^2 = x^3 - 3x + b over GF(p). */
-  record Curve(String name, int[] oid, BigInteger p, BigInteger b, String elementError) {
+  record Curve(String name, String jcaName, int[] oid, BigInteger p, BigInteger b, String elementError) {
 
-    Curve(String name, int[] oid, String p, String b, String elementError) {
-      this(name, oid, new BigInteger(p, 16), new BigInteger(b, 16), elementError);
+    Curve(String name, String jcaName, int[] oid, String p, String b, String elementError) {
+      this(name, jcaName, oid, new BigInteger(p, 16), new BigInteger(b, 16), elementError);
     }
 
     private String shortName() {

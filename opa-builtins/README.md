@@ -89,9 +89,8 @@ Note: String builtins (`contains`, `concat`, `split`, `sprintf`, `trim`, etc.) a
 | `crypto.md5`, `crypto.sha1`, `crypto.sha256` | Yes |
 | `crypto.hmac.md5/sha1/sha256/sha512` | Yes |
 | `crypto.hmac.equal` | Yes |
-| `crypto.x509.parse_certificates` | Yes |
-| `crypto.x509.parse_and_verify_certificates`, `crypto.x509.parse_and_verify_certificates_with_options` | No |
-| `crypto.x509.parse_certificate_request` | No |
+| `crypto.x509.parse_certificates`, `crypto.x509.parse_and_verify_certificates` | Yes |
+| `crypto.x509.parse_and_verify_certificates_with_options`, `crypto.x509.parse_certificate_request` | No |
 | `crypto.x509.parse_keypair`, `crypto.x509.parse_rsa_private_key`, `crypto.parse_private_keys` | No |
 | **Net** (opa-builtins-net) | |
 | `net.cidr_contains`, `net.cidr_contains_matches` | Yes |

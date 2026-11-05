@@ -191,6 +191,21 @@ final class X509Der {
     return new BigInteger(1, b);
   }
 
+  /**
+   * Reads an INTEGER into Go's {@code []byte} form (ReadASN1Integer(*[]byte)): negative values are
+   * rejected and leading zero bytes are stripped.
+   */
+  byte[] readUnsignedIntegerBytes() {
+    byte[] b = readIntegerBytes(TAG_INTEGER);
+    if (b == null || (b[0] & 0x80) == 0x80) {
+      return null;
+    }
+    int i = 0;
+    while (b.length - i > 1 && b[i] == 0) {
+      i++;
+    }
+    return Arrays.copyOfRange(b, i, b.length);
+  }
 
   /** Reads a DER BOOLEAN (only 0x00 and 0xff are accepted), or returns null. */
   Boolean readBoolean() {

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -37,7 +38,8 @@ public class CryptoBuiltins implements BuiltinProvider {
         Map.entry("crypto.hmac.sha256", instance::hmacSha256),
         Map.entry("crypto.hmac.sha512", instance::hmacSha512),
         Map.entry("crypto.hmac.equal", instance::hmacEqual),
-        Map.entry("crypto.x509.parse_certificates", instance::x509ParseCertificates));
+        Map.entry("crypto.x509.parse_certificates", instance::x509ParseCertificates),
+        Map.entry("crypto.x509.parse_and_verify_certificates", instance::x509ParseAndVerifyCertificates));
     // @formatter:on
   }
 
@@ -170,6 +172,52 @@ public class CryptoBuiltins implements BuiltinProvider {
   public RegoArray x509ParseCertificates(EvaluationContext ctx, RegoValue[] args) {
     String certs = getArg(args, 0, RegoString.class).getValue();
     return x509Values(X509Input.parseCertificates(certs));
+  }
+
+  @OpaBuiltin(
+      name = "crypto.x509.parse_and_verify_certificates",
+      description =
+          "Returns one or more certificates from the given string containing PEM or base64 encoded DER"
+              + " certificates after verifying the supplied certificates form a complete certificate chain back to a"
+              + " trusted root. The first certificate is treated as the root and the last is treated as the leaf, with"
+              + " all others being treated as intermediates.",
+      categories = {"crypto"},
+      args = {
+        @OpaType(
+            type = "string",
+            name = "certs",
+            description =
+                "base64 encoded DER or PEM data containing two or more certificates where the first is a root CA, the last is a"
+                    + " leaf certificate, and all others are intermediate CAs")
+      },
+      result =
+          @OpaType(
+              type = "array",
+              name = "output",
+              description =
+                  "array of `[valid, certs]`: if the input certificate chain could be verified then `valid` is `true` and"
+                      + " `certs` is an array of X.509 certificates represented as objects; if the input certificate chain"
+                      + " could not be verified then `valid` is `false` and `certs` is `[]`"))
+  public RegoArray x509ParseAndVerifyCertificates(EvaluationContext ctx, RegoValue[] args) {
+    String certs = getArg(args, 0, RegoString.class).getValue();
+    return x509ParseAndVerify(certs, Instant.now());
+  }
+
+  /**
+   * Verifies the chain at the given time. As in OPA, input that cannot be parsed, or a chain that
+   * does not verify, yields {@code [false, []]} rather than an error.
+   */
+  static RegoArray x509ParseAndVerify(String input, Instant now) {
+    List<X509Cert> chain;
+    try {
+      chain = X509Verifier.verify(X509Input.parseCertificates(input), now);
+    } catch (BuiltinError e) {
+      chain = null;
+    }
+    if (chain == null) {
+      return new RegoArray(List.of(RegoBoolean.FALSE, new RegoArray()));
+    }
+    return new RegoArray(List.of(RegoBoolean.TRUE, x509Values(chain)));
   }
 
   private static RegoArray x509Values(List<X509Cert> certs) {
