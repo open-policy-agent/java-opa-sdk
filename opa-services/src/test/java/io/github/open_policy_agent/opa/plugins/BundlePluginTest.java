@@ -6,12 +6,18 @@ import static org.mockito.Mockito.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
+import com.sun.net.httpserver.HttpServer;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -492,6 +498,107 @@ class BundlePluginTest {
   }
 
   // Helper methods to create test bundles
+
+  @Test
+  void bundle_corruptSecondActivation_keepsLastGoodBundle(@TempDir Path tempDir) throws Exception {
+    Path bundlePath = tempDir.resolve("test.tar.gz");
+    Files.write(bundlePath, createValidBundle());
+    BundlePlugin.Bundle bundle = fileBundle(tempDir);
+
+    bundle.downloadBundle().get();
+    bundle.getInitialActivation().get();
+    assertTrue(store.getBundles().containsKey("test-bundle"));
+    assertEquals("", bundle.status.message());
+
+    Files.write(bundlePath, new byte[] {1, 2, 3, 4});
+    Files.setLastModifiedTime(bundlePath, FileTime.fromMillis(System.currentTimeMillis() + 10_000));
+    bundle.downloadBundle().get();
+
+    assertTrue(store.getBundles().containsKey("test-bundle"), "last good bundle must stay live");
+    assertNotEquals("", bundle.status.message());
+    assertTrue(bundle.getInitialActivation().isDone());
+    assertFalse(bundle.getInitialActivation().isCompletedExceptionally());
+
+    // A later good bundle clears the failure.
+    Files.write(bundlePath, createValidBundle());
+    Files.setLastModifiedTime(bundlePath, FileTime.fromMillis(System.currentTimeMillis() + 20_000));
+    bundle.downloadBundle().get();
+    assertEquals("", bundle.status.message());
+  }
+
+  @Test
+  void bundle_corruptFirstActivation_failsInitialActivation(@TempDir Path tempDir) throws Exception {
+    Files.write(tempDir.resolve("test.tar.gz"), new byte[] {1, 2, 3, 4});
+    BundlePlugin.Bundle bundle = fileBundle(tempDir);
+
+    bundle.downloadBundle().get();
+
+    assertTrue(bundle.getInitialActivation().isCompletedExceptionally());
+    assertNotEquals("", bundle.status.message());
+    assertTrue(store.getBundles().isEmpty());
+  }
+
+  @Test
+  void bundle_failedActivation_doesNotRememberEtag() throws Exception {
+    byte[] good = createValidBundle();
+    byte[][] body = {new byte[] {1, 2, 3, 4}};
+    List<String> ifNoneMatch = new CopyOnWriteArrayList<>();
+    HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+    server.createContext(
+        "/bundle",
+        exchange -> {
+          ifNoneMatch.add(String.valueOf(exchange.getRequestHeaders().getFirst("If-None-Match")));
+          exchange.getResponseHeaders().add("ETag", "\"v" + body[0].length + "\"");
+          exchange.getResponseHeaders().add("Content-Type", "application/gzip");
+          exchange.sendResponseHeaders(200, body[0].length);
+          exchange.getResponseBody().write(body[0]);
+          exchange.close();
+        });
+    server.start();
+    try {
+      Config.ServiceConfig service =
+          new Config.ServiceConfig()
+              .setName("test-service")
+              .setUrl("http://127.0.0.1:" + server.getAddress().getPort());
+      config.setServices(Collections.singletonMap("test-service", service));
+      config.setBundles(
+          Collections.singletonMap(
+              "test-bundle", new Config.BundleConfig().setService("test-service").setResource("bundle")));
+      BundlePlugin.Bundle bundle = newBundle();
+
+      bundle.downloadBundle().get(10, TimeUnit.SECONDS);
+      assertTrue(bundle.getInitialActivation().isCompletedExceptionally());
+
+      body[0] = good;
+      bundle.downloadBundle().get(10, TimeUnit.SECONDS);
+
+      assertEquals(List.of("null", "null"), ifNoneMatch, "ETag of a failed bundle must not be sent back");
+      assertTrue(store.getBundles().containsKey("test-bundle"));
+    } finally {
+      server.stop(0);
+    }
+  }
+
+  private BundlePlugin.Bundle fileBundle(Path dir) {
+    Config.ServiceConfig service =
+        new Config.ServiceConfig().setName("test-service").setUrl(dir.toUri().toString());
+    config.setServices(Collections.singletonMap("test-service", service));
+    config.setBundles(
+        Collections.singletonMap(
+            "test-bundle", new Config.BundleConfig().setService("test-service").setResource("test.tar.gz")));
+    return newBundle();
+  }
+
+  private BundlePlugin.Bundle newBundle() {
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+    return ((BundlePlugin) new BundlePlugin().initialize(manager)).getBundle("test-bundle");
+  }
 
   private byte[] createValidBundle() throws IOException {
     ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
