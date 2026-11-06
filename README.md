@@ -301,6 +301,7 @@ See [opa-services/README.md](opa-services/README.md#tls-and-mtls) for a full mTL
 |-------|------|---------|-------------|
 | `service` | string | - | Name of the service to use |
 | `resource` | string | - | Resource path for the bundle |
+| `trigger` | string | `periodic` | `periodic` polls on a schedule; `manual` downloads only when `BundlePlugin.getBundle(name).refresh()` is called (`polling` is rejected) |
 | `polling.min_delay_seconds` | int | 60 | Minimum delay between polls |
 | `polling.max_delay_seconds` | int | 120 | Maximum delay between polls |
 

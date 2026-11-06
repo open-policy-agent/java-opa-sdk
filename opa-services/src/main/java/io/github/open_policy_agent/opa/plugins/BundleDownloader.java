@@ -54,6 +54,12 @@ public abstract class BundleDownloader {
   protected volatile String etag;
   protected volatile long lastModifiedTime = 0;
   protected long maxSizeBytes = Config.BundleConfig.DEFAULT_MAX_SIZE_BYTES;
+  protected boolean manualTrigger;
+
+  // Failure of the download attempt in progress; read by refresh(). Attempts are serialized by
+  // refreshTail, so a single slot is enough.
+  private volatile Throwable lastFailure;
+  private CompletableFuture<Void> refreshTail = CompletableFuture.completedFuture(null);
 
   // Fallback when no service config is available; matches the response_header_timeout_seconds
   // default in Config.ServiceConfig.
@@ -194,26 +200,40 @@ public abstract class BundleDownloader {
     return this;
   }
 
+  /**
+   * Switch between {@code periodic} polling (the default) and {@code manual} refresh, where no
+   * download happens until {@link #refresh()} is called.
+   */
+  public BundleDownloader setManualTrigger(boolean manualTrigger) {
+    this.manualTrigger = manualTrigger;
+    return this;
+  }
+
   public BundleDownloader setMaxSizeBytes(long maxSizeBytes) {
     this.maxSizeBytes = maxSizeBytes;
     return this;
   }
 
   /**
-   * @return a future that completes when the first bundle download succeeds, or completes
-   *     exceptionally with the underlying download/activation error
+   * @return a future that completes when the first bundle download succeeds. In periodic mode it
+   *     completes exceptionally with the underlying error if that first attempt fails; in manual
+   *     mode a failed {@link #refresh()} leaves it pending so a later refresh can still complete it
    */
   public CompletableFuture<Void> getInitialActivation() {
     return initialActivation;
   }
 
   /**
-   * Start polling for bundle updates.
+   * Start polling for bundle updates. In manual trigger mode nothing is scheduled and no download
+   * happens until {@link #refresh()} is called.
    *
    * @param scheduler the scheduler to use for periodic downloads
    * @return a future that completes when the initial bundle is downloaded and activated
    */
   public CompletableFuture<Void> startPolling(ScheduledExecutorService scheduler) {
+    if (manualTrigger) {
+      return initialActivation;
+    }
     int minDelay =
         (polling != null && polling.getMinDelaySeconds() != null)
             ? polling.getMinDelaySeconds()
@@ -226,6 +246,41 @@ public abstract class BundleDownloader {
     scheduleDownload(scheduler, minDelay, maxDelay, 0);
 
     return initialActivation;
+  }
+
+  /**
+   * Download and activate the bundle now. Intended for {@code trigger: manual}; calls are
+   * serialized with each other, so downloads never overlap. Not safe to combine with periodic
+   * polling. For file-based bundles the read and activation run on the calling thread when no
+   * earlier refresh is pending; HTTP downloads are asynchronous.
+   *
+   * @return a future that completes when this attempt has finished, or completes exceptionally
+   *     with the download/activation error
+   */
+  public synchronized CompletableFuture<Void> refresh() {
+    CompletableFuture<Void> attempt =
+        refreshTail.thenCompose(
+            ignored -> {
+              lastFailure = null;
+              return downloadBundle()
+                  .thenCompose(
+                      done ->
+                          lastFailure == null
+                              ? CompletableFuture.<Void>completedFuture(null)
+                              : CompletableFuture.<Void>failedFuture(lastFailure));
+            });
+    refreshTail = attempt.handle((result, throwable) -> null);
+    return attempt;
+  }
+
+  // Records a failed download attempt. Periodic mode fails the initial-activation future with the
+  // first error; manual mode leaves it pending so a later refresh() can still complete it.
+  private void fail(Throwable cause) {
+    status.failed(cause);
+    lastFailure = cause;
+    if (!manualTrigger) {
+      initialActivation.completeExceptionally(cause);
+    }
   }
 
   // Schedules one download after delaySeconds;
@@ -324,13 +379,6 @@ public abstract class BundleDownloader {
     }
   }
 
-  private void fail(Throwable cause) {
-    status.failed(cause);
-    if (!initialActivation.isDone()) {
-      initialActivation.completeExceptionally(cause);
-    }
-  }
-
   /**
    * Handle downloading from a file:// URI or filesystem path.
    *
@@ -343,9 +391,7 @@ public abstract class BundleDownloader {
     if (lastModifiedTime != 0 && lastModifiedTime == currentModTimeMillis) {
       manager.getLogger().debug("Bundle '%s': File not modified, skipping activation", name);
       status.notModified();
-      if (!initialActivation.isDone()) {
-        initialActivation.complete(null);
-      }
+      initialActivation.complete(null);
       return;
     }
 
@@ -353,9 +399,7 @@ public abstract class BundleDownloader {
     activateBundle(bundleData);
     lastModifiedTime = currentModTimeMillis;
 
-    if (!initialActivation.isDone()) {
-      initialActivation.complete(null);
-    }
+    initialActivation.complete(null);
   }
 
   /**
@@ -411,9 +455,7 @@ public abstract class BundleDownloader {
     if (response.statusCode() == 304) {
       manager.getLogger().debug("Bundle '%s': Not modified (ETag match)", name);
       status.notModified();
-      if (!initialActivation.isDone()) {
-        initialActivation.complete(null);
-      }
+      initialActivation.complete(null);
       return;
     }
 
@@ -444,9 +486,7 @@ public abstract class BundleDownloader {
       }
       // Only a bundle that activated may be answered "not modified" next time.
       this.etag = newEtag;
-      if (!initialActivation.isDone()) {
-        initialActivation.complete(null);
-      }
+      initialActivation.complete(null);
     } else {
       final HttpStatusException failure = new HttpStatusException(response.statusCode());
       manager.getLogger().error("Bundle '%s': %s", name, failure.getMessage());

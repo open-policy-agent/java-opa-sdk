@@ -372,6 +372,12 @@ public class Config {
     }
   }
 
+  /** Bundle {@code trigger} value for scheduled, jittered polling (the default). */
+  public static final String TRIGGER_PERIODIC = "periodic";
+
+  /** Bundle {@code trigger} value for on-demand refresh via {@code BundleDownloader.refresh()}. */
+  public static final String TRIGGER_MANUAL = "manual";
+
   public static class BundleConfig {
     /** Default maximum bundle size (compressed download and decompressed contents): 512 MB. */
     public static final long DEFAULT_MAX_SIZE_BYTES = 512L * 1024 * 1024;
@@ -379,6 +385,7 @@ public class Config {
     private PollingConfig polling;
     private String service;
     private String resource;
+    private String trigger = TRIGGER_PERIODIC;
 
     /**
      * Maximum bundle size in bytes, applied both to the compressed HTTP download and to the
@@ -406,6 +413,19 @@ public class Config {
 
     public BundleConfig setPolling(PollingConfig polling) {
       this.polling = polling;
+      return this;
+    }
+
+    /**
+     * Either {@link Config#TRIGGER_PERIODIC} or {@link Config#TRIGGER_MANUAL}; an unset (null)
+     * trigger is treated as periodic.
+     */
+    public String getTrigger() {
+      return trigger == null ? TRIGGER_PERIODIC : trigger;
+    }
+
+    public BundleConfig setTrigger(String trigger) {
+      this.trigger = trigger;
       return this;
     }
 
@@ -451,6 +471,9 @@ public class Config {
           + '\''
           + ", resource='"
           + resource
+          + '\''
+          + ", trigger='"
+          + trigger
           + '\''
           + ", maxSizeBytes="
           + maxSizeBytes

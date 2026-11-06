@@ -9,6 +9,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPOutputStream;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -373,6 +375,120 @@ class BundlePluginTest {
         store.getBundles().get("test-bundle").irPolicy, "plan.json should have been loaded");
     assertNotNull(
         store.getIrPolicyForEntrypoint("main/main"), "main/main plan should be queryable from store");
+  }
+
+  @Test
+  void validate_manualTriggerWithPolling_returnsError() {
+    Config.BundleConfig bundle =
+        new Config.BundleConfig()
+            .setService("test-service")
+            .setResource("test.tar.gz")
+            .setTrigger(Config.TRIGGER_MANUAL)
+            .setPolling(new Config.PollingConfig());
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    Set<String> errors = new BundlePlugin().validate(buildManager());
+
+    assertTrue(errors.stream().anyMatch(e -> e.contains("polling") && e.contains("manual")), errors.toString());
+  }
+
+  @Test
+  void validate_unknownTrigger_returnsError() {
+    Config.BundleConfig bundle =
+        new Config.BundleConfig()
+            .setService("test-service")
+            .setResource("test.tar.gz")
+            .setTrigger("sometimes");
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    Set<String> errors = new BundlePlugin().validate(buildManager());
+
+    assertTrue(errors.stream().anyMatch(e -> e.contains("invalid trigger 'sometimes'")), errors.toString());
+  }
+
+  @Test
+  void validate_nullTrigger_treatedAsPeriodic() {
+    Config.BundleConfig bundle =
+        new Config.BundleConfig()
+            .setService("test-service")
+            .setResource("test.tar.gz")
+            .setTrigger(null)
+            .setPolling(new Config.PollingConfig());
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    assertTrue(new BundlePlugin().validate(buildManager()).isEmpty());
+  }
+
+  @Test
+  void validate_manualTriggerWithoutPolling_isValid() {
+    Config.BundleConfig bundle =
+        new Config.BundleConfig()
+            .setService("test-service")
+            .setResource("test.tar.gz")
+            .setTrigger(Config.TRIGGER_MANUAL);
+    config.setBundles(Collections.singletonMap("test-bundle", bundle));
+
+    assertTrue(new BundlePlugin().validate(buildManager()).isEmpty());
+  }
+
+  @Test
+  void manualTrigger_doesNotFetchUntilRefresh(@TempDir Path tempDir) throws Exception {
+    Files.write(tempDir.resolve("test.tar.gz"), createValidBundle());
+    BundlePlugin plugin = startManualPlugin(tempDir, "test.tar.gz");
+
+    Thread.sleep(300);
+    assertEquals(PluginManager.Status.NOT_READY, manager.getPluginStatus("bundles"));
+    assertTrue(store.getBundles().isEmpty());
+
+    plugin.getBundle("test-bundle").refresh().get(5, TimeUnit.SECONDS);
+
+    assertNotNull(store.getBundles().get("test-bundle"));
+    assertEquals(PluginManager.Status.OK, manager.getPluginStatus("bundles"));
+  }
+
+  @Test
+  void manualTrigger_failedRefreshCanBeRetried(@TempDir Path tempDir) throws Exception {
+    BundlePlugin plugin = startManualPlugin(tempDir, "test.tar.gz");
+    BundlePlugin.Bundle bundle = plugin.getBundle("test-bundle");
+
+    ExecutionException failure =
+        assertThrows(ExecutionException.class, () -> bundle.refresh().get(5, TimeUnit.SECONDS));
+    assertNotNull(failure.getCause());
+    assertFalse(bundle.getInitialActivation().isDone(), "a failed manual refresh must not settle initial activation");
+    assertNotEquals(PluginManager.Status.ERROR, manager.getPluginStatus("bundles"));
+
+    Files.write(tempDir.resolve("test.tar.gz"), createValidBundle());
+    bundle.refresh().get(5, TimeUnit.SECONDS);
+
+    assertTrue(bundle.getInitialActivation().isDone());
+    assertEquals(PluginManager.Status.OK, manager.getPluginStatus("bundles"));
+  }
+
+  private PluginManager buildManager() {
+    manager =
+        new PluginManager.Builder()
+            .withId("test-opa")
+            .withStore(store)
+            .withConfig(config)
+            .withLogger(mockLogger)
+            .build();
+    return manager;
+  }
+
+  private BundlePlugin startManualPlugin(Path dir, String resource) {
+    config.setServices(
+        Collections.singletonMap(
+            "test-service", new Config.ServiceConfig().setName("test-service").setUrl(dir.toUri().toString())));
+    config.setBundles(
+        Collections.singletonMap(
+            "test-bundle",
+            new Config.BundleConfig()
+                .setService("test-service")
+                .setResource(resource)
+                .setTrigger(Config.TRIGGER_MANUAL)));
+    BundlePlugin plugin = (BundlePlugin) new BundlePlugin().initialize(buildManager());
+    plugin.start();
+    return plugin;
   }
 
   // Helper methods to create test bundles
