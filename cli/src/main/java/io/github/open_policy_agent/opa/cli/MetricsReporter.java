@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 public class MetricsReporter {
@@ -27,68 +28,47 @@ public class MetricsReporter {
   }
 
   private void printSingleMetricsTable(List<Metrics> allMetrics) {
-    final Map<String, Metrics.Metric> metricsData = allMetrics.get(0).all();
+    final Map<String, Row> rows = rows(allMetrics.get(0));
 
     int maxMetricNameWidth = "METRIC".length();
-    int maxValueWidth = "TIME".length();
+    int maxValueWidth = "VALUE".length();
 
-    for (final Map.Entry<String, Metrics.Metric> entry : metricsData.entrySet()) {
-      final String metricName = entry.getKey();
-      maxMetricNameWidth = Math.max(maxMetricNameWidth, metricName.length());
-
-      String value = "";
-      if (entry.getValue() instanceof Metrics.Timer) {
-        final Metrics.Timer timer = (Metrics.Timer) entry.getValue();
-        value = Format.duration(timer.value().toNanos());
-      }
-      maxValueWidth = Math.max(maxValueWidth, value.length());
+    for (final Map.Entry<String, Row> entry : rows.entrySet()) {
+      maxMetricNameWidth = Math.max(maxMetricNameWidth, entry.getKey().length());
+      maxValueWidth = Math.max(maxValueWidth, entry.getValue().text().length());
     }
 
     maxMetricNameWidth += 2;
     maxValueWidth += 2;
 
     printBorder(maxMetricNameWidth, maxValueWidth);
-    printRow("METRIC", "TIME", maxMetricNameWidth, maxValueWidth);
+    printRow("METRIC", "VALUE", maxMetricNameWidth, maxValueWidth);
     printBorder(maxMetricNameWidth, maxValueWidth);
 
-    for (final Map.Entry<String, Metrics.Metric> entry : metricsData.entrySet()) {
-      final String metricName = entry.getKey();
-      String value = "";
-
-      if (entry.getValue() instanceof Metrics.Timer) {
-        final Metrics.Timer timer = (Metrics.Timer) entry.getValue();
-        value = Format.duration(timer.value().toNanos());
-      }
-
-      printRow(metricName, value, maxMetricNameWidth, maxValueWidth);
+    for (final Map.Entry<String, Row> entry : rows.entrySet()) {
+      printRow(entry.getKey(), entry.getValue().text(), maxMetricNameWidth, maxValueWidth);
     }
 
     printBorder(maxMetricNameWidth, maxValueWidth);
   }
 
   private void printStatisticalMetricsTable(List<Metrics> allMetrics) {
-    final Map<String, List<Long>> timerValuesByName = new LinkedHashMap<>();
-
-    final Map<String, Metrics.Metric> firstMetrics = allMetrics.get(0).all();
-    for (final Map.Entry<String, Metrics.Metric> entry : firstMetrics.entrySet()) {
-      if (entry.getValue() instanceof Metrics.Timer) {
-        timerValuesByName.put(entry.getKey(), new ArrayList<>());
-      }
+    final Map<String, Row> firstRows = rows(allMetrics.get(0));
+    final Map<String, List<Long>> valuesByName = new LinkedHashMap<>();
+    for (final String name : firstRows.keySet()) {
+      valuesByName.put(name, new ArrayList<>());
     }
 
     for (final Metrics metrics : allMetrics) {
-      for (final Map.Entry<String, Metrics.Metric> entry : metrics.all().entrySet()) {
-        if (entry.getValue() instanceof Metrics.Timer) {
-          final Metrics.Timer timer = (Metrics.Timer) entry.getValue();
-          final List<Long> values = timerValuesByName.get(entry.getKey());
-          if (values != null) {
-            values.add(timer.value().toNanos());
-          }
+      for (final Map.Entry<String, Row> entry : rows(metrics).entrySet()) {
+        final List<Long> values = valuesByName.get(entry.getKey());
+        if (values != null) {
+          values.add(entry.getValue().value);
         }
       }
     }
 
-    if (timerValuesByName.isEmpty()) {
+    if (valuesByName.isEmpty()) {
       return;
     }
 
@@ -100,17 +80,18 @@ public class MetricsReporter {
     int p99Width = "99%".length();
 
     final Map<String, Statistics> statsByName = new LinkedHashMap<>();
-    for (final Map.Entry<String, List<Long>> entry : timerValuesByName.entrySet()) {
+    for (final Map.Entry<String, List<Long>> entry : valuesByName.entrySet()) {
       final String metricName = entry.getKey();
+      final Row row = firstRows.get(metricName);
       final Statistics stats = calculateStatistics(entry.getValue());
       statsByName.put(metricName, stats);
 
       metricWidth = Math.max(metricWidth, metricName.length());
-      minWidth = Math.max(minWidth, Format.duration(stats.min).length());
-      maxWidth = Math.max(maxWidth, Format.duration(stats.max).length());
-      meanWidth = Math.max(meanWidth, Format.duration(stats.mean).length());
-      p90Width = Math.max(p90Width, Format.duration(stats.p90).length());
-      p99Width = Math.max(p99Width, Format.duration(stats.p99).length());
+      minWidth = Math.max(minWidth, row.format(stats.min).length());
+      maxWidth = Math.max(maxWidth, row.format(stats.max).length());
+      meanWidth = Math.max(meanWidth, row.format(stats.mean).length());
+      p90Width = Math.max(p90Width, row.format(stats.p90).length());
+      p99Width = Math.max(p99Width, row.format(stats.p99).length());
     }
 
     metricWidth += 2;
@@ -137,14 +118,15 @@ public class MetricsReporter {
     printStatisticalBorder(metricWidth, minWidth, maxWidth, meanWidth, p90Width, p99Width);
 
     for (final Map.Entry<String, Statistics> entry : statsByName.entrySet()) {
+      final Row row = firstRows.get(entry.getKey());
       final Statistics stats = entry.getValue();
       printStatisticalRow(
           entry.getKey(),
-          Format.duration(stats.min),
-          Format.duration(stats.max),
-          Format.duration(stats.mean),
-          Format.duration(stats.p90),
-          Format.duration(stats.p99),
+          row.format(stats.min),
+          row.format(stats.max),
+          row.format(stats.mean),
+          row.format(stats.p90),
+          row.format(stats.p99),
           metricWidth,
           minWidth,
           maxWidth,
@@ -154,6 +136,42 @@ public class MetricsReporter {
     }
 
     printStatisticalBorder(metricWidth, minWidth, maxWidth, meanWidth, p90Width, p99Width);
+  }
+
+  /**
+   * Flattens a metrics snapshot into table rows. Timers keep their duration formatting, counters
+   * print their value, and histograms get one row per stat, named like {@link
+   * io.github.open_policy_agent.opa.metrics.MetricsPrinter} names them.
+   */
+  private static Map<String, Row> rows(Metrics metrics) {
+    final Map<String, Row> rows = new LinkedHashMap<>();
+    for (final Map.Entry<String, Metrics.Metric> entry : metrics.all().entrySet()) {
+      final String name = entry.getKey();
+      final Metrics.Metric metric = entry.getValue();
+      if (metric instanceof Metrics.Timer) {
+        rows.put(name, new Row(((Metrics.Timer) metric).value().toNanos(), true));
+      } else if (metric instanceof Metrics.Counter) {
+        rows.put(name, new Row(((Metrics.Counter) metric).value(), false));
+      } else if (metric instanceof Metrics.Histogram) {
+        final Metrics.Histogram.Values v = ((Metrics.Histogram) metric).value();
+        if (v == null) {
+          continue;
+        }
+        final String prefix = name + "_";
+        rows.put(prefix + "count", new Row(v.count, false));
+        rows.put(prefix + "min", new Row(v.min, false));
+        rows.put(prefix + "max", new Row(v.max, false));
+        rows.put(prefix + "mean", new Row(v.mean, false));
+        rows.put(prefix + "stddev", new Row(v.stddev, false));
+        rows.put(prefix + "median", new Row(v.median, false));
+        if (v.percentiles != null) {
+          for (final Map.Entry<String, Integer> p : new TreeMap<>(v.percentiles).entrySet()) {
+            rows.put(prefix + p.getKey(), new Row(p.getValue(), false));
+          }
+        }
+      }
+    }
+    return rows;
   }
 
   private Statistics calculateStatistics(List<Long> values) {
@@ -236,6 +254,24 @@ public class MetricsReporter {
         col4,
         col5,
         col6);
+  }
+
+  private static class Row {
+    final long value;
+    final boolean duration;
+
+    Row(long value, boolean duration) {
+      this.value = value;
+      this.duration = duration;
+    }
+
+    String text() {
+      return format(value);
+    }
+
+    String format(long v) {
+      return duration ? Format.duration(v) : String.valueOf(v);
+    }
   }
 
   private static class Statistics {
