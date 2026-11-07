@@ -12,6 +12,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   following Go's `crypto/x509` as OPA does. Chains whose signatures use NIST
   P-224 or ML-DSA, which Java 17 does not provide, are reported as not verified
   ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129))
+- `regoj eval --metrics` prints counters and histograms instead of blank cells,
+  and the value column is now headed `VALUE` instead of `TIME`
+  ([#221](https://github.com/open-policy-agent/java-opa-sdk/issues/221))
 
 ## 0.7.0
 
