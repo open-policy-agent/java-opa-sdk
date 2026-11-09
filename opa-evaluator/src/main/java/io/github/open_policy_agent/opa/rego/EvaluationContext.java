@@ -198,6 +198,18 @@ public class EvaluationContext {
     }
   }
 
+  /**
+   * The field is null until one is set or resolved: an {@link Engine} supplies its
+   * own for a context without one, and a context used without an engine falls
+   * back to all capabilities.
+   */
+  public BuiltinRegistry builtinRegistry() {
+    if (builtinRegistry == null) {
+      builtinRegistry = BuiltinRegistry.allCapabilities();
+    }
+    return builtinRegistry;
+  }
+
   public static class Builder {
     private String entrypoint;
     private RegoValue input;
@@ -295,9 +307,6 @@ public class EvaluationContext {
     }
 
     public EvaluationContext build() {
-      if (builtinRegistry == null) {
-        builtinRegistry = BuiltinRegistry.allCapabilities();
-      }
       if (metrics == null) {
         metrics = NoOpMetrics.Instance();
       }

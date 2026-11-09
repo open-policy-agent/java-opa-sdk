@@ -21,6 +21,8 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - `time.parse_duration_ns` now parses durations as OPA does: several parts (`1h30m`), fractions
   (`1.5h`), a sign, the `d`, `w` and `y` units, and `0`. Overflowing or malformed durations are
   undefined instead of wrapping around or failing with a Java exception
+- `Engine.evaluate` now uses the engine's builtin registry for contexts built without one, so
+  `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
 
 ## 0.7.0
 
