@@ -12,6 +12,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   following Go's `crypto/x509` as OPA does. Chains whose signatures use NIST
   P-224 or ML-DSA, which Java 17 does not provide, are reported as not verified
   ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129))
+- `time.parse_duration_ns` now parses durations as OPA does: several parts (`1h30m`), fractions
+  (`1.5h`), a sign, the `d`, `w` and `y` units, and `0`. Overflowing or malformed durations are
+  undefined instead of wrapping around or failing with a Java exception
 
 ## 0.7.0
 
