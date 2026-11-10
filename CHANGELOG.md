@@ -16,6 +16,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   fails on the minimum `long`, and `round` rounds halves away from zero as OPA does
   (`round(-2.5)` is `-3`). Decimals are still doubles, so inputs more precise than a double can
   differ from OPA
+- `time.parse_duration_ns` now parses durations as OPA does: several parts (`1h30m`), fractions
+  (`1.5h`), a sign, the `d`, `w` and `y` units, and `0`. Overflowing or malformed durations are
+  undefined instead of wrapping around or failing with a Java exception
 
 ## 0.7.0
 
