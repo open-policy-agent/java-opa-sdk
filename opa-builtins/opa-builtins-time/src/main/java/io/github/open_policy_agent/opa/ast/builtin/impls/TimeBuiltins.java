@@ -123,31 +123,7 @@ public class TimeBuiltins implements BuiltinProvider {
           @OpaType(type = "number", name = "ns", description = "the `duration` in nanoseconds"))
   public RegoValue parseDurationNs(EvaluationContext ctx, RegoValue[] args) {
         String duration = getArg(args, 0, RegoString.class).getValue();
-
-        long ns;
-
-        if (duration.endsWith("ns")) {
-            duration = duration.substring(0, duration.length() - 2);
-            ns = Long.parseLong(duration);
-        } else if (duration.endsWith("us") || duration.endsWith("µs")) {
-            duration = duration.substring(0, duration.length() - 2);
-            ns = Long.parseLong(duration) * 1000;
-        } else if (duration.endsWith("ms")) {
-            duration = duration.substring(0, duration.length() - 2);
-            ns = Long.parseLong(duration) * 1_000_000;
-        } else if (duration.endsWith("s")) {
-            duration = duration.substring(0, duration.length() - 1);
-            ns = Long.parseLong(duration) * 1_000_000_000;
-        } else if (duration.endsWith("m")) {
-            duration = duration.substring(0, duration.length() - 1);
-            ns = Long.parseLong(duration) * 1_000_000_000 * 60;
-        } else if (duration.endsWith("h")) {
-            duration = duration.substring(0, duration.length() - 1);
-            ns = Long.parseLong(duration) * 1_000_000_000 * 60 * 60;
-        } else {
-      throw new BuiltinError("invalid duration format: " + duration);
-        }
-        return new RegoBigInt(ns);
+        return new RegoBigInt(GoDuration.parseNanos(duration));
     }
 
   @OpaBuiltin(
