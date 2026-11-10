@@ -12,6 +12,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
   following Go's `crypto/x509` as OPA does. Chains whose signatures use NIST
   P-224 or ML-DSA, which Java 17 does not provide, are reported as not verified
   ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129))
+- `abs`, `round`, `ceil` and `floor` now return integers beyond the `long` range, `abs` no longer
+  fails on the minimum `long`, and `round` rounds halves away from zero as OPA does
+  (`round(-2.5)` is `-3`). Decimals are still doubles, so inputs more precise than a double can
+  differ from OPA
 
 ## 0.7.0
 
