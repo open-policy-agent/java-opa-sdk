@@ -1,6 +1,7 @@
 package io.github.open_policy_agent.opa.ir;
 
 import java.math.BigInteger;
+import io.github.open_policy_agent.opa.ast.builtin.BuiltinRegistry;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
@@ -73,12 +74,20 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
   private final Policy policy;
   private final Map<String, Func> funcRegistry;
   private final ArrayList<String> staticStrings;
+  private final BuiltinRegistry builtinRegistry;
 
   // private constructor to enforce the use of the Builder
   private Evaluator(Builder builder) {
     this.policy = builder.policy;
     this.funcRegistry = builder.funcRegistry;
     this.staticStrings = builder.staticStrings;
+    this.builtinRegistry = builder.builtinRegistry;
+  }
+
+  private void useDefaultRegistry(IREvaluationContext irCtx) {
+    if (irCtx.builtinRegistry == null) {
+      irCtx.builtinRegistry = builtinRegistry;
+    }
   }
 
   public RegoValue[] evaluate(EvaluationContext ctx, RegoValue input, RegoObject data) {
@@ -95,6 +104,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
             .withFunctions(this.funcRegistry)
             .withStaticStrings(this.staticStrings)
             .build();
+    useDefaultRegistry(irCtx);
 
     // Ensure frame capacity is at least 2 for input (index 0) and data (index 1)
     int capacity = plan.getMaxLocals() + 1;
@@ -144,6 +154,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
             .withFunctionsByPath(preparedPlan.getFunctionsByPath())
             .withStaticStrings(preparedPlan.getStaticStrings())
             .build();
+    useDefaultRegistry(irCtx);
 
     // Use pre-computed frame capacity
     Frame frame = new Frame.Builder().withLocalCapacity(preparedPlan.getFrameCapacity()).build();
@@ -912,9 +923,10 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
     }
     // TODO: [ENTERPRISE] [MED] Implement nd_builtin_cache support - non-deterministic builtin
     // caching for time.now_ns(), opa.runtime(), etc.
-    if (ctx.builtinRegistry != null && ctx.builtinRegistry.hasBuiltIn(name)) {
+    final BuiltinRegistry registry = ctx.builtinRegistry();
+    if (registry.hasBuiltIn(name)) {
       try {
-        RegoValue value = ctx.builtinRegistry.getBuiltIn(name).apply(ctx, vArgs);
+        RegoValue value = registry.getBuiltIn(name).apply(ctx, vArgs);
         if (value == null) {
           return false;
         }
@@ -933,7 +945,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
       }
     } else {
       throw new FunctionNotFoundError(name)
-          .withContext("availableBuiltins", ctx.builtinRegistry.registeredBuiltins());
+          .withContext("availableBuiltins", registry.registeredBuiltins());
     }
   }
 
@@ -954,15 +966,14 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
     private Policy policy;
     private Map<String, Func> funcRegistry;
     private ArrayList<String> staticStrings = new ArrayList<>();
-    private io.github.open_policy_agent.opa.ast.builtin.BuiltinRegistry builtinRegistry;
+    private BuiltinRegistry builtinRegistry;
 
     public Builder withPolicy(Policy policy) {
       this.policy = policy;
       return this;
     }
 
-    public Builder withBuiltinRegistry(
-        io.github.open_policy_agent.opa.ast.builtin.BuiltinRegistry registry) {
+    public Builder withBuiltinRegistry(BuiltinRegistry registry) {
       this.builtinRegistry = registry;
       return this;
     }
