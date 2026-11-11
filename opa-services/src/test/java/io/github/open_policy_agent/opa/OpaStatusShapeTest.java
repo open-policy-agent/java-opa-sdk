@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
@@ -56,6 +58,7 @@ class OpaStatusShapeTest {
   private HttpServer server;
   private Opa opa;
   private String instanceId;
+  private volatile long bodyDelayMillis;
 
   @BeforeEach
   void startServer() throws IOException {
@@ -80,6 +83,8 @@ class OpaStatusShapeTest {
             exchange.sendResponseHeaders(failure, -1);
           } else if (body != null) {
             exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().flush();
+            sleepQuietly(bodyDelayMillis);
             exchange.getResponseBody().write(body);
           } else {
             exchange.sendResponseHeaders(404, -1);
@@ -499,5 +504,96 @@ class OpaStatusShapeTest {
     final JsonNode labels = awaitReport(r -> r.has("labels")).path("labels");
 
     assertTrue(labels.has("id") && labels.has("version"), labels.toString());
+  }
+
+  // ---- metrics ----
+
+  private static final String REQUEST_TIMER = "timer_bundle_request_ns";
+  private static final String LOAD_TIMER = "timer_rego_load_bundles_ns";
+
+  private static Set<String> timerNames(JsonNode status) {
+    final Set<String> names = new TreeSet<>();
+    status.path("metrics").propertyNames().forEach(names::add);
+    return names;
+  }
+
+  private static void assertPositiveNanos(JsonNode status) {
+    status.path("metrics").properties().forEach(entry -> {
+      assertTrue(entry.getValue().isIntegralNumber(), status.toString());
+      assertTrue(entry.getValue().asLong() >= 0, status.toString());
+    });
+  }
+
+  @Test
+  void aLoadedBundleReportsTheRequestAndLoadTimers() throws Exception {
+    startWithBundleA("rev-1");
+
+    final JsonNode entry = awaitBundle("a", b -> activated(b) && b.has("metrics"));
+
+    assertEquals(Set.of(REQUEST_TIMER, LOAD_TIMER), timerNames(entry), entry.toString());
+    assertPositiveNanos(entry);
+  }
+
+  @Test
+  void aNotModifiedPollReportsOnlyTheRequestTimer() throws Exception {
+    etags.put("/bundles/a.tar.gz", "\"e1\"");
+    startWithBundleA("rev-1");
+
+    final JsonNode entry =
+        awaitBundle("a", b -> activated(b) && b.has("metrics") && !b.path("metrics").has(LOAD_TIMER));
+
+    assertEquals(Set.of(REQUEST_TIMER), timerNames(entry), entry.toString());
+    assertPositiveNanos(entry);
+  }
+
+  @Test
+  void aFailedDownloadReportsOnlyTheRequestTimer() throws Exception {
+    failures.put("/bundles/a.tar.gz", 500);
+    start(bundleYaml("a", "bundles/a.tar.gz"), false);
+
+    final JsonNode entry = awaitBundle("a", b -> b.has("code") && b.has("metrics"));
+
+    assertEquals(Set.of(REQUEST_TIMER), timerNames(entry), entry.toString());
+    assertPositiveNanos(entry);
+  }
+
+  @Test
+  void aBundleThatDownloadsButFailsToLoadReportsBothTimers() throws Exception {
+    bodies.put("/bundles/a.tar.gz", unloadableBundle("a", "rev-1"));
+    start(bundleYaml("a", "bundles/a.tar.gz"), false);
+
+    final JsonNode entry = awaitBundle("a", b -> b.has("code") && b.path("metrics").has(LOAD_TIMER));
+
+    assertEquals(Set.of(REQUEST_TIMER, LOAD_TIMER), timerNames(entry), entry.toString());
+    assertPositiveNanos(entry);
+  }
+
+  @Test
+  void discoveryReportsNoMetricsLikeOpa() throws Exception {
+    startWithDiscovery("", "{}");
+
+    awaitBundle("a", b -> activated(b) && b.has("metrics"));
+
+    assertFalse(latest("discovery", null).has("metrics"), latest("discovery", null).toString());
+  }
+
+  @Test
+  void bodyTransferTimeCountsTowardsTheLoadTimerNotTheRequestTimer() throws Exception {
+    bodyDelayMillis = 400;
+    startWithBundleA("rev-1");
+
+    final JsonNode entry = awaitBundle("a", b -> activated(b) && b.has("metrics"));
+
+    final long load = entry.path("metrics").path(LOAD_TIMER).asLong();
+    assertTrue(load >= 400_000_000L, entry.toString());
+    assertTrue(entry.path("metrics").path(REQUEST_TIMER).asLong() < load, entry.toString());
+  }
+
+  private static void sleepQuietly(long millis) {
+    try {
+      Thread.sleep(millis);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
   }
 }

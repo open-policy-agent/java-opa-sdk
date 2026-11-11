@@ -233,7 +233,7 @@ public final class DiscoveryPlugin implements Plugin {
 
     private DiscoveryBundle(
         String name, PluginManager manager, ServicePlugin.Service service, List<String> configPath) {
-      super(name, "discovery", manager, service);
+      super(name, "discovery", manager, service, false);
       manager.setDiscoveryStatus(status);
       this.configPath = configPath;
     }
