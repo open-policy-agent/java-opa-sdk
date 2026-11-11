@@ -26,9 +26,18 @@ final class BundleStatus {
   private String code = "";
   private String message = "";
   private int httpCode;
+  private long requestStartNanos;
+  private Long requestNanos;
+  private boolean answered = true;
+  private long loadStartNanos;
+  private boolean loading;
+  private Long loadNanos;
+  private final boolean reportsMetrics;
 
-  BundleStatus(String name) {
+  /** OPA's discovery status carries no metrics, so discovery passes {@code false}. */
+  BundleStatus(String name, boolean reportsMetrics) {
     this.name = name;
+    this.reportsMetrics = reportsMetrics;
   }
 
   String name() {
@@ -38,6 +47,36 @@ final class BundleStatus {
   /** A download attempt started. */
   synchronized void request() {
     lastRequest = Instant.now();
+    requestStartNanos = System.nanoTime();
+    answered = false;
+  }
+
+  /**
+   * The server answered, or the file was read. The previous poll's timers stay in the report until
+   * now, as in OPA; only the first call of a poll counts.
+   */
+  synchronized void responded() {
+    if (!answered) {
+      answered = true;
+      requestNanos = System.nanoTime() - requestStartNanos;
+      loading = false;
+      loadNanos = null;
+    }
+  }
+
+  /** The downloaded bytes are about to be loaded; {@link #activated} or {@link #failed} ends it. */
+  synchronized void loadStarted() {
+    loadStartNanos = System.nanoTime();
+    loading = true;
+    loadNanos = null;
+  }
+
+  /** Ends the load timer; the plugin may call it once the bundle is in the store. */
+  synchronized void loadFinished() {
+    if (loading) {
+      loading = false;
+      loadNanos = System.nanoTime() - loadStartNanos;
+    }
   }
 
   /** The server answered but had nothing new; the current bundle stays active. */
@@ -56,6 +95,7 @@ final class BundleStatus {
 
   /** The downloaded bundle is active; this also clears any earlier error. */
   synchronized void activated(String revision) {
+    loadFinished();
     clearError();
     lastSuccessfulActivation = Instant.now();
     activeRevision = orEmpty(revision);
@@ -64,6 +104,7 @@ final class BundleStatus {
 
   /** A download or activation failed; the last successful timestamps and revision are kept. */
   synchronized void failed(Throwable cause) {
+    loadFinished();
     code = ERROR_CODE;
     httpCode = cause instanceof BundleDownloader.HttpStatusException
         ? ((BundleDownloader.HttpStatusException) cause).statusCode()
@@ -102,6 +143,13 @@ final class BundleStatus {
     putIfSet(json, "message", message);
     if (httpCode > 0) {
       json.put("http_code", httpCode);
+    }
+    if (reportsMetrics && requestNanos != null) {
+      final ObjectNode metrics = json.putObject("metrics");
+      metrics.put("timer_bundle_request_ns", requestNanos);
+      if (loadNanos != null) {
+        metrics.put("timer_rego_load_bundles_ns", loadNanos);
+      }
     }
     return json;
   }

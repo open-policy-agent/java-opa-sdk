@@ -33,6 +33,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
 - `object.union_n` now merges into one result object instead of copying it for every element, so
   its cost grows linearly with the number of objects instead of quadratically ([#286](https://github.com/open-policy-agent/java-opa-sdk/pull/286)) authored by @kroekle
+  `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
+- Report the `timer_bundle_request_ns` and `timer_rego_load_bundles_ns` timers in the `metrics` of
+  each bundle in status reports, as OPA does. They describe the latest poll only ([#285](https://github.com/open-policy-agent/java-opa-sdk/pull/285)) authored by @kroekle
 
 ## 0.7.0
 
