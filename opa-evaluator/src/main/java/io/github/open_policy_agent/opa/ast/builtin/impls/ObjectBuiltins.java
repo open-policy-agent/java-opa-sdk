@@ -1,5 +1,7 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -59,15 +61,15 @@ public class ObjectBuiltins {
   public RegoObject unionN(EvaluationContext ctx, RegoValue[] args) {
     RegoArray objectsArg = getArg(args, 0, RegoArray.class);
 
-    RegoObject output = new RegoObject();
+    final List<RegoObject> objects = new ArrayList<>();
     for (RegoValue v : objectsArg.getValues()) {
       if (v instanceof RegoObject) {
-        output = output.merge((RegoObject) v);
+        objects.add((RegoObject) v);
       } else {
         throw new TypeError("operand 0 must be array of objects but got array containing " + v.getTypeName());
       }
     }
-    return output;
+    return RegoObject.mergeAll(objects);
   }
 
   @OpaBuiltin(
