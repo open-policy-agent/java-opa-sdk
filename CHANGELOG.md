@@ -26,6 +26,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
   error on a prepared query instead of an undefined result: `eval` then throws a
   `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
+- Number constants in a plan are parsed once and shared by every evaluation, and parsing a number
+  no longer throws and swallows exceptions for decimals, so comparisons against decimal literals
+  such as `x > 0.5` cost about the same as against integers ([#288](https://github.com/open-policy-agent/java-opa-sdk/pull/288)) authored by @kroekle
 
 ## 0.7.0
 

@@ -1,5 +1,6 @@
 package io.github.open_policy_agent.opa.ir;
 
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.ir.policy.Block;
@@ -442,5 +443,17 @@ class EvaluatorTest {
     assertNotNull(preparedPlan);
     assertNotNull(preparedPlan.getStaticStrings());
     assertTrue(preparedPlan.getStaticStrings().isEmpty());
+  }
+
+  @Test
+  void aContextBuiltWithoutTheCacheStillParsesNumberConstants() {
+    final ArrayList<String> strings = new ArrayList<>(List.of("x", "42"));
+    final IREvaluationContext ctx =
+        new IREvaluationContext.Builder()
+            .withContext(new EvaluationContext.Builder().build())
+            .withStaticStrings(strings)
+            .build();
+
+    assertEquals(RegoInt32.of(42), ctx.numberConstants.get(1, ctx.staticStrings));
   }
 }

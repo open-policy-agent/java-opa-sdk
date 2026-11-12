@@ -11,6 +11,7 @@ public class IREvaluationContext extends EvaluationContext {
   Map<String, Func> functions;
   Map<String, Func> functionsByPath;
   ArrayList<String> staticStrings;
+  NumberConstants numberConstants;
 
   // private constructor to enforce the use of the Builder
   private IREvaluationContext(Builder builder) {
@@ -18,6 +19,10 @@ public class IREvaluationContext extends EvaluationContext {
     this.functions = builder.functions;
     this.functionsByPath = builder.functionsByPath;
     this.staticStrings = builder.staticStrings;
+    this.numberConstants =
+        builder.numberConstants != null
+            ? builder.numberConstants
+            : new NumberConstants(builder.staticStrings.size());
   }
 
   public static class Builder {
@@ -25,6 +30,7 @@ public class IREvaluationContext extends EvaluationContext {
     private Map<String, Func> functions = new HashMap<>();
     private Map<String, Func> functionsByPath = new HashMap<>();
     private ArrayList<String> staticStrings = new ArrayList<>();
+    private NumberConstants numberConstants;
 
     public Builder withContext(EvaluationContext evaluationContext) {
       this.evaluationContext = evaluationContext;
@@ -43,6 +49,11 @@ public class IREvaluationContext extends EvaluationContext {
 
     public Builder withStaticStrings(ArrayList<String> staticStrings) {
       this.staticStrings = staticStrings;
+      return this;
+    }
+
+    Builder withNumberConstants(NumberConstants numberConstants) {
+      this.numberConstants = numberConstants;
       return this;
     }
 
