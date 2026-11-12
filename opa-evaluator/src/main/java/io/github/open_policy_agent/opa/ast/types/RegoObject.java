@@ -1,8 +1,11 @@
 package io.github.open_policy_agent.opa.ast.types;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 public class RegoObject implements RegoValue {
@@ -72,31 +75,49 @@ public class RegoObject implements RegoValue {
    * @return a new merged object
    */
   public RegoObject merge(RegoObject other) {
-    RegoObject result = new RegoObject();
+    final RegoObject result = new RegoObject(this.value);
+    result.mergeInto(other, null);
+    return result;
+  }
 
-    // Start with all properties from this (left object)
-    result.value.putAll(this.value);
+  /**
+   * Merges the objects, in order, into a new object: the result of calling {@link #merge} on each
+   * in turn, without copying the accumulated object for every element.
+   *
+   * @param objects the objects to merge; later ones win on conflicts
+   * @return a new merged object
+   */
+  public static RegoObject mergeAll(Iterable<RegoObject> objects) {
+    final RegoObject result = new RegoObject();
+    final Set<RegoObject> created = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (RegoObject other : objects) {
+      result.mergeInto(other, created);
+    }
+    return result;
+  }
 
-    // Merge in properties from other (right object)
+  // Values are shared with the inputs, so a nested object may only be changed in place if this
+  // merge created it (tracked in created, which may be null when no nested object is revisited).
+  private void mergeInto(RegoObject other, Set<RegoObject> created) {
     for (Map.Entry<RegoValue, RegoValue> entry : other.value.entrySet()) {
-      RegoValue key = entry.getKey();
-      RegoValue rightValue = entry.getValue();
-      RegoValue leftValue = result.value.get(key);
+      final RegoValue key = entry.getKey();
+      final RegoValue rightValue = entry.getValue();
+      final RegoValue leftValue = value.get(key);
 
-      if (leftValue == null) {
-        // Key only exists in right object - add it
-        result.value.put(key, rightValue);
-      } else if (leftValue instanceof RegoObject && rightValue instanceof RegoObject) {
-        // Both values are objects - recursively merge them
-        RegoObject mergedValue = ((RegoObject) leftValue).merge((RegoObject) rightValue);
-        result.value.put(key, mergedValue);
+      if (leftValue instanceof RegoObject && rightValue instanceof RegoObject) {
+        RegoObject merged = (RegoObject) leftValue;
+        if (created == null || !created.contains(merged)) {
+          merged = new RegoObject(merged.value);
+          if (created != null) {
+            created.add(merged);
+          }
+          value.put(key, merged);
+        }
+        merged.mergeInto((RegoObject) rightValue, created);
       } else {
-        // Conflict: right object wins
-        result.value.put(key, rightValue);
+        value.put(key, rightValue);
       }
     }
-
-    return result;
   }
 
   @Override
