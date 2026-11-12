@@ -26,6 +26,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
   error on a prepared query instead of an undefined result: `eval` then throws a
   `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
+  `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
+- Report the `timer_bundle_request_ns` and `timer_rego_load_bundles_ns` timers in the `metrics` of
+  each bundle in status reports, as OPA does. They describe the latest poll only ([#285](https://github.com/open-policy-agent/java-opa-sdk/pull/285)) authored by @kroekle
 
 ## 0.7.0
 

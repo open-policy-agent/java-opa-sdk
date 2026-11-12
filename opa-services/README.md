@@ -382,6 +382,7 @@ labels. The instance id is also kept as the top-level `id` of status reports. `b
 | `last_successful_download` | Time a bundle was last downloaded. |
 | `last_successful_activation` | Time a bundle was last activated. |
 | `code`, `message`, `http_code` | Set after a failed download or activation: `bundle_error`, the error text, and the HTTP status if the server answered. Cleared by the next success. |
+| `metrics` | Bundles only. Timers of the latest poll in nanoseconds: `timer_bundle_request_ns` (time until the server answered or the file was read; also set when the server answers with an error or the request fails, but not when nothing was sent, such as an unknown service) and `timer_rego_load_bundles_ns` (reading the response body and loading the bundle into the store, also set when that fails). The load timer is absent when no bundle was loaded, after an unchanged poll, an HTTP error or a transport failure. A new poll keeps the previous timers until the server answers. |
 
 Timestamps are RFC 3339 in UTC. A timestamp that has not happened yet is `0001-01-01T00:00:00Z`, so
 a bundle that has never downloaded successfully is still listed, with its error. For discovery,
@@ -392,11 +393,15 @@ A bundle whose activation failed keeps its previous `active_revision`, `size` an
 `last_successful_activation`, and is downloaded again on the next poll instead of being treated as
 unchanged.
 
-Bundle entries also keep `revision` and `active` from earlier versions. `metrics` and `errors` are
-not reported: a bundle that fails to load, including one with compile errors, is a failed download.
-Its `message` is the load error and the `last_successful_*` times stay as they were. A failed HTTP
-request has the message `server replied with <status text>`, for example `server replied with Not
-Found`, and `http_code` holds the number.
+Bundle entries also keep `revision` and `active` from earlier versions. `errors` and the parse and
+compile timers are not reported, because bundles arrive as compiled plans. Neither are the top-level
+`metrics` and the `metrics` of discovery, which OPA does not report either.
+
+A bundle that fails to load, including one with compile errors, is a failed download. Its `message`
+is the load error and the `last_successful_*` times stay as they were. A failed HTTP request has the
+message `server replied with <status text>`, for example `server replied with Not Found`, and
+`http_code` holds the number.
+
 Each plugin is reported as an object with a `state` (`NOT_READY`, `OK`, `ERROR` or `WARN`), for example `"plugins": {"discovery": {"state": "OK"}}`.
 The bundle plugin is keyed `bundle`.
 

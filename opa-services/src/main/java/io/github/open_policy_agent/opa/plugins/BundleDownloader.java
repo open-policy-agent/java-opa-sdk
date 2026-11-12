@@ -111,18 +111,28 @@ public abstract class BundleDownloader {
    */
   protected BundleDownloader(
       String name, PluginManager manager, ServicePlugin.Service authService) {
-    this(name, name, manager, authService);
+    this(name, name, manager, authService, true);
   }
 
   /** Like the constructor above, with the name the status is reported under. */
   protected BundleDownloader(
       String name, String statusName, PluginManager manager, ServicePlugin.Service authService) {
+    this(name, statusName, manager, authService, true);
+  }
+
+  /** {@code reportsMetrics} is false for discovery, whose status OPA reports without metrics. */
+  protected BundleDownloader(
+      String name,
+      String statusName,
+      PluginManager manager,
+      ServicePlugin.Service authService,
+      boolean reportsMetrics) {
     this.name = name;
     this.manager = manager;
     this.authService = authService;
     this.httpClient = authService != null ? authService.getClient() : defaultHttpClient();
     this.initialActivation = new CompletableFuture<>();
-    this.status = new BundleStatus(statusName);
+    this.status = new BundleStatus(statusName, reportsMetrics);
   }
 
   private static HttpClient defaultHttpClient() {
@@ -390,12 +400,15 @@ public abstract class BundleDownloader {
 
     if (lastModifiedTime != 0 && lastModifiedTime == currentModTimeMillis) {
       manager.getLogger().debug("Bundle '%s': File not modified, skipping activation", name);
+      status.responded();
       status.notModified();
       initialActivation.complete(null);
       return;
     }
 
     byte[] bundleData = Files.readAllBytes(filePath);
+    status.responded();
+    status.loadStarted();
     activateBundle(bundleData);
     lastModifiedTime = currentModTimeMillis;
 
@@ -442,6 +455,7 @@ public abstract class BundleDownloader {
   // HTTP client's executor thread, but the poll chain never starts the next download until the
   // future returned by handleHttpDownload completes, so activateBundle is never called concurrently.
   private void handleHttpResponse(HttpResponse<InputStream> response, Throwable throwable) {
+    status.responded();
     if (throwable != null) {
       Throwable cause =
           throwable instanceof java.util.concurrent.CompletionException
@@ -468,6 +482,7 @@ public abstract class BundleDownloader {
         return;
       }
       OptionalLong contentLength = response.headers().firstValueAsLong("Content-Length");
+      status.loadStarted();
       byte[] body;
       try {
         body = readBodyWithLimit(response.body(), contentLength);
