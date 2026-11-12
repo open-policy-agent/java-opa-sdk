@@ -23,6 +23,11 @@ jobs:
       - name: Check release notes
         if: github.ref_type == 'tag'
         run: tools/release-notes.sh "${GITHUB_REF_NAME}" > /dev/null
+      # Artifacts take their version from gradle.properties, so a tag without the version bump would
+      # publish the previous version.
+      - name: Check tag matches version
+        if: github.ref_type == 'tag'
+        run: tools/check-release-version.sh "${GITHUB_REF_NAME}"
       - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           java-version: "17"
