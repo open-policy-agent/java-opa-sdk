@@ -529,6 +529,7 @@ public class Engine {
       private boolean printHookSet;
       private RegoValue runtime;
       private boolean runtimeSet;
+      private boolean strictBuiltinErrors;
 
       private Builder withEngine(Engine engine) {
         this.engine = engine;
@@ -587,6 +588,18 @@ public class Engine {
        */
       public Builder withProfiler(Profiler profiler) {
         this.profilers.add(profiler);
+        return this;
+      }
+
+      /**
+       * Make a builtin error an evaluation error instead of an undefined result: {@code eval}
+       * then throws a {@link io.github.open_policy_agent.opa.ast.builtin.BuiltinError} or {@link
+       * TypeError} naming the builtin. Every builtin sees the setting. Off by default.
+       *
+       * @return this builder
+       */
+      public Builder withStrictBuiltinErrors() {
+        this.strictBuiltinErrors = true;
         return this;
       }
 
@@ -655,6 +668,9 @@ public class Engine {
         }
         if (runtimeSet) {
           contextBuilder.withRuntime(runtime);
+        }
+        if (strictBuiltinErrors) {
+          contextBuilder.withStrictBuiltinErrors();
         }
 
         // Warm up the plan by pre-computing expensive values

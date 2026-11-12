@@ -388,6 +388,7 @@ new Opa.Builder().withConfig(config)
 | `withProfiler(Profiler)` | Enable query profiling |
 | `withTracer(QueryTracer)` | Enable query execution tracing |
 | `withPrintHook(PrintHook)` | Capture output from `print()` statements (default: logger) |
+| `withStrictBuiltinErrors()` | Make a builtin error an evaluation error instead of undefined (default: off) |
 
 ### Opa API Builder Options
 

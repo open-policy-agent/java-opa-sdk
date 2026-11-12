@@ -13,16 +13,19 @@ project adheres to [Semantic Versioning](http://semver.org/).
   P-224 or ML-DSA, which Java 17 does not provide, are reported as not verified
   ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129))
 - `time.parse_ns` and `time.parse_rfc3339_ns` now return the exact int64 nanoseconds instead of a
-  value rounded through a double, and accept 1 to 9 fractional digits as OPA does
+  value rounded through a double, and accept 1 to 9 fractional digits as OPA does ([#280](https://github.com/open-policy-agent/java-opa-sdk/pull/280)) authored by @kroekle
 - `abs`, `round`, `ceil` and `floor` now return integers beyond the `long` range, `abs` no longer
   fails on the minimum `long`, and `round` rounds halves away from zero as OPA does
   (`round(-2.5)` is `-3`). Decimals are still doubles, so inputs more precise than a double can
-  differ from OPA
+  differ from OPA ([#281](https://github.com/open-policy-agent/java-opa-sdk/pull/281)) authored by @kroekle
 - `time.parse_duration_ns` now parses durations as OPA does: several parts (`1h30m`), fractions
   (`1.5h`), a sign, the `d`, `w` and `y` units, and `0`. Overflowing or malformed durations are
-  undefined instead of wrapping around or failing with a Java exception
+  undefined instead of wrapping around or failing with a Java exception ([#282](https://github.com/open-policy-agent/java-opa-sdk/pull/282)) authored by @kroekle
 - `Engine.evaluate` now uses the engine's builtin registry for contexts built without one, so
-  `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
+  `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply ([#279](https://github.com/open-policy-agent/java-opa-sdk/pull/279)) authored by @kroekle
+- Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
+  error on a prepared query instead of an undefined result: `eval` then throws a
+  `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
 
 ## 0.7.0
 
