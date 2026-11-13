@@ -11,6 +11,7 @@ import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoSet;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import io.github.open_policy_agent.opa.ast.types.TypeUtils;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.json.JsonFactory;
@@ -172,11 +173,7 @@ public class RegoValueModule extends SimpleModule {
       if (!root.isObject()) {
         throw DatabindException.from(jp, "expected JSON object for RegoObject, got " + root.getNodeType());
       }
-      RegoObject obj = new RegoObject();
-      for (Map.Entry<String, JsonNode> field : root.properties()) {
-        obj.setProp(new RegoString(field.getKey()), convertNode(jp, field.getValue()));
-      }
-      return obj;
+      return (RegoObject) convertNode(jp, root);
     }
 
     private static RegoValue convertNode(JsonParser jp, JsonNode node) {
@@ -184,7 +181,7 @@ public class RegoValueModule extends SimpleModule {
         return RegoNull.INSTANCE;
       }
       if (node.isTextual()) {
-        return new RegoString(node.asText());
+        return TypeUtils.decodedString(node.asText());
       }
       if (node.isBoolean()) {
         return RegoBoolean.of(node.asBoolean());
@@ -214,7 +211,7 @@ public class RegoValueModule extends SimpleModule {
       if (node.isObject()) {
         RegoObject obj = new RegoObject();
         for (Map.Entry<String, JsonNode> field : node.properties()) {
-          obj.setProp(new RegoString(field.getKey()), convertNode(jp, field.getValue()));
+          obj.setProp(TypeUtils.decodedString(field.getKey()), convertNode(jp, field.getValue()));
         }
         return obj;
       }

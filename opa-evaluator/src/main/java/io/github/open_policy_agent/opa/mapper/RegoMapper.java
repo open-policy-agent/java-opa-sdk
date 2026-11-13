@@ -27,6 +27,7 @@ import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoSet;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import io.github.open_policy_agent.opa.ast.types.TypeUtils;
 
 /**
  * Converts POJOs to and from {@link RegoValue} instances directly via cached reflection, bypassing
@@ -74,7 +75,7 @@ public class RegoMapper {
 
     // Primitives and boxed types
     if (obj instanceof String) {
-      return new RegoString((String) obj);
+      return TypeUtils.decodedString((String) obj);
     }
     if (obj instanceof Boolean) {
       return RegoBoolean.of((Boolean) obj);
@@ -128,7 +129,7 @@ public class RegoMapper {
     // treated as scalar values, not decomposed into their internal fields.
     String className = obj.getClass().getName();
     if (className.startsWith("java.") || className.startsWith("javax.")) {
-      return new RegoString(obj.toString());
+      return TypeUtils.decodedString(obj.toString());
     }
 
     // POJO
@@ -189,7 +190,7 @@ public class RegoMapper {
     RegoObject obj = new RegoObject();
     for (Map.Entry<?, ?> entry : map.entrySet()) {
       String key = String.valueOf(entry.getKey());
-      obj.setProp(new RegoString(key), toRegoValue(entry.getValue()));
+      obj.setProp(TypeUtils.decodedString(key), toRegoValue(entry.getValue()));
     }
     return obj;
   }
