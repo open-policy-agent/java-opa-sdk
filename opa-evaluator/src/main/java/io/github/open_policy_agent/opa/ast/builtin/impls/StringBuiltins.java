@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.IntUnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -259,27 +260,12 @@ public class StringBuiltins {
               name = "output",
               description = "string trimmed of `cutset` characters"))
   public RegoValue trim(EvaluationContext ctx, RegoValue[] args) {
-    String value = getArg(args, 0, RegoString.class).getValue();
-    String cutset = getArg(args, 1, RegoString.class).getValue();
-
-    Set<Character> cutChars = new HashSet<>();
-    for (char c : cutset.toCharArray()) {
-      cutChars.add(c);
-    }
-
-    // Trim from the beginning
-    int start = 0;
-    while (start < value.length() && cutChars.contains(value.charAt(start))) {
-      start++;
-    }
-
-    // Trim from the end
-    int end = value.length();
-    while (end > start && cutChars.contains(value.charAt(end - 1))) {
-      end--;
-    }
-
-    return new RegoString(value.substring(start, end));
+    return new RegoString(
+        trimCodePoints(
+            getArg(args, 0, RegoString.class).getValue(),
+            getArg(args, 1, RegoString.class).getValue(),
+            true,
+            true));
   }
 
   @OpaBuiltin(
@@ -300,21 +286,12 @@ public class StringBuiltins {
               name = "output",
               description = "string left-trimmed of `cutset` characters"))
   public RegoString trimLeft(EvaluationContext ctx, RegoValue[] args) {
-    String value = getArg(args, 0, RegoString.class).getValue();
-    String cutset = getArg(args, 1, RegoString.class).getValue();
-
-    Set<Character> cutChars = new HashSet<>();
-    for (char c : cutset.toCharArray()) {
-      cutChars.add(c);
-    }
-
-    // Trim from the beginning
-    int start = 0;
-    while (start < value.length() && cutChars.contains(value.charAt(start))) {
-      start++;
-    }
-
-    return new RegoString(value.substring(start));
+    return new RegoString(
+        trimCodePoints(
+            getArg(args, 0, RegoString.class).getValue(),
+            getArg(args, 1, RegoString.class).getValue(),
+            true,
+            false));
   }
 
   @OpaBuiltin(
@@ -335,22 +312,33 @@ public class StringBuiltins {
               name = "output",
               description = "string right-trimmed of `cutset` characters"))
   public RegoString trimRight(EvaluationContext ctx, RegoValue[] args) {
-    String value = getArg(args, 0, RegoString.class).getValue();
-    String cutset = getArg(args, 1, RegoString.class).getValue();
+    return new RegoString(
+        trimCodePoints(
+            getArg(args, 0, RegoString.class).getValue(),
+            getArg(args, 1, RegoString.class).getValue(),
+            false,
+            true));
+  }
 
-    Set<Character> cutChars = new HashSet<>();
-    for (char c : cutset.toCharArray()) {
-      cutChars.add(c);
-    }
+  // Go maps one code point at a time (unicode.ToUpper/ToLower), not whole strings with the special
+  // cases Java adds, such as "ß" to "SS".
+  private static String mapCodePoints(String value, IntUnaryOperator mapping) {
+    final int[] mapped = value.codePoints().map(mapping).toArray();
+    return new String(mapped, 0, mapped.length);
+  }
 
+  // The cutset is a set of code points, as in Go, so a surrogate pair is never split.
+  private static String trimCodePoints(String value, String cutset, boolean left, boolean right) {
+    final Set<Integer> cut = cutset.codePoints().boxed().collect(Collectors.toSet());
     int start = 0;
-    // Trim from the end
     int end = value.length();
-    while (end > start && cutChars.contains(value.charAt(end - 1))) {
-      end--;
+    while (left && start < end && cut.contains(value.codePointAt(start))) {
+      start += Character.charCount(value.codePointAt(start));
     }
-
-    return new RegoString(value.substring(start, end));
+    while (right && end > start && cut.contains(value.codePointBefore(end))) {
+      end -= Character.charCount(value.codePointBefore(end));
+    }
+    return value.substring(start, end);
   }
 
   @OpaBuiltin(
@@ -366,7 +354,7 @@ public class StringBuiltins {
       result = @OpaType(type = "string", name = "y", description = "upper-case of x"))
   public RegoValue upper(EvaluationContext ctx, RegoValue[] args) {
     String x = getArg(args, 0, RegoString.class).getValue();
-    return new RegoString(x.toUpperCase());
+    return new RegoString(mapCodePoints(x, Character::toUpperCase));
   }
 
   @OpaBuiltin(
@@ -396,13 +384,17 @@ public class StringBuiltins {
       throw new BuiltinError("negative offset");
     }
 
+    // offset and length count code points, not UTF-16 units
+    final int codePoints = value.codePointCount(0, value.length());
     String ss;
-    if (offset > value.length()) {
+    if (offset > codePoints) {
       ss = "";
-    } else if (length < 0 || offset + length > value.length()) {
-      ss = value.substring(offset);
     } else {
-      ss = value.substring(offset, offset + length);
+      final int start = value.offsetByCodePoints(0, offset);
+      ss =
+          length < 0 || length > codePoints - offset
+              ? value.substring(start)
+              : value.substring(start, value.offsetByCodePoints(start, length));
     }
 
     return new RegoString(ss);
@@ -421,7 +413,7 @@ public class StringBuiltins {
       result = @OpaType(type = "string", name = "y", description = "lower-case of x"))
   public RegoValue lower(EvaluationContext ctx, RegoValue[] args) {
     String x = getArg(args, 0, RegoString.class).getValue();
-    return new RegoString(x.toLowerCase());
+    return new RegoString(mapCodePoints(x, Character::toLowerCase));
   }
 
   @OpaBuiltin(
@@ -648,7 +640,7 @@ public class StringBuiltins {
     int lastIdx = 0;
 
     if (substring == null || substring.isEmpty()) {
-        return RegoInt32.of(search.length()+1);
+        return RegoInt32.of(search.codePointCount(0, search.length()) + 1);
 
     }
 

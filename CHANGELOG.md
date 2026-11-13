@@ -26,6 +26,12 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
   error on a prepared query instead of an undefined result: `eval` then throws a
   `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
+- String builtins now count and cut strings in code points, as OPA does, instead of UTF-16 units:
+  `count`, `strings.count` with an empty substring, `substring`, and the width and precision of
+  `sprintf` (`%6s`, `%.2s`) give the same answers for emoji and other characters outside the basic
+  plane. `upper` and `lower` map one code point at a time, so `upper("ß")` stays `ß` as in OPA.
+  `trim`, `trim_left` and `trim_right` treat the cutset as code points, so an emoji in it no longer
+  strips half of a different emoji, and the precision of `sprintf("%.2x", ...)` counts bytes ([#289](https://github.com/open-policy-agent/java-opa-sdk/pull/289)) authored by @kroekle
 
 ## 0.7.0
 
