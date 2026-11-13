@@ -45,6 +45,7 @@ import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.X509EncodedKeySpec;
 import java.text.ParseException;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -1233,18 +1234,6 @@ public class TokenBuiltins implements BuiltinProvider {
     return base64url + "=".repeat(pad);
   }
 
-  private static String bytesToHex(byte[] bytes) {
-    StringBuilder hexString = new StringBuilder(2 * bytes.length);
-    for (byte b : bytes) {
-      String hex = Integer.toHexString(0xff & b);
-      if (hex.length() == 1) {
-        hexString.append('0');
-      }
-      hexString.append(hex);
-    }
-    return hexString.toString();
-  }
-
   private RegoBoolean verify(String jwt, String cert, String secret, boolean strict) {
     preValidateJWT(jwt, false);
     try {
@@ -1313,7 +1302,7 @@ public class TokenBuiltins implements BuiltinProvider {
       }
       // Get signature as hex
       byte[] sigBytes = token.getSignature().decode();
-      String sigHex = bytesToHex(sigBytes);
+      String sigHex = HexFormat.of().formatHex(sigBytes);
       RegoString sig = new RegoString(sigHex);
 
       return new RegoValue[] {header, payload, sig};

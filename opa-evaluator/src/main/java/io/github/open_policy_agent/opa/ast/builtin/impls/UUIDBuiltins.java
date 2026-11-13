@@ -14,6 +14,7 @@ import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -25,6 +26,7 @@ public class UUIDBuiltins {
   private static final String RFC4122 = "uuid.rfc4122";
   private static final String URN_PREFIX = "urn:uuid:";
   private static final SecureRandom RANDOM = new SecureRandom();
+  private static final HexFormat NODE_ID_HEX = HexFormat.ofDelimiter("-");
   private static final Pattern CANONICAL_UUID_PATTERN =
       Pattern.compile(
           "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
@@ -208,14 +210,7 @@ public class UUIDBuiltins {
   }
 
   private String nodeId(byte[] bytes) {
-    StringBuilder result = new StringBuilder(17);
-    for (int i = 10; i < bytes.length; i++) {
-      if (i > 10) {
-        result.append("-");
-      }
-      result.append(String.format("%02x", Byte.toUnsignedInt(bytes[i])));
-    }
-    return result.toString();
+    return NODE_ID_HEX.formatHex(bytes, 10, bytes.length);
   }
 
   private byte[] toBytes(UUID uuid) {

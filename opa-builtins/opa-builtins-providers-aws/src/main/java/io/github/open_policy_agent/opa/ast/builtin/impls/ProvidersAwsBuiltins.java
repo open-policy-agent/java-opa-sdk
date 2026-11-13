@@ -13,6 +13,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -250,7 +251,7 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
     signingKey = hmacSha256(signingKey, service);
     signingKey = hmacSha256(signingKey, "aws4_request");
 
-    String signature = bytesToHex(hmacSha256(signingKey, strToSign));
+    String signature = HexFormat.of().formatHex(hmacSha256(signingKey, strToSign));
 
     String authHeader =
         "AWS4-HMAC-SHA256 Credential="
@@ -641,18 +642,10 @@ public class ProvidersAwsBuiltins implements BuiltinProvider {
   private static String sha256Hex(byte[] data) {
     try {
       MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      return bytesToHex(digest.digest(data));
+      return HexFormat.of().formatHex(digest.digest(data));
     } catch (NoSuchAlgorithmException e) {
       throw new TypeError("providers.aws.sign_req: SHA-256 algorithm not available");
     }
-  }
-
-  private static String bytesToHex(byte[] bytes) {
-    StringBuilder hex = new StringBuilder(bytes.length * 2);
-    for (byte b : bytes) {
-      hex.append(String.format("%02x", b));
-    }
-    return hex.toString();
   }
 
   private static String stringFromProperty(RegoObject obj, String key) {
