@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class CidrBuiltinsTest {
 
@@ -164,5 +166,46 @@ class CidrBuiltinsTest {
         .map(v -> ((RegoString) v).getValue())
         .sorted()
         .collect(Collectors.toList());
+  }
+
+  // A CIDR with host bits set stands for its network, as in Go's net.ParseCIDR.
+  @ParameterizedTest(name = "{0} {1}")
+  @CsvSource({
+    "10.1.2.3/8,10.9.9.9/8,true,true",
+    "10.1.2.3/24,10.1.2.200/32,true,true",
+    "10.1.2.3/24,10.1.3.3/24,false,false",
+    "10.1.2.3/16,10.1.200.3/24,true,true",
+    "10.1.2.3/24,10.1.0.0/16,true,false",
+    "192.168.1.77/25,192.168.1.200/25,false,false",
+    "192.168.1.77/25,192.168.1.1/25,true,true",
+    "2001:db8::1/32,2001:db8:ffff::5/48,true,true",
+    "2001:db8::1/64,2001:db8:0:1::1/64,false,false",
+    "10.1.2.3/8,::/0,false,false",
+    "::/0,10.1.2.3/8,false,false"
+  })
+  void hostBitsAreIgnoredByIntersectsAndContains(String a, String b, boolean intersects, boolean contains) {
+    final RegoValue[] args = {new RegoString(a), new RegoString(b)};
+
+    assertEquals(RegoBoolean.of(intersects), builtins.intersects(ctx, args));
+    assertEquals(RegoBoolean.of(contains), builtins.contains(ctx, args));
+  }
+
+  @Test
+  void cidrExpandStartsAtTheNetworkAddress() {
+    assertEquals(List.of("10.1.2.0", "10.1.2.1", "10.1.2.2", "10.1.2.3"), expand("10.1.2.3/30"));
+    assertEquals(List.of("10.1.2.2", "10.1.2.3"), expand("10.1.2.3/31"));
+  }
+
+  @Test
+  void cidrMergeUsesTheNetworkOfEachCidr() {
+    assertEquals(List.of("10.1.2.0/24"), merge("10.1.2.3/24"));
+    assertEquals(List.of("10.1.2.0/23"), merge("10.1.2.3/24", "10.1.3.99/24"));
+    assertEquals(List.of("192.168.1.0/24"), merge("192.168.1.77/25", "192.168.1.200/25"));
+    assertEquals(List.of("10.1.2.0/23", "192.168.1.0/25"), merge("10.1.2.3/24", "10.1.3.99/24", "192.168.1.77/25"));
+  }
+
+  private List<String> expand(String cidr) {
+    final RegoSet result = (RegoSet) builtins.expand(ctx, new RegoValue[] {new RegoString(cidr)});
+    return result.getValue().stream().map(v -> ((RegoString) v).getValue()).sorted().collect(Collectors.toList());
   }
 }
