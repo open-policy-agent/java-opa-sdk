@@ -39,6 +39,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Number constants in a plan are parsed once and shared by every evaluation, and parsing a number
   no longer throws and swallows exceptions for decimals, so comparisons against decimal literals
   such as `x > 0.5` cost about the same as against integers ([#288](https://github.com/open-policy-agent/java-opa-sdk/pull/288)) authored by @kroekle
+- `time.add_date` now normalizes overflowing days and months like OPA (`2023-01-31` plus one month is March 3, not February 28), and a year, month or day count that is not an integer is a type error instead of being truncated ([#291](https://github.com/open-policy-agent/java-opa-sdk/pull/291)) authored by @kroekle
 
 ## 0.7.0
 
