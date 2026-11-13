@@ -53,6 +53,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `withoutRuleResultCache()` on `EvaluationContext.Builder` or `PreparedQuery.Builder`, or
   `setRuleResultCache(false)` on `Opa.DecisionOptions`. A side effect in a cached rule body, such
   as `print()`, now happens once per evaluation ([#299](https://github.com/open-policy-agent/java-opa-sdk/pull/299)) authored by @kroekle
+- Hex-encode bytes with `HexFormat` instead of a per-byte `String.format` in `hex.encode`, the
+  `crypto.md5`, `crypto.sha1`, `crypto.sha256` and `crypto.hmac.*` builtins, `uuid.parse` and
+  `providers.aws.sign_req`. In a microbenchmark `hex.encode` of 10,000 characters went from about
+  1.5 ms to 5 µs and a short `crypto.sha256` from about 5.4 µs to 0.19 µs ([#294](https://github.com/open-policy-agent/java-opa-sdk/pull/294)) authored by @kroekle
 
 ## 0.7.0
 

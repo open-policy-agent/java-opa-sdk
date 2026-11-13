@@ -1,6 +1,7 @@
 package io.github.open_policy_agent.opa.ast.builtin.impls;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 import java.util.Map;
 import java.util.function.BiFunction;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
@@ -31,13 +32,7 @@ public class HexBuiltins {
       result = @OpaType(name = "y", description = "serialization of `x` using hex-encoding"))
   public RegoString encode(EvaluationContext ctx, RegoValue[] args) {
     String input = getArg(args, 0, RegoString.class).getValue();
-    StringBuilder hex = new StringBuilder();
-
-    for (byte b : input.getBytes(StandardCharsets.UTF_8)) {
-      hex.append(String.format("%02x", b));
-    }
-
-    return new RegoString(hex.toString());
+    return new RegoString(HexFormat.of().formatHex(input.getBytes(StandardCharsets.UTF_8)));
   }
 
   @OpaBuiltin(
