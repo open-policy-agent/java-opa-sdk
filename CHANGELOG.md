@@ -26,6 +26,10 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
   error on a prepared query instead of an undefined result: `eval` then throws a
   `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
+- Hex-encode bytes with `HexFormat` instead of a per-byte `String.format` in `hex.encode`, the
+  `crypto.md5`, `crypto.sha1`, `crypto.sha256` and `crypto.hmac.*` builtins, `uuid.parse` and
+  `providers.aws.sign_req`. In a microbenchmark `hex.encode` of 10,000 characters went from about
+  1.5 ms to 5 µs and a short `crypto.sha256` from about 5.4 µs to 0.19 µs ([#294](https://github.com/open-policy-agent/java-opa-sdk/pull/294)) authored by @kroekle
 
 ## 0.7.0
 
