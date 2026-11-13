@@ -15,7 +15,6 @@ import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoUndefined;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.ast.types.TypeMismatchException;
-import io.github.open_policy_agent.opa.ast.types.TypeUtils;
 import io.github.open_policy_agent.opa.ir.policy.Block;
 import io.github.open_policy_agent.opa.ir.policy.Func;
 import io.github.open_policy_agent.opa.ir.policy.Plan;
@@ -74,6 +73,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
   private final Policy policy;
   private final Map<String, Func> funcRegistry;
   private final ArrayList<String> staticStrings;
+  private final NumberConstants numberConstants;
   private final BuiltinRegistry builtinRegistry;
 
   // private constructor to enforce the use of the Builder
@@ -81,6 +81,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
     this.policy = builder.policy;
     this.funcRegistry = builder.funcRegistry;
     this.staticStrings = builder.staticStrings;
+    this.numberConstants = new NumberConstants(staticStrings.size());
     this.builtinRegistry = builder.builtinRegistry;
   }
 
@@ -103,6 +104,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
             .withContext(ctx)
             .withFunctions(this.funcRegistry)
             .withStaticStrings(this.staticStrings)
+            .withNumberConstants(this.numberConstants)
             .build();
     useDefaultRegistry(irCtx);
 
@@ -153,6 +155,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
             .withFunctions(preparedPlan.getFuncRegistry())
             .withFunctionsByPath(preparedPlan.getFunctionsByPath())
             .withStaticStrings(preparedPlan.getStaticStrings())
+            .withNumberConstants(preparedPlan.getNumberConstants())
             .build();
     useDefaultRegistry(irCtx);
 
@@ -464,7 +467,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
               MakeNumberRefStmt mnrs = (MakeNumberRefStmt) stmt;
               frame.setLocal(
                       mnrs.getTarget(),
-                      TypeUtils.parseStringToNumber(ctx.staticStrings.get(mnrs.getIndex())));
+                      ctx.numberConstants.get(mnrs.getIndex(), ctx.staticStrings));
               break;
             }
             case EQUAL: {
@@ -960,6 +963,10 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
 
   ArrayList<String> getStaticStrings() {
     return staticStrings;
+  }
+
+  NumberConstants getNumberConstants() {
+    return numberConstants;
   }
 
   public static class Builder {
