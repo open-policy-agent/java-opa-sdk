@@ -23,6 +23,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   undefined instead of wrapping around or failing with a Java exception
 - `Engine.evaluate` now uses the engine's builtin registry for contexts built without one, so
   `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
+- The evaluator no longer reads the clock and calls the tracer and profiler hooks for every
+  statement when no tracer, profiler or statement profiler is attached, which makes evaluation
+  noticeably faster on loop-heavy policies. What an attached hook receives is unchanged ([#287](https://github.com/open-policy-agent/java-opa-sdk/pull/287)) authored by @kroekle
 
 ## 0.7.0
 
