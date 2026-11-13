@@ -58,6 +58,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `providers.aws.sign_req`. In a microbenchmark `hex.encode` of 10,000 characters went from about
   1.5 ms to 5 µs and a short `crypto.sha256` from about 5.4 µs to 0.19 µs ([#294](https://github.com/open-policy-agent/java-opa-sdk/pull/294)) authored by @kroekle
 - Unpaired surrogates in strings and object keys converted from Java objects, `yaml.unmarshal` and JSON string values now become U+FFFD as OPA does. JSON text with a lone high surrogate followed by a non-escape character is still rejected by the parser ([#290](https://github.com/open-policy-agent/java-opa-sdk/pull/290)) authored by @kroekle
+- `net.cidr_intersects` now compares the networks of CIDRs written with host bits set (`10.1.2.3/8` and `10.9.9.9/8` intersect), as OPA does ([#292](https://github.com/open-policy-agent/java-opa-sdk/pull/292)) authored by @kroekle
 
 ## 0.7.0
 
