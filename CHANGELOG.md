@@ -40,6 +40,12 @@ project adheres to [Semantic Versioning](http://semver.org/).
   no longer throws and swallows exceptions for decimals, so comparisons against decimal literals
   such as `x > 0.5` cost about the same as against integers ([#288](https://github.com/open-policy-agent/java-opa-sdk/pull/288)) authored by @kroekle
 - `time.add_date` now normalizes overflowing days and months like OPA (`2023-01-31` plus one month is March 3, not February 28), and a year, month or day count that is not an integer is a type error instead of being truncated ([#291](https://github.com/open-policy-agent/java-opa-sdk/pull/291)) authored by @kroekle
+- String builtins now count and cut strings in code points, as OPA does, instead of UTF-16 units:
+  `count`, `strings.count` with an empty substring, `substring`, and the width and precision of
+  `sprintf` (`%6s`, `%.2s`) give the same answers for emoji and other characters outside the basic
+  plane. `upper` and `lower` map one code point at a time, so `upper("ß")` stays `ß` as in OPA.
+  `trim`, `trim_left` and `trim_right` treat the cutset as code points, so an emoji in it no longer
+  strips half of a different emoji, and the precision of `sprintf("%.2x", ...)` counts bytes ([#289](https://github.com/open-policy-agent/java-opa-sdk/pull/289)) authored by @kroekle
 
 ## 0.7.0
 

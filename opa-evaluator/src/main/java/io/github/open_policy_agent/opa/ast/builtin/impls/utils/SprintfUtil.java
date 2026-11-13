@@ -1210,7 +1210,9 @@ public class SprintfUtil {
     private void fmtSx(String string, boolean uppercase) {
         byte[] bytes = string.getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
-        int length = flags.precision != null ? flags.precision : string.length();
+        // Precision counts bytes of the UTF-8 encoding, and caps how many are printed.
+        int length =
+            flags.precision != null && flags.precision < bytes.length ? flags.precision : bytes.length;
         int encodedWidth = 2 * length;
 
         if (encodedWidth <= 0) {
@@ -1235,7 +1237,8 @@ public class SprintfUtil {
         String byteFmt = uppercase ? "%02X" : "%02x";
 
         boolean firstByte = true;
-        for (byte b : bytes) {
+        for (int i = 0; i < length; i++) {
+            final byte b = bytes[i];
             if (firstByte) {
                 if (flags.sharp) {
                     result.append(hexPrefix);
@@ -1261,9 +1264,9 @@ public class SprintfUtil {
             return string;
         }
 
-        return string.length() <= flags.precision ?
+        return string.codePointCount(0, string.length()) <= flags.precision ?
             string :
-            string.substring(0, flags.precision);
+            string.substring(0, string.offsetByCodePoints(0, flags.precision));
     }
 
     private void printPaddedString(String string) {
@@ -1272,7 +1275,7 @@ public class SprintfUtil {
             return;
         }
 
-        int paddingSize = flags.width - string.length();
+        int paddingSize = flags.width - string.codePointCount(0, string.length());
 
         if (!flags.minus) {
             printPadding(paddingSize);
