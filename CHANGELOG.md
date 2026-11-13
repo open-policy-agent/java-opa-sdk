@@ -26,6 +26,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
   error on a prepared query instead of an undefined result: `eval` then throws a
   `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
+- `time.add_date` now normalizes overflowing days and months like OPA (`2023-01-31` plus one month is March 3, not February 28), and a year, month or day count that is not an integer is a type error instead of being truncated ([#291](https://github.com/open-policy-agent/java-opa-sdk/pull/291)) authored by @kroekle
 
 ## 0.7.0
 
