@@ -23,7 +23,7 @@ public class RegoString implements RegoValue {
 
     @Override
     public int length() {
-        return value.length();
+        return value.codePointCount(0, value.length());
     }
 
     public String getTypeName() { return "string";}
