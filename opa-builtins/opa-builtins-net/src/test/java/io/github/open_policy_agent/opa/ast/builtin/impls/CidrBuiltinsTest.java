@@ -8,6 +8,7 @@ import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoInt32;
 import io.github.open_policy_agent.opa.ast.types.RegoSet;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
@@ -15,8 +16,11 @@ import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class CidrBuiltinsTest {
 
@@ -164,5 +168,54 @@ class CidrBuiltinsTest {
         .map(v -> ((RegoString) v).getValue())
         .sorted()
         .collect(Collectors.toList());
+  }
+
+  @ParameterizedTest(name = "{0}({1}, {2})")
+  @CsvSource({
+    "net.cidr_contains,10.1.2.3,10.1.2.3,10.1.2.3",
+    "net.cidr_contains,::1,::1,::1",
+    "net.cidr_intersects,10.1.2.3,10.1.2.3,10.1.2.3",
+    "net.cidr_intersects,10.1.2.0/24,10.1.2.3,10.1.2.3",
+    "net.cidr_intersects,10.1.2.0/24,::1,::1"
+  })
+  void aBareIpWhereACidrIsRequiredIsAnError(String builtin, String a, String b, String badOperand) {
+    final RegoValue[] args = {new RegoString(a), new RegoString(b)};
+
+    final BuiltinError e = assertThrows(BuiltinError.class, () -> builtins.builtins().get(builtin).apply(ctx, args));
+
+    assertEquals("eval_builtin_error: " + builtin + ": invalid CIDR address: " + badOperand, e.getMessage());
+  }
+
+  @Test
+  void containsMatchesRejectsABareIpAsTheCidr() {
+    final RegoValue[] args = {new RegoArray(List.of(new RegoString("10.1.2.3"))), new RegoArray(List.of(new RegoString("10.1.2.3")))};
+
+    final BuiltinError e = assertThrows(BuiltinError.class, () -> builtins.containsMatches(ctx, args));
+
+    assertEquals("eval_builtin_error: net.cidr_contains_matches: invalid CIDR address: 10.1.2.3", e.getMessage());
+  }
+
+  @Test
+  void containsMatchesNamesItselfWhenTheSecondOperandIsInvalid() {
+    final RegoValue[] args = {new RegoArray(List.of(new RegoString("10.1.2.0/24"))), new RegoArray(List.of(new RegoString("garbage")))};
+
+    final BuiltinError e = assertThrows(BuiltinError.class, () -> builtins.containsMatches(ctx, args));
+
+    assertTrue(
+        e.getMessage().contains("net.cidr_contains_matches: not a valid textual representation of an IP address or CIDR: garbage"),
+        e.getMessage());
+  }
+
+  @Test
+  void aBareIpIsStillAllowedAsTheSecondOperandOfContains() {
+    assertEquals(RegoBoolean.TRUE, builtins.contains(ctx, new RegoValue[] {new RegoString("10.1.2.0/24"), new RegoString("10.1.2.3")}));
+
+    final RegoSet matches =
+        (RegoSet)
+            builtins.containsMatches(
+                ctx,
+                new RegoValue[] {new RegoArray(List.of(new RegoString("10.1.2.0/24"))), new RegoArray(List.of(new RegoString("10.1.2.3")))});
+
+    assertEquals(Set.of(new RegoArray(List.of(RegoInt32.of(0), RegoInt32.of(0)))), matches.getValue());
   }
 }
