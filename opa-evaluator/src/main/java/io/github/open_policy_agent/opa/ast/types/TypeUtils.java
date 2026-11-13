@@ -68,6 +68,43 @@ public final class TypeUtils {
     return b;
   }
 
+  /**
+   * Replaces each unpaired surrogate with U+FFFD, as OPA does for text it decodes: a Go string
+   * holds UTF-8, which has no lone surrogates. Valid surrogate pairs are kept, and a string
+   * without any unpaired surrogate is returned as is.
+   *
+   * @param text text read from outside, such as decoded JSON
+   * @return the text with every unpaired surrogate replaced
+   */
+  public static String replaceLoneSurrogates(String text) {
+    final int length = text.length();
+    StringBuilder out = null;
+    int i = 0;
+    while (i < length) {
+      final char c = text.charAt(i);
+      final boolean pair =
+          Character.isHighSurrogate(c) && i + 1 < length && Character.isLowSurrogate(text.charAt(i + 1));
+      if (!pair && Character.isSurrogate(c)) {
+        if (out == null) {
+          out = new StringBuilder(length).append(text, 0, i);
+        }
+        out.append('\uFFFD');
+      } else if (out != null) {
+        out.append(c);
+        if (pair) {
+          out.append(text.charAt(i + 1));
+        }
+      }
+      i += pair ? 2 : 1;
+    }
+    return out == null ? text : out.toString();
+  }
+
+  /** Wraps decoded text in a {@link RegoString}, replacing unpaired surrogates. */
+  public static RegoString decodedString(String text) {
+    return new RegoString(replaceLoneSurrogates(text));
+  }
+
   public static RegoValue parseStringToNumber(String number) {
     // Try parsing as int first
     try {
