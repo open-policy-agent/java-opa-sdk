@@ -1367,7 +1367,7 @@ public class JsonBuiltins implements BuiltinProvider {
       RegoObject regoObj = new RegoObject();
       for (java.util.Map.Entry<?, ?> entry : ((java.util.Map<?, ?>) obj).entrySet()) {
         String key = entry.getKey().toString();
-        regoObj.setProp(new RegoString(key), convertToRegoValue(entry.getValue(), yamlMode));
+        regoObj.setProp(TypeUtils.decodedString(key), convertToRegoValue(entry.getValue(), yamlMode));
       }
       return regoObj;
     } else {
@@ -1395,7 +1395,7 @@ public class JsonBuiltins implements BuiltinProvider {
         return RegoNull.INSTANCE;
       }
     }
-    return new RegoString(str);
+    return TypeUtils.decodedString(str);
   }
 
   /** Extracts paths from a RegoArray or RegoSet. */
