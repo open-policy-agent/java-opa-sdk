@@ -26,6 +26,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
   error on a prepared query instead of an undefined result: `eval` then throws a
   `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
+- `net.cidr_intersects` now compares the networks of CIDRs written with host bits set (`10.1.2.3/8` and `10.9.9.9/8` intersect), as OPA does ([#292](https://github.com/open-policy-agent/java-opa-sdk/pull/292)) authored by @kroekle
 
 ## 0.7.0
 
