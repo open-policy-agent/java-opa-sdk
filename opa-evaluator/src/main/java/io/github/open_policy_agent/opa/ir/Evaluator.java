@@ -186,6 +186,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
 
   private boolean evaluateBlock(Block block, int blockIndex, Frame frame, IREvaluationContext ctx) {
     ctx.traceEnterBlock();
+    final boolean hooks = ctx.statementHooks();
 
     try {
       int stmtIndex = 0;
@@ -194,10 +195,14 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
           stmtIndex++;
           continue;
         }
-        long startTime = System.nanoTime();
-        ctx.statementProfiler.startStatement(stmt);
+        final long startTime = hooks ? System.nanoTime() : 0L;
+        if (hooks) {
+          ctx.statementProfiler.startStatement(stmt);
+        }
         try {
-          ctx.traceEnterEvent(stmt, blockIndex, stmtIndex);
+          if (hooks) {
+            ctx.traceEnterEvent(stmt, blockIndex, stmtIndex);
+          }
           switch (stmt.getType()) {
             case MAKE_OBJECT: {
               MakeObjectStmt mos = (MakeObjectStmt) stmt;
@@ -699,9 +704,11 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
             }
           }
         } finally {
-          long duration = System.nanoTime() - startTime;
-          ctx.statementProfiler.stopStatement(stmt, duration);
-          ctx.traceExitEvent(stmt, blockIndex, stmtIndex, duration);
+          if (hooks) {
+            final long duration = System.nanoTime() - startTime;
+            ctx.statementProfiler.stopStatement(stmt, duration);
+            ctx.traceExitEvent(stmt, blockIndex, stmtIndex, duration);
+          }
           stmtIndex++;
         }
       }

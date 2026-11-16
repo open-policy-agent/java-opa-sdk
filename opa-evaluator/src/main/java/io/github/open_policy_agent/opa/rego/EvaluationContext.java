@@ -33,9 +33,10 @@ public class EvaluationContext {
   public BuiltinRegistry builtinRegistry;
   public final Metrics metrics;
   public final StatementProfiler statementProfiler;
-  private QueryTracer tracer;
+  private final QueryTracer tracer;
   private final long evalStartTime = System.currentTimeMillis();
   private final List<Profiler> profilers;
+  private final boolean statementHooks;
   private final boolean strictBuiltinErrors;
   public final boolean sortSets;
   private final NdBuiltinCache ndBuiltinCache;
@@ -65,6 +66,7 @@ public class EvaluationContext {
     this.ndBuiltinCache = other.ndBuiltinCache;
     this.printHook = other.printHook;
     this.runtime = other.runtime;
+    this.statementHooks = other.statementHooks;
   }
 
   private EvaluationContext(Builder builder) {
@@ -72,9 +74,7 @@ public class EvaluationContext {
     this.input = builder.input;
     this.store = builder.store;
     this.builtinRegistry = builder.builtinRegistry;
-    if (builder.tracer != null) {
-      this.tracer = builder.tracer;
-    }
+    this.tracer = builder.tracer;
     this.metrics = builder.metrics;
     this.statementProfiler = builder.statementProfiler;
     this.profilers = List.copyOf(builder.profilers);
@@ -83,6 +83,18 @@ public class EvaluationContext {
     this.ndBuiltinCache = builder.ndBuiltinCache;
     this.printHook = builder.printHook;
     this.runtime = builder.runtime;
+    this.statementHooks =
+        tracer != null
+            || !profilers.isEmpty()
+            || statementProfiler.getClass() != NoOpStatementProfiler.class;
+  }
+
+  /**
+   * Whether anything listens to individual statements: a tracer, a {@link Profiler} or a statement
+   * profiler.
+   */
+  protected boolean hasStatementHooks() {
+    return statementHooks;
   }
 
   public boolean isStrictBuiltinErrors() {
