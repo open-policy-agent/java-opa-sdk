@@ -105,6 +105,10 @@ final class BundleStatus {
   /** A download or activation failed; the last successful timestamps and revision are kept. */
   synchronized void failed(Throwable cause) {
     loadFinished();
+    if (!answered) {
+      requestNanos = null;
+      loadNanos = null;
+    }
     code = ERROR_CODE;
     httpCode = cause instanceof BundleDownloader.HttpStatusException
         ? ((BundleDownloader.HttpStatusException) cause).statusCode()

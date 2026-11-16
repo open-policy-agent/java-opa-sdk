@@ -122,6 +122,20 @@ class BundleStatusTest {
   }
 
   @Test
+  void aFailureBeforeAnyResponseAfterASuccessfulPollClearsThePreviousTimers() {
+    final BundleStatus status = new BundleStatus("a", true);
+    status.request();
+    status.responded();
+    status.loadStarted();
+    status.activated("rev-1");
+
+    status.request();
+    status.failed(new IOException("service not found"));
+
+    assertEquals(Set.of(), timers(status));
+  }
+
+  @Test
   void aFileBundleReportsBothTimers() throws Exception {
     DiscoveryTestSupport.write(tempDir, "a.tar.gz", DiscoveryTestSupport.bundle("a", "rev-1"));
     final Config config =
