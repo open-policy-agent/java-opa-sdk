@@ -219,7 +219,7 @@ public class CliTest {
         run("eval", "-b", bundleTgz, "-i", INPUT_JSON, "--metrics", ENTRYPOINT);
     assertThat(exitCode).isZero();
     final String out = outContent.toString(StandardCharsets.UTF_8);
-    assertThat(out).contains("METRIC").contains("TIME");
+    assertThat(out).contains("METRIC").contains("VALUE");
     assertThat(out).contains("cli_prepare_query");
   }
 

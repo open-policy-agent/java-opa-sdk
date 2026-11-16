@@ -26,6 +26,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - Add `PreparedQuery.Builder.withStrictBuiltinErrors()` to make a builtin error an evaluation
   error on a prepared query instead of an undefined result: `eval` then throws a
   `BuiltinError` or `TypeError` naming the builtin. The default is unchanged ([#283](https://github.com/open-policy-agent/java-opa-sdk/pull/283)) authored by @kroekle
+- `regoj eval --metrics` prints counters and histograms instead of blank cells,
+  and the value column is now headed `VALUE` instead of `TIME`
+  ([#221](https://github.com/open-policy-agent/java-opa-sdk/issues/221))
 
 ## 0.7.0
 
