@@ -30,6 +30,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   and the value column is now headed `VALUE` instead of `TIME`
   ([#221](https://github.com/open-policy-agent/java-opa-sdk/issues/221))
 - `net.cidr_contains`, `net.cidr_contains_matches` and `net.cidr_intersects` now reject a bare IP address where a CIDR is required, as OPA does. Only the second operand of `net.cidr_contains` and `net.cidr_contains_matches` may still be a bare IP ([#293](https://github.com/open-policy-agent/java-opa-sdk/pull/293)) authored by @kroekle
+  `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
+- `object.union_n` now merges into one result object instead of copying it for every element, so
+  its cost grows linearly with the number of objects instead of quadratically ([#286](https://github.com/open-policy-agent/java-opa-sdk/pull/286)) authored by @kroekle
 
 ## 0.7.0
 
