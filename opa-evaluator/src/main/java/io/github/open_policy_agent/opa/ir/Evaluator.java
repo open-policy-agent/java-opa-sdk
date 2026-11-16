@@ -277,10 +277,11 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
               RegoValue newValue = resolveOperand(avos.getSource(), ctx, frame);
               RegoValue oldValue = frame.getLocal(avos.getTarget());
               if (oldValue != null && oldValue.compareTo(newValue) != 0) {
+                String name = frame.getFuncName() == null ? "" : frame.getFuncName().replaceFirst("^g\\d+\\.", "");
                 if (frame.isUserFunction()) {
-                  throw new MultipleAssignmentsError("functions must not produce multiple outputs for same inputs");
+                  throw new MultipleAssignmentsError("function " + name + " produced conflicting values for the same inputs");
                 }
-                throw new MultipleAssignmentsError();
+                throw new MultipleAssignmentsError("rule " + name + " produced conflicting values");
               }
               frame.setLocal(avos.getTarget(), resolveOperand(avos.getSource(), ctx, frame));
               break;
@@ -895,6 +896,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
     Frame newFrame = frame.subFrame(frameLocals);
     boolean isUserFunction = func.getParams() != null && func.getParams().size() > 2;
     newFrame.setUserFunction(isUserFunction);
+    newFrame.setFuncName(func.getName());
     // Mark the data parameter (index 1 in params list) as data-derived in the new frame.
     // By OPA IR convention, params[0] = input and params[1] = data.
     if (func.getParams() != null && func.getParams().size() >= 2) {

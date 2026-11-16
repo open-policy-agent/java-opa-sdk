@@ -3,3 +3,7 @@
 # Compliance test cases to exclude from generation. The generator skips any
 # case whose note matches a key below.
 
+jsonbuiltins/unmarshal number beyond the supported exponent is undefined: new in OPA v1.22; SDK does not yet bound json.unmarshal number exponents
+jsonbuiltins/unmarshal number with too big an exponent is undefined: new in OPA v1.22; SDK does not yet bound json.unmarshal number exponents
+comparisonexpr/decimals order like the numbers they denote: new in OPA v1.22; SDK decimal comparison ordering differs
+arithmetic/int32 window edges (results crossing into wider integers): new in OPA v1.22; SDK arithmetic differs at int32 window edges

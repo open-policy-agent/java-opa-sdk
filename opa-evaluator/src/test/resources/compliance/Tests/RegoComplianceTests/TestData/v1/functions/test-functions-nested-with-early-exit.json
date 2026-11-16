@@ -7,7 +7,7 @@
 				"package generated\n\np(_) if {\n\tdata.generated.q\n}\n\nq := true\n\nq := false\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "complete rules must not produce multiple outputs",
+			"want_error": "rule data.generated.q produced conflicting values",
 			"entrypoints": [
 				"eval"
 			],
@@ -465,7 +465,7 @@
 				"package generated\n\np(_) if {\n\tdata.generated.q\n}\n\nq if {\n\tfalse\n}\n\nelse := true\n\nq if {\n\tfalse\n}\n\nelse := false\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "complete rules must not produce multiple outputs",
+			"want_error": "rule data.generated.q produced conflicting values",
 			"entrypoints": [
 				"eval"
 			],
@@ -1037,7 +1037,7 @@
 				"package generated\n\np(x) if {\n\ty := data.generated.q(x)\n}\n\nq(_) := true\n\nq(_) := false\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.generated.q produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],
@@ -1542,7 +1542,7 @@
 				"package generated\n\np(x) if {\n\ty := data.generated.q(x)\n}\n\nq(_) if {\n\tfalse\n}\n\nelse := true\n\nq(_) if {\n\tfalse\n}\n\nelse := false\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.generated.q produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],
@@ -2191,7 +2191,7 @@
 				"package test\n\np(x) if {\n\ty := data.test.q(x)\n}\n\nxs := {1, 2}\n\nq(_) := xs[_]\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.test.q produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],

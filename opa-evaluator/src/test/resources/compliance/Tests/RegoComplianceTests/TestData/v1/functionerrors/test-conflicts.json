@@ -7,7 +7,7 @@
 				"package test\n\no := [\"1\", \"2\"]\n\nf(x) := o[_] == x\n\np if f(\"1\")\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.test.f produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],
@@ -641,7 +641,7 @@
 				"package test\n\no := [\"1\", \"2\"]\n\nf(x) := o[_] == x\n\np if f(\"2\")\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.test.f produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],

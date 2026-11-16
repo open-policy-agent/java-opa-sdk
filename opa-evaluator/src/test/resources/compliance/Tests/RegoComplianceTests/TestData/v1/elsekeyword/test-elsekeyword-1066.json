@@ -7,7 +7,7 @@
 				"package ex\n\nconflict_2 if {\n\tfalse\n}\n\nelse := false\n\nconflict_2 if {\n\tfalse\n}\n\nelse := true\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "complete rules must not produce multiple outputs",
+			"want_error": "rule data.ex.conflict_2 produced conflicting values",
 			"entrypoints": [
 				"eval"
 			],
