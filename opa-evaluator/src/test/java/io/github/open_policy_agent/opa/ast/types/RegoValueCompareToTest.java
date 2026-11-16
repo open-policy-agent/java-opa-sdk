@@ -91,11 +91,17 @@ class RegoValueCompareToTest {
     assertEquals(0, a.compareTo(b), label);
   }
 
+  // Rego orders types: null < boolean < number < string < array < object < set
   static Stream<Arguments> crossTypeOrderingPairs() {
     return Stream.of(
-        Arguments.of(RegoBoolean.TRUE, RegoNull.INSTANCE, "Boolean < Null (by type name)"),
-        Arguments.of(RegoNull.INSTANCE, RegoInt32.of(1), "Null < Number (by type name)"),
-        Arguments.of(RegoInt32.of(1), new RegoString("a"), "Number < String (by type name)")
+        Arguments.of(RegoNull.INSTANCE, RegoBoolean.FALSE, "Null < Boolean"),
+        Arguments.of(RegoBoolean.TRUE, RegoInt32.of(1), "Boolean < Number"),
+        Arguments.of(RegoInt32.of(1), new RegoString("a"), "Number < String"),
+        Arguments.of(new RegoString("a"), arrayOf(RegoInt32.of(1)), "String < Array"),
+        Arguments.of(arrayOf(RegoInt32.of(1)), new RegoObject(), "Array < Object"),
+        Arguments.of(new RegoObject(), new RegoSet(false), "Object < Set"),
+        Arguments.of(RegoNull.INSTANCE, new RegoSet(false), "Null < Set"),
+        Arguments.of(new RegoBigInt(100L), arrayOf(), "BigInt < empty Array")
     );
   }
 

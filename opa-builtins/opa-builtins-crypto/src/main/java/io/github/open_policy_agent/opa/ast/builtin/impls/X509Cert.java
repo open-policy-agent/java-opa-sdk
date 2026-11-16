@@ -8,6 +8,7 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -45,6 +46,11 @@ final class X509Cert {
   static final int PK_ECDSA = 3;
   static final int PK_ED25519 = 4;
   static final int PK_MLDSA = 5;
+
+  // Go's x509.KeyUsage bit for keyCertSign, and the x509.ExtKeyUsage values verification uses.
+  static final int KEY_USAGE_CERT_SIGN = 1 << 5;
+  static final int EKU_ANY = 0;
+  static final int EKU_SERVER_AUTH = 1;
 
   byte[] raw;
   byte[] rawTbsCertificate;
@@ -141,6 +147,18 @@ final class X509Cert {
 
   /** An ML-DSA key; Go serializes it as an empty object, and Java 17 cannot verify with it. */
   record MlDsaKey() {}
+
+  /** The extension with the given OID, or null. */
+  Extension extension(int... oid) {
+    if (extensions != null) {
+      for (Extension e : extensions) {
+        if (Arrays.equals(e.id(), oid)) {
+          return e;
+        }
+      }
+    }
+    return null;
+  }
 
   /** Appends to a list that may still be null, matching how Go appends to a nil slice. */
   static <T> List<T> add(List<T> list, T value) {

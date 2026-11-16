@@ -397,6 +397,23 @@
       }
     }
   }, {
+    "name" : "crypto.x509.parse_and_verify_certificates",
+    "description" : "Returns one or more certificates from the given string containing PEM or base64 encoded DER certificates after verifying the supplied certificates form a complete certificate chain back to a trusted root. The first certificate is treated as the root and the last is treated as the leaf, with all others being treated as intermediates.",
+    "categories" : [ "crypto" ],
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "string",
+        "name" : "certs",
+        "description" : "base64 encoded DER or PEM data containing two or more certificates where the first is a root CA, the last is a leaf certificate, and all others are intermediate CAs"
+      } ],
+      "result" : {
+        "type" : "array",
+        "name" : "output",
+        "description" : "array of `[valid, certs]`: if the input certificate chain could be verified then `valid` is `true` and `certs` is an array of X.509 certificates represented as objects; if the input certificate chain could not be verified then `valid` is `false` and `certs` is `[]`"
+      }
+    }
+  }, {
     "name" : "crypto.x509.parse_certificates",
     "description" : "Returns zero or more certificates from the given string, which holds one or more concatenated PEM blocks, optionally base64 encoded as a whole, or base64 encoded DER certificate data.",
     "categories" : [ "crypto" ],

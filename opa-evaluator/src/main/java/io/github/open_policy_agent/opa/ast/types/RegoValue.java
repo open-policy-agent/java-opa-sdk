@@ -16,7 +16,13 @@ public interface RegoValue extends Comparable<RegoValue> {
             return 1;
         }
 
-        // Compare by type first for consistent ordering
+        // Values of different types are ordered as in Rego:
+        // null < boolean < number < string < array < object < set
+        int rankComparison = Integer.compare(typeRank(this), typeRank(other));
+        if (rankComparison != 0) {
+            return rankComparison;
+        }
+        // Types outside that order are grouped by name
         int typeComparison = this.getTypeName().compareTo(other.getTypeName());
         if (typeComparison != 0) {
             return typeComparison;
@@ -75,5 +81,24 @@ public interface RegoValue extends Comparable<RegoValue> {
 
         // Fallback to string representation comparison
         return this.toString().compareTo(other.toString());
+    }
+
+    private static int typeRank(RegoValue value) {
+        if (value instanceof RegoNull) {
+            return 0;
+        } else if (value instanceof RegoBoolean) {
+            return 1;
+        } else if (value instanceof RegoNumber) {
+            return 2;
+        } else if (value instanceof RegoString) {
+            return 3;
+        } else if (value instanceof RegoArray) {
+            return 4;
+        } else if (value instanceof RegoObject) {
+            return 5;
+        } else if (value instanceof RegoSet) {
+            return 6;
+        }
+        return -1;
     }
 }

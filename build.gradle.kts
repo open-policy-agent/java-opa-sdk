@@ -16,6 +16,11 @@ subprojects {
                 isIgnoreFailures = false
             }
 
+            // Tests use the methodName_describesScenario convention; this config only relaxes MethodName.
+            tasks.named<Checkstyle>("checkstyleTest") {
+                configFile = rootProject.file("config/checkstyle/checkstyle-test.xml")
+            }
+
             configure<PmdExtension> {
                 toolVersion = "7.14.0"
                 isConsoleOutput = true

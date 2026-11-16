@@ -387,4 +387,43 @@ class ConfigTest {
     assertTrue(s.contains("<redacted>"), s);
     assertFalse(s.contains("super-secret"), "passphrase must never appear in toString(): " + s);
   }
+
+  @Test
+  void config_bundleTrigger_loadsFromYaml() throws Exception {
+    String yamlConfig =
+        "services:\n"
+            + "  acmecorp:\n"
+            + "    url: https://example.com\n"
+            + "bundles:\n"
+            + "  manual:\n"
+            + "    service: acmecorp\n"
+            + "    resource: a.tar.gz\n"
+            + "    trigger: manual\n"
+            + "  default:\n"
+            + "    service: acmecorp\n"
+            + "    resource: b.tar.gz\n"
+            + "  explicit-null:\n"
+            + "    service: acmecorp\n"
+            + "    resource: c.tar.gz\n"
+            + "    trigger: null\n";
+
+    Config config =
+        new ObjectMapper(new YAMLFactory()).readValue(new StringReader(yamlConfig), Config.class);
+
+    assertEquals(Config.TRIGGER_MANUAL, config.getBundles().get("manual").getTrigger());
+    assertNull(config.getBundles().get("manual").getPolling());
+    assertEquals(Config.TRIGGER_PERIODIC, config.getBundles().get("default").getTrigger());
+    assertEquals(Config.TRIGGER_PERIODIC, config.getBundles().get("explicit-null").getTrigger());
+  }
+
+  @Test
+  void config_bundleTrigger_loadsFromJson() throws Exception {
+    String json =
+        "{\"bundles\": {\"authz\": {\"service\": \"acmecorp\", \"resource\": \"a.tar.gz\","
+            + " \"trigger\": \"manual\"}}}";
+
+    Config config = new ObjectMapper().readValue(json, Config.class);
+
+    assertEquals(Config.TRIGGER_MANUAL, config.getBundles().get("authz").getTrigger());
+  }
 }

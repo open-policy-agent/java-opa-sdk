@@ -96,7 +96,7 @@ public class RegoInt32 implements RegoValue, RegoNumber {
       return other.getBigIntValue().equals(BigInteger.valueOf(value));
         } else if (o instanceof RegoDecimal) {
       RegoDecimal other = (RegoDecimal) o;
-      return value.floatValue() == other.getValue();
+      return value.doubleValue() == other.getValue();
     }
 
     return false;

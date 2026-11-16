@@ -13,7 +13,8 @@ import java.util.List;
 
 /**
  * Parses the name constraints extension (RFC 5280, 4.2.1.10) into a certificate, as Go's x509
- * {@code parseNameConstraintsExtension} does.
+ * {@code parseNameConstraintsExtension} does. {@link X509ChainConstraints} applies the parsed
+ * constraints to a chain.
  */
 final class X509NameConstraints {
 

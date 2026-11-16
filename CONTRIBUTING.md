@@ -34,7 +34,8 @@ When contributing, please consider the following pointers:
   `capabilities/<version>.json` keeps one snapshot per release, so downstream
   tooling can report the release a builtin became available in. Preparing a
   release means bumping `version` in `gradle.properties` and then running
-  `./gradlew :cli:snapshotCapabilities`. Published snapshots are immutable —
+  `./gradlew :cli:snapshotCapabilities`. The release workflow fails if the tag
+  does not match that version. Published snapshots are immutable —
   they describe what that release exposed, not what the current tree does — and
   the task refuses to overwrite one.
 

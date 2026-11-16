@@ -3,7 +3,9 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
+import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
 import io.github.open_policy_agent.opa.ast.types.RegoInt32;
 import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoSet;
@@ -12,6 +14,7 @@ import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 public class AggregateBuiltinsTest {
@@ -23,12 +26,39 @@ public class AggregateBuiltinsTest {
   public void testMember2Set() {
     RegoSet set = new RegoSet(false);
     set.addValue(RegoInt32.of(1));
+    set.addValue(new RegoBigInt(1L << 40));
+    set.addValue(new RegoDecimal(16777217.0));
+    set.addValue(new RegoString("2"));
+    set.addValue(new RegoArray(List.of(RegoInt32.of(1), RegoInt32.of(2))));
+    set.addValue(new RegoObject(Map.of(new RegoString("a"), RegoInt32.of(1))));
+    set.addValue(new RegoSet(false, Set.of(RegoInt32.of(1), RegoInt32.of(2))));
 
-    RegoValue resTrue = aggregateBuiltins.member2(ctx, new RegoValue[] {RegoInt32.of(1), set});
-    assertEquals(RegoBoolean.TRUE, resTrue);
+    RegoValue[] members = {
+      RegoInt32.of(1),
+      new RegoDecimal(1.0),
+      new RegoBigInt(1L),
+      new RegoDecimal((double) (1L << 40)),
+      // Above 2^24, where a float comparison would round the int.
+      RegoInt32.of(16777217),
+      new RegoArray(List.of(RegoInt32.of(1), RegoInt32.of(2))),
+      new RegoObject(Map.of(new RegoString("a"), RegoInt32.of(1))),
+      new RegoSet(false, Set.of(RegoInt32.of(1), RegoInt32.of(2))),
+    };
+    for (RegoValue x : members) {
+      assertEquals(RegoBoolean.TRUE, aggregateBuiltins.member2(ctx, new RegoValue[] {x, set}), x.toString());
+    }
 
-    RegoValue resFalse = aggregateBuiltins.member2(ctx, new RegoValue[] {RegoInt32.of(2), set});
-    assertEquals(RegoBoolean.FALSE, resFalse);
+    // OPA: `2 in {"2"}` is false.
+    RegoValue[] nonMembers = {
+      RegoInt32.of(2),
+      new RegoDecimal(1.5),
+      RegoInt32.of(16777216),
+      new RegoArray(List.of(RegoInt32.of(2))),
+      new RegoSet(false, Set.of(RegoInt32.of(2))),
+    };
+    for (RegoValue x : nonMembers) {
+      assertEquals(RegoBoolean.FALSE, aggregateBuiltins.member2(ctx, new RegoValue[] {x, set}), x.toString());
+    }
   }
 
   @Test

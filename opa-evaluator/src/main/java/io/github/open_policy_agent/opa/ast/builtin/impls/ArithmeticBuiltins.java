@@ -15,9 +15,6 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import static java.lang.Math.abs;
-import static java.lang.Math.ceil;
-import static java.lang.Math.floor;
-import static java.lang.Math.round;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
 
 import java.math.BigDecimal;
@@ -120,17 +117,7 @@ public class ArithmeticBuiltins {
   public RegoValue ceil_f(EvaluationContext ctx, RegoValue[] args) {
     RegoNumber x = getArg(args, 0, RegoNumber.class);
 
-    if (x.isDecimal()) {
-      long result = (long) ceil(x.getDecimalValue());
-      // Return RegoInt32 for values that fit, otherwise RegoBigInt
-      if (result >= Integer.MIN_VALUE && result <= Integer.MAX_VALUE) {
-        return RegoInt32.of((int) result);
-      }
-      return new RegoBigInt(result);
-    } else {
-      // Integer already - return as-is
-      return x;
-    }
+    return x.isDecimal() ? roundDecimal(x, RoundingMode.CEILING) : x;
   }
 
   @OpaBuiltin(
@@ -142,17 +129,7 @@ public class ArithmeticBuiltins {
   public RegoValue round_f(EvaluationContext ctx, RegoValue[] args) {
     RegoNumber x = getArg(args, 0, RegoNumber.class);
 
-    if (x.isDecimal()) {
-      long result = round(x.getDecimalValue());
-      // Return RegoInt32 for values that fit, otherwise RegoBigInt
-      if (result >= Integer.MIN_VALUE && result <= Integer.MAX_VALUE) {
-        return RegoInt32.of((int) result);
-      }
-      return new RegoBigInt(result);
-    } else {
-      // Integer already - return as-is
-      return x;
-    }
+    return x.isDecimal() ? roundDecimal(x, RoundingMode.HALF_UP) : x;
   }
 
   @OpaBuiltin(
@@ -165,17 +142,23 @@ public class ArithmeticBuiltins {
   public RegoValue floor_f(EvaluationContext ctx, RegoValue[] args) {
     RegoNumber x = getArg(args, 0, RegoNumber.class);
 
-    if (x.isDecimal()) {
-      long result = (long) floor(x.getDecimalValue());
-      // Return RegoInt32 for values that fit, otherwise RegoBigInt
-      if (result >= Integer.MIN_VALUE && result <= Integer.MAX_VALUE) {
-        return RegoInt32.of((int) result);
-      }
-      return new RegoBigInt(result);
-    } else {
-      // Integer already - return as-is
+    return x.isDecimal() ? roundDecimal(x, RoundingMode.FLOOR) : x;
+  }
+
+  // On the double's exact binary value (not its shortest text), HALF_UP rounds ties away from
+  // zero, as OPA's add-or-subtract-0.5 does. The suppression is for that deliberate double use.
+  @SuppressWarnings("PMD.AvoidDecimalLiteralsInBigDecimalConstructor")
+  private static RegoValue roundDecimal(RegoNumber x, RoundingMode mode) {
+    final double value = x.getDecimalValue();
+    if (!Double.isFinite(value)) {
       return x;
     }
+    return integer(new BigDecimal(value).setScale(0, mode).toBigIntegerExact());
+  }
+
+  // RegoInt32 for values that fit, otherwise RegoBigInt
+  private static RegoValue integer(BigInteger i) {
+    return i.bitLength() < Integer.SIZE ? RegoInt32.of(i.intValue()) : new RegoBigInt(i);
   }
 
   @OpaBuiltin(
@@ -195,7 +178,7 @@ public class ArithmeticBuiltins {
     if (x.isDecimal()) {
       return new RegoDecimal(abs(x.getDecimalValue()));
     } else {
-      return new RegoBigInt(abs(x.getBigIntValue().longValueExact()));
+      return integer(x.getBigIntValue().abs());
     }
   }
 

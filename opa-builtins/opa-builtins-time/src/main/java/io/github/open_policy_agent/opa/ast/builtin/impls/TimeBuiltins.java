@@ -3,7 +3,6 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 import static java.lang.Math.abs;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
@@ -31,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
+import java.util.regex.Pattern;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinProvider;
 import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
@@ -39,6 +39,19 @@ import io.github.open_policy_agent.opa.ast.builtin.impls.utils.GoTimeLayoutConve
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 
 public class TimeBuiltins implements BuiltinProvider {
+
+  private static final Pattern FIXED_FRACTION = Pattern.compile("05[.,]0");
+  private static final Pattern FRACTION = Pattern.compile("\\.S+");
+  private static final String ANY_FRACTION = anyFraction();
+
+  private static String anyFraction() {
+    final StringBuilder sections = new StringBuilder();
+    for (int digits = 9; digits >= 1; digits--) {
+      sections.append("[.").append("S".repeat(digits)).append(']');
+    }
+    return sections.toString();
+  }
+
   @Override
   public Map<String, BiFunction<EvaluationContext, RegoValue[], RegoValue>> builtins() {
     TimeBuiltins instance = new TimeBuiltins();
@@ -110,31 +123,7 @@ public class TimeBuiltins implements BuiltinProvider {
           @OpaType(type = "number", name = "ns", description = "the `duration` in nanoseconds"))
   public RegoValue parseDurationNs(EvaluationContext ctx, RegoValue[] args) {
         String duration = getArg(args, 0, RegoString.class).getValue();
-
-        long ns;
-
-        if (duration.endsWith("ns")) {
-            duration = duration.substring(0, duration.length() - 2);
-            ns = Long.parseLong(duration);
-        } else if (duration.endsWith("us") || duration.endsWith("µs")) {
-            duration = duration.substring(0, duration.length() - 2);
-            ns = Long.parseLong(duration) * 1000;
-        } else if (duration.endsWith("ms")) {
-            duration = duration.substring(0, duration.length() - 2);
-            ns = Long.parseLong(duration) * 1_000_000;
-        } else if (duration.endsWith("s")) {
-            duration = duration.substring(0, duration.length() - 1);
-            ns = Long.parseLong(duration) * 1_000_000_000;
-        } else if (duration.endsWith("m")) {
-            duration = duration.substring(0, duration.length() - 1);
-            ns = Long.parseLong(duration) * 1_000_000_000 * 60;
-        } else if (duration.endsWith("h")) {
-            duration = duration.substring(0, duration.length() - 1);
-            ns = Long.parseLong(duration) * 1_000_000_000 * 60 * 60;
-        } else {
-      throw new BuiltinError("invalid duration format: " + duration);
-        }
-        return new RegoBigInt(ns);
+        return new RegoBigInt(GoDuration.parseNanos(duration));
     }
 
   @OpaBuiltin(
@@ -340,9 +329,7 @@ public class TimeBuiltins implements BuiltinProvider {
               description = "`value` in nanoseconds since epoch"))
   public RegoValue parseRFC3339Ns(EvaluationContext ctx, RegoValue[] args) {
         String value = getArg(args, 0, RegoString.class).getValue();
-        RegoBigInt exact = parseNsFormat("RFC3339Nano", value);
-        double d = exact.getValue().doubleValue();
-        return new RegoBigInt(new BigDecimal(Double.toString(d)).toBigInteger());
+        return parseNsFormat("RFC3339Nano", value);
     }
 
   @OpaBuiltin(
@@ -370,17 +357,16 @@ public class TimeBuiltins implements BuiltinProvider {
         String goLayout = getArg(args, 0, RegoString.class).getValue();
         String value = getArg(args, 1, RegoString.class).getValue();
 
-        // OPA serializes time.parse_ns results as IEEE 754 float64 (Go's json.Marshal behavior).
-        // Round-trip through double so boundary values match OPA's output.
-        RegoBigInt exact = parseNsFormat(goLayout, value);
-        double d = exact.getValue().doubleValue();
-        return new RegoBigInt(new BigDecimal(Double.toString(d)).toBigInteger());
+        return parseNsFormat(goLayout, value);
     }
 
     private RegoBigInt parseNsFormat(String goLayout, String value) {
-    String[] javaPattern = GoTimeLayoutConverter.convert(goLayout);
+        final boolean fixedFraction = FIXED_FRACTION.matcher(goLayout).find();
+        String[] javaPattern = GoTimeLayoutConverter.convert(goLayout);
         TemporalAccessor parsed = null;
-        for (String pattern : javaPattern) {
+        for (String basePattern : javaPattern) {
+            final String pattern =
+                fixedFraction ? basePattern : FRACTION.matcher(basePattern).replaceAll(ANY_FRACTION);
             try {
                 // Go's layouts use fixed English month/day/AM-PM names regardless of the
                 // JVM's default locale, so pin the formatter locale rather than inheriting it.
@@ -459,19 +445,26 @@ public class TimeBuiltins implements BuiltinProvider {
         return instant.atZone(zoneId);
     }
 
+    // Nanosecond values may be any integer representation: small literals are RegoInt32,
+    // computed ones and large literals are RegoBigInt.
+    private long nanosOf(RegoValue value) {
+        if (value instanceof RegoNumber && !((RegoNumber) value).isDecimal()) {
+            return ((RegoNumber) value).getBigIntValue().longValueExact();
+        }
+        throw new BuiltinError("invalid argument type: " + value.getTypeName());
+    }
+
     private ZonedDateTime getZonedDateTime(RegoValue arg) {
         ZonedDateTime ns;
         try {
-            if (arg instanceof RegoBigInt) {
-                ns = zonedDateTimeFromNano(((RegoBigInt) arg).getValue().longValueExact(), "UTC");
-            } else if (arg instanceof RegoArray) {
+            if (arg instanceof RegoArray) {
                 String timezone = ((RegoString) ((RegoArray) arg).getValue().get(1)).getValue();
                 ns = zonedDateTimeFromNano(
-                        ((RegoBigInt) ((RegoArray) arg).getValue().get(0)).getValue().longValueExact(),
+                        nanosOf(((RegoArray) arg).getValue().get(0)),
                         timezone.isEmpty() ? "UTC" : timezone
                 );
             } else {
-        throw new BuiltinError("invalid argument type: " + arg.getTypeName());
+                ns = zonedDateTimeFromNano(nanosOf(arg), "UTC");
             }
         }catch (ArithmeticException ignore) {
             throw new BuiltinError("timestamp too big");

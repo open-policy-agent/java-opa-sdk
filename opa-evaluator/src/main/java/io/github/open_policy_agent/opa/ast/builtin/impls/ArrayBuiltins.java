@@ -3,6 +3,7 @@ package io.github.open_policy_agent.opa.ast.builtin.impls;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getArg;
+import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.getIntArg;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,7 +13,6 @@ import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaDynamic;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
-import io.github.open_policy_agent.opa.ast.types.RegoInt32;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import io.github.open_policy_agent.opa.rego.TypeError;
@@ -98,8 +98,8 @@ public class ArrayBuiltins {
     public RegoValue eval(EvaluationContext ctx, RegoValue[] args) {
             List<RegoValue> x = getArg(args, 0, RegoArray.class).getValue();
 
-            int start = max(getArg(args, 1, RegoInt32.class).getValue(), 0);
-            int stop = min(getArg(args, 2, RegoInt32.class).getValue(), x.size());
+            int start = max(getIntArg(args, 1), 0);
+            int stop = min(getIntArg(args, 2), x.size());
 
             if (start > x.size() || stop < start) {
                 return new RegoArray();
