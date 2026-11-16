@@ -62,9 +62,13 @@ public class CidrBuiltins implements BuiltinProvider {
     // @formatter:on
   }
 
-  /** Parse an IP address or CIDR from a string. */
-  private IPAddress parseAddress(String str) throws AddressStringException {
-    return addressString(str).toAddress();
+  /** Parse a CIDR operand, which like Go's net.ParseCIDR needs an explicit prefix. */
+  private IPAddress parseCidr(String str, String builtinName) throws AddressStringException {
+    final IPAddressString addrStr = addressString(str);
+    if (!addrStr.isValid() || addrStr.getNetworkPrefixLength() == null) {
+      throw new BuiltinError(builtinName + ": invalid CIDR address: " + str);
+    }
+    return addrStr.toAddress();
   }
 
   /** Parse an IP address or CIDR, throwing a BuiltinError with the builtin name on failure. */
@@ -92,22 +96,26 @@ public class CidrBuiltins implements BuiltinProvider {
               name = "result",
               description = "`true` if `cidr_or_ip` is contained within `cidr`"))
   public RegoValue contains(EvaluationContext ctx, RegoValue[] args) {
+    return contains(args, "net.cidr_contains");
+  }
+
+  private RegoValue contains(RegoValue[] args, String builtinName) {
     try {
       String cidrStr = getArg(args, 0, RegoString.class).getValue();
       String cidrOrIpStr = getArg(args, 1, RegoString.class).getValue();
 
       // Parse the first CIDR
-      IPAddress cidrAddr = parseAddress(cidrStr).toPrefixBlock();
+      IPAddress cidrAddr = parseCidr(cidrStr, builtinName).toPrefixBlock();
 
       // Try parsing as a plain IP first (no CIDR notation)
       // In Go, net.ParseIP only accepts plain IPs without /prefix
       if (!cidrOrIpStr.contains("/")) {
-        IPAddress ip = parseAddressOrThrow(cidrOrIpStr, "net.cidr_contains");
+        IPAddress ip = parseAddressOrThrow(cidrOrIpStr, builtinName);
         return RegoBoolean.of(cidrAddr.contains(ip));
       }
 
       // It has CIDR notation, parse as CIDR
-      IPAddress checkAddr = parseAddressOrThrow(cidrOrIpStr, "net.cidr_contains").toPrefixBlock();
+      IPAddress checkAddr = parseAddressOrThrow(cidrOrIpStr, builtinName).toPrefixBlock();
 
       // Check if cidrAddr contains both the start and end of checkAddr's range
       boolean containsStart = cidrAddr.contains(checkAddr.getLower());
@@ -118,7 +126,7 @@ public class CidrBuiltins implements BuiltinProvider {
       return RegoBoolean.of(cidrAddr.contains(checkAddr.getUpper()));
 
     } catch (AddressStringException e) {
-      throw new BuiltinError("net.cidr_contains: " + e.getMessage());
+      throw new BuiltinError(builtinName + ": " + e.getMessage());
     }
   }
 
@@ -140,8 +148,8 @@ public class CidrBuiltins implements BuiltinProvider {
       String cidr1Str = getArg(args, 0, RegoString.class).getValue();
       String cidr2Str = getArg(args, 1, RegoString.class).getValue();
 
-      IPAddress addr1 = parseAddress(cidr1Str);
-      IPAddress addr2 = parseAddress(cidr2Str);
+      IPAddress addr1 = parseCidr(cidr1Str, "net.cidr_intersects");
+      IPAddress addr2 = parseCidr(cidr2Str, "net.cidr_intersects");
 
       // Two CIDRs intersect if either contains the other's starting IP
       boolean intersects = addr1.contains(addr2.getLower()) || addr2.contains(addr1.getLower());
@@ -187,7 +195,7 @@ public class CidrBuiltins implements BuiltinProvider {
     for (CidrMatch match1 : cidrs1) {
       for (CidrMatch match2 : cidrs2) {
         // Check if cidr1 contains cidr2
-        RegoValue containsResult = contains(ctx, new RegoValue[] {match1.cidr, match2.cidr});
+        RegoValue containsResult = contains(new RegoValue[] {match1.cidr, match2.cidr}, "net.cidr_contains_matches");
         if (containsResult instanceof RegoBoolean && ((RegoBoolean) containsResult).getValue()) {
           // Add [index1, index2] to result
           resultSet.add(new RegoArray(Arrays.asList(match1.index, match2.index)));
