@@ -8,7 +8,7 @@ repositories {
 
 dependencies {
     api(project(":opa-evaluator"))
-    implementation(platform("tools.jackson:jackson-bom:3.2.4"))
+    implementation(platform("tools.jackson:jackson-bom:3.3.0"))
     implementation("tools.jackson.core:jackson-databind")
     implementation("tools.jackson.dataformat:jackson-dataformat-yaml")
 
