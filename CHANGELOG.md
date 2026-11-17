@@ -36,6 +36,9 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
 - Report the `timer_bundle_request_ns` and `timer_rego_load_bundles_ns` timers in the `metrics` of
   each bundle in status reports, as OPA does. They describe the latest poll only ([#285](https://github.com/open-policy-agent/java-opa-sdk/pull/285)) authored by @kroekle
+- Number constants in a plan are parsed once and shared by every evaluation, and parsing a number
+  no longer throws and swallows exceptions for decimals, so comparisons against decimal literals
+  such as `x > 0.5` cost about the same as against integers ([#288](https://github.com/open-policy-agent/java-opa-sdk/pull/288)) authored by @kroekle
 
 ## 0.7.0
 

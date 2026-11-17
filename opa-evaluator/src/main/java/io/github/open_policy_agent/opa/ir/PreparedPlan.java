@@ -29,6 +29,7 @@ public class PreparedPlan {
   private final int frameCapacity;
   private final Map<String, Func> functionsByPath;
   private final ArrayList<String> staticStrings;
+  private final NumberConstants numberConstants;
   private final Map<String, Func> funcRegistry;
 
   private PreparedPlan(Builder builder) {
@@ -36,6 +37,7 @@ public class PreparedPlan {
     this.frameCapacity = builder.frameCapacity;
     this.functionsByPath = builder.functionsByPath;
     this.staticStrings = builder.staticStrings;
+    this.numberConstants = builder.numberConstants;
     this.funcRegistry = builder.funcRegistry;
   }
 
@@ -55,6 +57,10 @@ public class PreparedPlan {
     return staticStrings;
   }
 
+  NumberConstants getNumberConstants() {
+    return numberConstants;
+  }
+
   public Map<String, Func> getFuncRegistry() {
     return funcRegistry;
   }
@@ -64,6 +70,7 @@ public class PreparedPlan {
     private int frameCapacity;
     private Map<String, Func> functionsByPath;
     private ArrayList<String> staticStrings;
+    private NumberConstants numberConstants;
     private Map<String, Func> funcRegistry;
 
     /**
@@ -91,6 +98,7 @@ public class PreparedPlan {
       // Get references to static data
       this.funcRegistry = evaluator.getFuncRegistry();
       this.staticStrings = evaluator.getStaticStrings();
+      this.numberConstants = evaluator.getNumberConstants();
 
       // Pre-compute functionsByPath map (this is the expensive operation)
       if (this.funcRegistry != null) {
