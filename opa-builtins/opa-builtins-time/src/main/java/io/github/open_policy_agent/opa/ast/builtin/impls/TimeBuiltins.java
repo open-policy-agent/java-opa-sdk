@@ -6,10 +6,12 @@ import static io.github.open_policy_agent.opa.ast.builtin.impls.utils.ArgHelper.
 import java.math.BigInteger;
 import io.github.open_policy_agent.opa.ast.types.RegoArray;
 import io.github.open_policy_agent.opa.ast.types.RegoBigInt;
+import io.github.open_policy_agent.opa.ast.types.RegoDecimal;
 import io.github.open_policy_agent.opa.ast.types.RegoInt32;
 import io.github.open_policy_agent.opa.ast.types.RegoNumber;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import java.time.DateTimeException;
 import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.Instant;
@@ -37,6 +39,7 @@ import io.github.open_policy_agent.opa.ast.builtin.OpaBuiltin;
 import io.github.open_policy_agent.opa.ast.builtin.OpaType;
 import io.github.open_policy_agent.opa.ast.builtin.impls.utils.GoTimeLayoutConverter;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
+import io.github.open_policy_agent.opa.rego.TypeError;
 
 public class TimeBuiltins implements BuiltinProvider {
 
@@ -291,26 +294,54 @@ public class TimeBuiltins implements BuiltinProvider {
                   "nanoseconds since the epoch representing the input time, with years, months and days added"))
   public RegoValue addDate(EvaluationContext ctx, RegoValue[] args) {
         try {
-            RegoNumber nsArg = getArg(args, 0, RegoNumber.class);
-            long ns = nsArg.getBigIntValue().longValueExact();
-            int years = getArg(args, 1, RegoNumber.class).getBigIntValue().intValueExact();
-            int months = getArg(args, 2, RegoNumber.class).getBigIntValue().intValueExact();
-            int days = getArg(args, 3, RegoNumber.class).getBigIntValue().intValueExact();
+            long ns = int64Operand(args, 0);
+            int years = Math.toIntExact(int64Operand(args, 1));
+            int months = Math.toIntExact(int64Operand(args, 2));
+            int days = Math.toIntExact(int64Operand(args, 3));
 
             long seconds = ns / 1_000_000_000;
             long nanos = ns % 1_000_000_000;
             Instant originalInstant = Instant.ofEpochSecond(seconds, nanos);
-            ZonedDateTime newDateTime = originalInstant.atZone(ZoneId.of("UTC")).plusYears(years).plusMonths(months).plusDays(days);
+            final ZonedDateTime original = originalInstant.atZone(ZoneOffset.UTC);
+            // Go adds to the date fields and then normalizes, so Jan 31 + 1 month is Mar 3, not Feb 28.
+            final LocalDate date =
+                    LocalDate.of(original.getYear(), 1, 1)
+                            .plusYears(years)
+                            .plusMonths(original.getMonthValue() - 1L + months)
+                            .plusDays(original.getDayOfMonth() - 1L + days);
+            final ZonedDateTime newDateTime = date.atTime(original.toLocalTime()).atZone(ZoneOffset.UTC);
 
             BigInteger newEpochNano = BigInteger.valueOf(newDateTime.toInstant().getEpochSecond())
                     .multiply(BigInteger.valueOf(1_000_000_000L))
                     .add(BigInteger.valueOf(newDateTime.toInstant().getNano()));
 
             return bigIntToRegoNs(newEpochNano);
-        } catch (ArithmeticException ignore) {
+        } catch (ArithmeticException | DateTimeException ignore) {
             throw new BuiltinError("time outside of valid range");
         }
     }
+
+  // OPA reads every operand as an int64: a timestamp that is not one is a builtin error, a
+  // count that is not one is a type error.
+  private static long int64Operand(RegoValue[] args, int index) {
+    final RegoNumber number = getArg(args, index, RegoNumber.class);
+    BigInteger value = null;
+    if (number instanceof RegoDecimal) {
+      final double d = ((RegoDecimal) number).getValue();
+      if (d == Math.rint(d) && Math.abs(d) < 0x1p63) {
+        value = BigInteger.valueOf((long) d);
+      }
+    } else {
+      value = number.getBigIntValue();
+    }
+    if (value != null && value.bitLength() < 64) {
+      return value.longValue();
+    }
+    if (index == 0) {
+      throw new BuiltinError("timestamp too big");
+    }
+    throw new TypeError("operand " + (index + 1) + " must be integer number but got floating-point number");
+  }
 
   @OpaBuiltin(
       name = "time.parse_rfc3339_ns",
