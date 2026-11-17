@@ -388,7 +388,10 @@ new Opa.Builder().withConfig(config)
 | `withProfiler(Profiler)` | Enable query profiling |
 | `withTracer(QueryTracer)` | Enable query execution tracing |
 | `withPrintHook(PrintHook)` | Capture output from `print()` statements (default: logger) |
+| `withoutRuleResultCache()` | Run a rule body every time it is referenced (default: a rule whose only parameters are input and data runs once per evaluation and its result is reused) |
 | `withStrictBuiltinErrors()` | Make a builtin error an evaluation error instead of undefined (default: off) |
+
+The rule result cache applies only to the evaluation's own input and data, not to values set with `with`, and is skipped while a tracer, profiler, coverage or statement profiler is attached. `EvaluationContext.Builder` has the same `withoutRuleResultCache()` option for `Engine.evaluate`.
 
 ### Opa API Builder Options
 

@@ -36,6 +36,7 @@ public class EvaluationContext {
   private QueryTracer tracer;
   private final long evalStartTime = System.currentTimeMillis();
   private final List<Profiler> profilers;
+  private final boolean ruleResultCache;
   private final boolean strictBuiltinErrors;
   public final boolean sortSets;
   private final NdBuiltinCache ndBuiltinCache;
@@ -65,6 +66,7 @@ public class EvaluationContext {
     this.ndBuiltinCache = other.ndBuiltinCache;
     this.printHook = other.printHook;
     this.runtime = other.runtime;
+    this.ruleResultCache = other.ruleResultCache;
   }
 
   private EvaluationContext(Builder builder) {
@@ -83,6 +85,20 @@ public class EvaluationContext {
     this.ndBuiltinCache = builder.ndBuiltinCache;
     this.printHook = builder.printHook;
     this.runtime = builder.runtime;
+    this.ruleResultCache =
+        builder.ruleResultCache
+            && tracer == null
+            && profilers.isEmpty()
+            && statementProfiler.getClass() == NoOpStatementProfiler.class;
+  }
+
+  /**
+   * Whether the evaluator may reuse the result of a rule within this evaluation. False when it was
+   * turned off with {@link Builder#withoutRuleResultCache()}, or when a tracer, a profiler or a
+   * statement profiler is attached, since a reused result would skip the events they expect.
+   */
+  protected boolean ruleResultCacheActive() {
+    return ruleResultCache;
   }
 
   public boolean isStrictBuiltinErrors() {
@@ -220,6 +236,7 @@ public class EvaluationContext {
     StatementProfiler statementProfiler;
     final List<Profiler> profilers = new ArrayList<>();
     private boolean strictBuiltinErrors = false;
+    private boolean ruleResultCache = true;
     private boolean sortSets = false;
     private NdBuiltinCache ndBuiltinCache;
     private PrintHook printHook = PrintHook.logger(new Logger.StandardLogger());
@@ -227,6 +244,23 @@ public class EvaluationContext {
 
     public Builder withStrictBuiltinErrors() {
       this.strictBuiltinErrors = true;
+      return this;
+    }
+
+    /**
+     * Turns off the rule result cache, which is on by default. The cache runs the body of a rule
+     * whose only parameters are input and data once per evaluation and reuses the result, so a rule
+     * referenced from a loop is not evaluated again for every iteration. Undefined results are
+     * reused too, and errors never are. It applies only to the evaluation's own input and data (not
+     * to values set with {@code with}), and is bypassed when a tracer, profiler, coverage or
+     * statement profiler is attached. Call this to make the evaluator run every rule body each time
+     * it is referenced. This option may be deprecated if the OPA planner later emits this caching in
+     * the plan itself.
+     *
+     * @return this builder
+     */
+    public Builder withoutRuleResultCache() {
+      this.ruleResultCache = false;
       return this;
     }
 

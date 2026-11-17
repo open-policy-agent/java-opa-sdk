@@ -426,9 +426,21 @@ public class ComplianceTest {
     }
   }
 
+  // A tracer explains a failure but switches the rule result cache off, so the corpus runs once
+  // with it and once without it, with the cache active.
   @ParameterizedTest(name = "{0}")
   @MethodSource("getComplianceTestData")
   public void testEvaluate(String caseName, JsonNode root) {
+    evaluateCase(caseName, root, false);
+  }
+
+  @ParameterizedTest(name = "{0} (rule result cache)")
+  @MethodSource("getComplianceTestData")
+  public void testEvaluateWithRuleResultCache(String caseName, JsonNode root) {
+    evaluateCase(caseName, root, true);
+  }
+
+  private void evaluateCase(String caseName, JsonNode root, boolean ruleResultCache) {
     casesExecuted.incrementAndGet();
     try {
       ObjectMapper mapper = JsonMapper.builder().addModule(new io.github.open_policy_agent.opa.jackson.RegoValueModule()).build();
@@ -467,8 +479,10 @@ public class ComplianceTest {
           new EvaluationContext.Builder()
               .withBuiltinRegistry(builtinRegistry)
               .withSortedSets()
-              .withEntrypoint(entrypoint)
-              .withTracer(tracer);
+              .withEntrypoint(entrypoint);
+      if (!ruleResultCache) {
+        contextBuilder.withTracer(tracer);
+      }
 
       if (root.has("strict_error") && root.get("strict_error").asBoolean()) {
         contextBuilder.withStrictBuiltinErrors();

@@ -257,6 +257,10 @@ public class Opa {
       builder.withProfiler(options.getProfiler());
     }
 
+    if (options != null && !options.isRuleResultCache()) {
+      builder.withoutRuleResultCache();
+    }
+
     return builder.build();
   }
 
@@ -402,6 +406,7 @@ public class Opa {
     private JsonNode input;
     private Object ndbCache;
     private boolean strictBuiltinErrors;
+    private boolean ruleResultCache = true;
     boolean showMetrics;
     private Profiler profiler;
     private boolean instrument;
@@ -441,6 +446,28 @@ public class Opa {
 
     public DecisionOptions setStrictBuiltinErrors(boolean strictBuiltinErrors) {
       this.strictBuiltinErrors = strictBuiltinErrors;
+      return this;
+    }
+
+    public boolean isRuleResultCache() {
+      return ruleResultCache;
+    }
+
+    /**
+     * Turns the rule result cache on (the default) or off for this decision. When on, a rule whose
+     * only parameters are input and data runs once per evaluation and its result is reused, so a
+     * rule referenced from a loop is not evaluated again for every iteration. The cache ignores
+     * values set with {@code with} and is bypassed while a profiler is attached. Turn it off to run
+     * every rule body each time it is referenced.
+     *
+     * <p>This option may not be long lived: it may be deprecated or removed if the OPA planner
+     * later emits this caching in the plan itself.
+     *
+     * @param ruleResultCache {@code false} to run every rule body each time it is referenced
+     * @return this options object
+     */
+    public DecisionOptions setRuleResultCache(boolean ruleResultCache) {
+      this.ruleResultCache = ruleResultCache;
       return this;
     }
 
