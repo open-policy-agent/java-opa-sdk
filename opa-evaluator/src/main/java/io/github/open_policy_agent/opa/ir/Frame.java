@@ -25,6 +25,7 @@ public class Frame {
     private List<RegoValue> resultSet = null;
     // true if this frame is executing a user-defined function (params > 2)
     private boolean userFunction = false;
+    private String funcName;
 
   private Frame(RegoValue[] locals) {
     this.locals = locals;
@@ -112,6 +113,14 @@ public class Frame {
 
   public boolean isUserFunction() {
     return userFunction;
+  }
+
+  public String getFuncName() {
+    return funcName;
+  }
+
+  public void setFuncName(String funcName) {
+    this.funcName = funcName;
   }
 
   public void setUserFunction(boolean userFunction) {

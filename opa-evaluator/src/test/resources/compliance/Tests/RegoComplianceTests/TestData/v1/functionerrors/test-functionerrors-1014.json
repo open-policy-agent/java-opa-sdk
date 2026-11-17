@@ -7,7 +7,7 @@
 				"package test3\n\np(1, a) := y if {\n\ty = a\n}\n\np(x, y) := z if {\n\tz = x\n}\n\nr := y if {\n\tdata.test3.p(1, 0, y)\n}\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.test3.p produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],

@@ -4505,7 +4505,7 @@
 				}
 			},
 			"want_error_code": "eval_conflict_error",
-			"want_error": "eval_conflict_error: complete rules must not produce multiple outputs",
+			"want_error": "rule data.x.p.x produced conflicting values",
 			"entrypoints": [
 				"eval"
 			],

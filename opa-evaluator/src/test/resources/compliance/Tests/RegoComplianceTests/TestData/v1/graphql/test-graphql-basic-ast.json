@@ -4,7 +4,7 @@
 			"note": "graphql_parse_query/success-basic-ast simple query",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\nast := {\"Operations\": [{\n\t\"Name\": \"\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"hero\",\n\t\t\"Name\": \"hero\",\n\t\t\"SelectionSet\": [{\n\t\t\t\"Alias\": \"name\",\n\t\t\t\"Name\": \"name\",\n\t\t}],\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(\"{hero {name}}\") == ast\n}\n"
+				"package test\n\nast := {\"Operations\": [{\n\t\"Description\": \"\", \"Name\": \"\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"hero\",\n\t\t\"Name\": \"hero\",\n\t\t\"SelectionSet\": [{\n\t\t\t\"Alias\": \"name\",\n\t\t\t\"Name\": \"name\",\n\t\t}],\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(\"{hero {name}}\") == ast\n}\n"
 			],
 			"want_result": [
 				{
@@ -27,10 +27,13 @@
 							"value": "Operations"
 						},
 						{
-							"value": "Name"
+							"value": "Description"
 						},
 						{
 							"value": ""
+						},
+						{
+							"value": "Name"
 						},
 						{
 							"value": "Operation"
@@ -264,7 +267,26 @@
 												},
 												"value": {
 													"type": "string_index",
+													"value": 4
+												},
+												"object": 6,
+												"file": 0,
+												"col": 1,
+												"row": 3,
+												"end_col": 4,
+												"end_row": 14
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
 													"value": 6
+												},
+												"value": {
+													"type": "string_index",
+													"value": 7
 												},
 												"object": 6,
 												"file": 0,
@@ -302,11 +324,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 9
+													"value": 10
 												},
 												"object": 8,
 												"file": 0,
@@ -321,11 +343,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 9
+													"value": 10
 												},
 												"object": 8,
 												"file": 0,
@@ -363,11 +385,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 11
 												},
 												"object": 10,
 												"file": 0,
@@ -382,11 +404,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 11
 												},
 												"object": 10,
 												"file": 0,
@@ -416,7 +438,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -450,7 +472,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -739,13 +761,13 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CqIBCgMKAXgKDwoNe2hlcm8ge25hbWV9fQoMCgpPcGVyYXRpb25zCgYKBE5hbWUKAgoACgsKCU9wZXJhdGlvbgoHCgVxdWVyeQoOCgxTZWxlY3Rpb25TZXQKBwoFQWxpYXMKBgoEaGVybwoGCgRuYW1lEhUKE2dyYXBocWwucGFyc2VfcXVlcnkaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBqpBwqABQoQZzAuZGF0YS50ZXN0LmFzdBICAAEYAiKVBAoRCAAQARgDsAIEuAIOggICCAMKEQgAEAEYA7ACBLgCDsIBAggEChMIABABGAOwAgS4Ag6iAQQIARAFChEIABABGAOwAgS4Ag7CAQIIBgodCAAQARgDsAIEuAIO8gEOCgQKAhgDEgQKAhgEGAYKHQgAEAEYA7ACBLgCDvIBDgoECgIYBRIECgIYBhgGChMIABABGAOwAgS4Ag6iAQQIARAHChEIABABGAOwAgS4Ag7CAQIICAodCAAQARgDsAIEuAIO8gEOCgQKAhgIEgQKAhgJGAgKHQgAEAEYA7ACBLgCDvIBDgoECgIYAxIECgIYCRgIChMIABABGAOwAgS4Ag6iAQQIARAJChEIABABGAOwAgS4Ag7CAQIICgodCAAQARgDsAIEuAIO8gEOCgQKAhgIEgQKAhgKGAoKHQgAEAEYA7ACBLgCDvIBDgoECgIYAxIECgIYChgKChYIABABGAOwAgS4Ag4iCAoECgIQChAJCh0IABABGAOwAgS4Ag7yAQ4KBAoCGAcSBAoCEAkYCAoWCAAQARgDsAIEuAIOIggKBAoCEAgQBwodCAAQARgDsAIEuAIO8gEOCgQKAhgHEgQKAhAHGAYKFggAEAEYA7ACBLgCDiIICgQKAhAGEAUKHQgAEAEYA7ACBLgCDvIBDgoECgIYAhIECgIQBRgEChYIABABGAOwAgS4Ag4yCAoECgIQBBADIioKEAgAEAEYA7ACBLgCDnoCCAMKFggAEAEYA7ACBLgCDjIICgQKAhADEAIiEwoRCAAQARgDsAIEuAIOkgICCAIqAmcwKgR0ZXN0KgNhc3QKowIKDmcwLmRhdGEudGVzdC5wEgIAARgCIrwBChEIABABGBCwAgK4AhCCAgIIAworCAAQAhgRsAImuAIRWh0KE2dyYXBocWwucGFyc2VfcXVlcnkSBAoCGAEYBAoWCAAQAhgRsAImuAIROggKBAoCEAQQBQouCAAQAhgRsAItuAIRWiAKEGcwLmRhdGEudGVzdC5hc3QSBAoCEAASBAoCEAEYBgoaCAAQAhgRsAItuAIRagwKBAoCEAUSBAoCEAYKFggAEAEYELACArgCEDIICgQKAggBEAMiKgoQCAAQARgQsAICuAIQegIIAwoWCAAQARgQsAICuAIQMggKBAoCEAMQAiITChEIABABGBCwAgK4AhCSAgIIAioCZzAqBHRlc3QqAXA="
+			"plan_proto": "CrEBCgMKAXgKDwoNe2hlcm8ge25hbWV9fQoMCgpPcGVyYXRpb25zCg0KC0Rlc2NyaXB0aW9uCgIKAAoGCgROYW1lCgsKCU9wZXJhdGlvbgoHCgVxdWVyeQoOCgxTZWxlY3Rpb25TZXQKBwoFQWxpYXMKBgoEaGVybwoGCgRuYW1lEhUKE2dyYXBocWwucGFyc2VfcXVlcnkaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrIBwqfBQoQZzAuZGF0YS50ZXN0LmFzdBICAAEYAiK0BAoRCAAQARgDsAIEuAIOggICCAMKEQgAEAEYA7ACBLgCDsIBAggEChMIABABGAOwAgS4Ag6iAQQIARAFChEIABABGAOwAgS4Ag7CAQIIBgodCAAQARgDsAIEuAIO8gEOCgQKAhgDEgQKAhgEGAYKHQgAEAEYA7ACBLgCDvIBDgoECgIYBRIECgIYBBgGCh0IABABGAOwAgS4Ag7yAQ4KBAoCGAYSBAoCGAcYBgoTCAAQARgDsAIEuAIOogEECAEQBwoRCAAQARgDsAIEuAIOwgECCAgKHQgAEAEYA7ACBLgCDvIBDgoECgIYCRIECgIYChgICh0IABABGAOwAgS4Ag7yAQ4KBAoCGAUSBAoCGAoYCAoTCAAQARgDsAIEuAIOogEECAEQCQoRCAAQARgDsAIEuAIOwgECCAoKHQgAEAEYA7ACBLgCDvIBDgoECgIYCRIECgIYCxgKCh0IABABGAOwAgS4Ag7yAQ4KBAoCGAUSBAoCGAsYCgoWCAAQARgDsAIEuAIOIggKBAoCEAoQCQodCAAQARgDsAIEuAIO8gEOCgQKAhgIEgQKAhAJGAgKFggAEAEYA7ACBLgCDiIICgQKAhAIEAcKHQgAEAEYA7ACBLgCDvIBDgoECgIYCBIECgIQBxgGChYIABABGAOwAgS4Ag4iCAoECgIQBhAFCh0IABABGAOwAgS4Ag7yAQ4KBAoCGAISBAoCEAUYBAoWCAAQARgDsAIEuAIOMggKBAoCEAQQAyIqChAIABABGAOwAgS4Ag56AggDChYIABABGAOwAgS4Ag4yCAoECgIQAxACIhMKEQgAEAEYA7ACBLgCDpICAggCKgJnMCoEdGVzdCoDYXN0CqMCCg5nMC5kYXRhLnRlc3QucBICAAEYAiK8AQoRCAAQARgQsAICuAIQggICCAMKKwgAEAIYEbACJrgCEVodChNncmFwaHFsLnBhcnNlX3F1ZXJ5EgQKAhgBGAQKFggAEAIYEbACJrgCEToICgQKAhAEEAUKLggAEAIYEbACLbgCEVogChBnMC5kYXRhLnRlc3QuYXN0EgQKAhAAEgQKAhABGAYKGggAEAIYEbACLbgCEWoMCgQKAhAFEgQKAhAGChYIABABGBCwAgK4AhAyCAoECgIIARADIioKEAgAEAEYELACArgCEHoCCAMKFggAEAEYELACArgCEDIICgQKAhADEAIiEwoRCAAQARgQsAICuAIQkgICCAIqAmcwKgR0ZXN0KgFw"
 		},
 		{
 			"note": "graphql_parse_query/success-basic-ast with arguments",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\ngql := `query hero ($episode: Episode!) {\n    hero (episode: $episode) {\n        id\n        name\n        friends {\n            id\n            name\n            friends {\n                id\n                name\n                appearsIn\n            }\n            appearsIn\n        }\n        appearsIn\n    }\n}`\n\nast := {\"Operations\": [{\n\t\"Name\": \"hero\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"hero\",\n\t\t\"Arguments\": [{\n\t\t\t\"Name\": \"episode\",\n\t\t\t\"Value\": {\n                \"ExpectedTypeHasDefault\": false,\n\t\t\t\t\"Kind\": 0,\n\t\t\t\t\"Raw\": \"episode\",\n\t\t\t},\n\t\t}],\n\t\t\"Name\": \"hero\",\n\t\t\"SelectionSet\": [\n\t\t\t{\n\t\t\t\t\"Alias\": \"id\",\n\t\t\t\t\"Name\": \"id\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\"Name\": \"name\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"Alias\": \"friends\",\n\t\t\t\t\"Name\": \"friends\",\n\t\t\t\t\"SelectionSet\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"id\",\n\t\t\t\t\t\t\"Name\": \"id\",\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"friends\",\n\t\t\t\t\t\t\"Name\": \"friends\",\n\t\t\t\t\t\t\"SelectionSet\": [\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\"Alias\": \"id\",\n\t\t\t\t\t\t\t\t\"Name\": \"id\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\"Alias\": \"appearsIn\",\n\t\t\t\t\t\t\t\t\"Name\": \"appearsIn\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t],\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"appearsIn\",\n\t\t\t\t\t\t\"Name\": \"appearsIn\",\n\t\t\t\t\t},\n\t\t\t\t],\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"Alias\": \"appearsIn\",\n\t\t\t\t\"Name\": \"appearsIn\",\n\t\t\t},\n\t\t],\n\t}],\n\t\"VariableDefinitions\": [{\n\t\t\"Type\": {\n\t\t\t\"NamedType\": \"Episode\",\n\t\t\t\"NonNull\": true,\n\t\t},\n\t\t\"Used\": false,\n\t\t\"Variable\": \"episode\",\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(gql) == ast\n}\n"
+				"package test\n\ngql := `query hero ($episode: Episode!) {\n    hero (episode: $episode) {\n        id\n        name\n        friends {\n            id\n            name\n            friends {\n                id\n                name\n                appearsIn\n            }\n            appearsIn\n        }\n        appearsIn\n    }\n}`\n\nast := {\"Operations\": [{\n\t\"Description\": \"\", \"Name\": \"hero\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"hero\",\n\t\t\"Arguments\": [{\n\t\t\t\"Name\": \"episode\",\n\t\t\t\"Value\": {\n                \"ExpectedTypeHasDefault\": false,\n\t\t\t\t\"Kind\": 0,\n\t\t\t\t\"Raw\": \"episode\",\n\t\t\t},\n\t\t}],\n\t\t\"Name\": \"hero\",\n\t\t\"SelectionSet\": [\n\t\t\t{\n\t\t\t\t\"Alias\": \"id\",\n\t\t\t\t\"Name\": \"id\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\"Name\": \"name\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"Alias\": \"friends\",\n\t\t\t\t\"Name\": \"friends\",\n\t\t\t\t\"SelectionSet\": [\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"id\",\n\t\t\t\t\t\t\"Name\": \"id\",\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"friends\",\n\t\t\t\t\t\t\"Name\": \"friends\",\n\t\t\t\t\t\t\"SelectionSet\": [\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\"Alias\": \"id\",\n\t\t\t\t\t\t\t\t\"Name\": \"id\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\t\t\t\"Alias\": \"appearsIn\",\n\t\t\t\t\t\t\t\t\"Name\": \"appearsIn\",\n\t\t\t\t\t\t\t},\n\t\t\t\t\t\t],\n\t\t\t\t\t},\n\t\t\t\t\t{\n\t\t\t\t\t\t\"Alias\": \"appearsIn\",\n\t\t\t\t\t\t\"Name\": \"appearsIn\",\n\t\t\t\t\t},\n\t\t\t\t],\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"Alias\": \"appearsIn\",\n\t\t\t\t\"Name\": \"appearsIn\",\n\t\t\t},\n\t\t],\n\t}],\n\t\"VariableDefinitions\": [{\n\t\t\"Description\": \"\", \"Type\": {\n\t\t\t\"NamedType\": \"Episode\",\n\t\t\t\"NonNull\": true,\n\t\t},\n\t\t\"Used\": false,\n\t\t\"Variable\": \"episode\",\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(gql) == ast\n}\n"
 			],
 			"want_result": [
 				{
@@ -766,6 +788,12 @@
 						},
 						{
 							"value": "Operations"
+						},
+						{
+							"value": "Description"
+						},
+						{
+							"value": ""
 						},
 						{
 							"value": "Name"
@@ -1154,6 +1182,25 @@
 											}
 										},
 										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 7
+												},
+												"value": {
+													"type": "string_index",
+													"value": 8
+												},
+												"object": 6,
+												"file": 0,
+												"col": 1,
+												"row": 21,
+												"end_col": 4,
+												"end_row": 94
+											}
+										},
+										{
 											"type": "MakeArrayStmt",
 											"stmt": {
 												"capacity": 1,
@@ -1181,11 +1228,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"object": 8,
 												"file": 0,
@@ -1223,11 +1270,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 12
 												},
 												"object": 10,
 												"file": 0,
@@ -1253,7 +1300,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 12
+													"value": 14
 												},
 												"value": {
 													"type": "bool",
@@ -1275,8 +1322,8 @@
 												"row": 21,
 												"end_col": 4,
 												"end_row": 94,
-												"index": 14,
-												"Index": 14,
+												"index": 16,
+												"Index": 16,
 												"target": 12
 											}
 										},
@@ -1285,7 +1332,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 13
+													"value": 15
 												},
 												"value": {
 													"type": "local",
@@ -1304,11 +1351,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 15
+													"value": 17
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 12
 												},
 												"object": 11,
 												"file": 0,
@@ -1323,7 +1370,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 11
+													"value": 13
 												},
 												"value": {
 													"type": "local",
@@ -1357,7 +1404,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 9
+													"value": 11
 												},
 												"value": {
 													"type": "local",
@@ -1376,11 +1423,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"object": 8,
 												"file": 0,
@@ -1418,11 +1465,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 16
+													"value": 18
 												},
 												"object": 14,
 												"file": 0,
@@ -1437,11 +1484,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 16
+													"value": 18
 												},
 												"object": 14,
 												"file": 0,
@@ -1482,11 +1529,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 15,
 												"file": 0,
@@ -1501,11 +1548,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 15,
 												"file": 0,
@@ -1546,11 +1593,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 20
 												},
 												"object": 16,
 												"file": 0,
@@ -1565,11 +1612,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 20
 												},
 												"object": 16,
 												"file": 0,
@@ -1607,11 +1654,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 16
+													"value": 18
 												},
 												"object": 18,
 												"file": 0,
@@ -1626,11 +1673,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 16
+													"value": 18
 												},
 												"object": 18,
 												"file": 0,
@@ -1671,11 +1718,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 19,
 												"file": 0,
@@ -1690,11 +1737,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 19,
 												"file": 0,
@@ -1735,11 +1782,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 20
 												},
 												"object": 20,
 												"file": 0,
@@ -1754,11 +1801,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 20
 												},
 												"object": 20,
 												"file": 0,
@@ -1796,11 +1843,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 16
+													"value": 18
 												},
 												"object": 22,
 												"file": 0,
@@ -1815,11 +1862,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 16
+													"value": 18
 												},
 												"object": 22,
 												"file": 0,
@@ -1860,11 +1907,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 23,
 												"file": 0,
@@ -1879,11 +1926,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 23,
 												"file": 0,
@@ -1924,11 +1971,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 24,
 												"file": 0,
@@ -1943,11 +1990,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 24,
 												"file": 0,
@@ -1977,7 +2024,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -2022,11 +2069,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 25,
 												"file": 0,
@@ -2041,11 +2088,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 25,
 												"file": 0,
@@ -2075,7 +2122,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -2120,11 +2167,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 26,
 												"file": 0,
@@ -2139,11 +2186,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 26,
 												"file": 0,
@@ -2173,7 +2220,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -2207,7 +2254,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -2245,6 +2292,25 @@
 											}
 										},
 										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 3
+												},
+												"value": {
+													"type": "string_index",
+													"value": 4
+												},
+												"object": 28,
+												"file": 0,
+												"col": 1,
+												"row": 21,
+												"end_col": 4,
+												"end_row": 94
+											}
+										},
+										{
 											"type": "MakeObjectStmt",
 											"stmt": {
 												"target": 29,
@@ -2260,11 +2326,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 22
+													"value": 24
 												},
 												"value": {
 													"type": "string_index",
-													"value": 23
+													"value": 25
 												},
 												"object": 29,
 												"file": 0,
@@ -2279,7 +2345,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 24
+													"value": 26
 												},
 												"value": {
 													"type": "bool",
@@ -2298,7 +2364,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 21
+													"value": 23
 												},
 												"value": {
 													"type": "local",
@@ -2317,7 +2383,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 25
+													"value": 27
 												},
 												"value": {
 													"type": "bool",
@@ -2336,11 +2402,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 26
+													"value": 28
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 12
 												},
 												"object": 28,
 												"file": 0,
@@ -2370,7 +2436,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 20
+													"value": 22
 												},
 												"value": {
 													"type": "local",
@@ -2696,13 +2762,13 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CoAFCgMKAXgKrQIKqgJxdWVyeSBoZXJvICgkZXBpc29kZTogRXBpc29kZSEpIHsKICAgIGhlcm8gKGVwaXNvZGU6ICRlcGlzb2RlKSB7CiAgICAgICAgaWQKICAgICAgICBuYW1lCiAgICAgICAgZnJpZW5kcyB7CiAgICAgICAgICAgIGlkCiAgICAgICAgICAgIG5hbWUKICAgICAgICAgICAgZnJpZW5kcyB7CiAgICAgICAgICAgICAgICBpZAogICAgICAgICAgICAgICAgbmFtZQogICAgICAgICAgICAgICAgYXBwZWFyc0luCiAgICAgICAgICAgIH0KICAgICAgICAgICAgYXBwZWFyc0luCiAgICAgICAgfQogICAgICAgIGFwcGVhcnNJbgogICAgfQp9CgwKCk9wZXJhdGlvbnMKBgoETmFtZQoGCgRoZXJvCgsKCU9wZXJhdGlvbgoHCgVxdWVyeQoOCgxTZWxlY3Rpb25TZXQKBwoFQWxpYXMKCwoJQXJndW1lbnRzCgkKB2VwaXNvZGUKBwoFVmFsdWUKGAoWRXhwZWN0ZWRUeXBlSGFzRGVmYXVsdAoGCgRLaW5kCgMKATAKBQoDUmF3CgQKAmlkCgYKBG5hbWUKCQoHZnJpZW5kcwoLCglhcHBlYXJzSW4KFQoTVmFyaWFibGVEZWZpbml0aW9ucwoGCgRUeXBlCgsKCU5hbWVkVHlwZQoJCgdFcGlzb2RlCgkKB05vbk51bGwKBgoEVXNlZAoKCghWYXJpYWJsZRIVChNncmFwaHFsLnBhcnNlX3F1ZXJ5Gg8KDW1vZHVsZS0wLnJlZ28aCQoHPHF1ZXJ5PhKXAQqUAQoEZXZhbBKLAQosCAEQARgBsAIQuAIBWh4KDmcwLmRhdGEudGVzdC5wEgQKAhAAEgQKAhABGAIKFggBEAEYAbACELgCAToICgQKAhACEAMKEQgBEAEYAbACELgCAcIBAggECh0IARABGAGwAhC4AgHyAQ4KBAoCGAASBAoCEAMYBAoRCAEQARgBsAIQuAIBigICCAQauhYKlQEKEGcwLmRhdGEudGVzdC5ncWwSAgABGAIiKwoRCAAQARgDsAIDuAITggICCAMKFggAEAEYA7ACA7gCEzIICgQKAhgBEAMiKgoQCAAQARgDsAIDuAITegIIAwoWCAAQARgDsAIDuAITMggKBAoCEAMQAiITChEIABABGAOwAgO4AhOSAgIIAioCZzAqBHRlc3QqA2dxbAqxEgoQZzAuZGF0YS50ZXN0LmFzdBICAAEYAiLGEQoRCAAQARgVsAIEuAJeggICCAMKEQgAEAEYFbACBLgCXsIBAggEChMIABABGBWwAgS4Al6iAQQIARAFChEIABABGBWwAgS4Al7CAQIIBgodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgEGAYKHQgAEAEYFbACBLgCXvIBDgoECgIYBRIECgIYBhgGChMIABABGBWwAgS4Al6iAQQIARAHChEIABABGBWwAgS4Al7CAQIICAodCAAQARgVsAIEuAJe8gEOCgQKAhgIEgQKAhgEGAgKEwgAEAEYFbACBLgCXqIBBAgBEAkKEQgAEAEYFbACBLgCXsIBAggKCh0IABABGBWwAgS4Al7yAQ4KBAoCGAMSBAoCGAoYCgoRCAAQARgVsAIEuAJewgECCAsKHQgAEAEYFbACBLgCXvIBDgoECgIYDBIECgIIABgLChMIABABGBWwAgS4Al66AQQIDhAMCh0IABABGBWwAgS4Al7yAQ4KBAoCGA0SBAoCEAwYCwodCAAQARgVsAIEuAJe8gEOCgQKAhgPEgQKAhgKGAsKHQgAEAEYFbACBLgCXvIBDgoECgIYCxIECgIQCxgKChYIABABGBWwAgS4Al4iCAoECgIQChAJCh0IABABGBWwAgS4Al7yAQ4KBAoCGAkSBAoCEAkYCAodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgEGAgKEwgAEAEYFbACBLgCXqIBBAgEEA0KEQgAEAEYFbACBLgCXsIBAggOCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBAYDgodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgQGA4KFggAEAEYFbACBLgCXiIICgQKAhAOEA0KEQgAEAEYFbACBLgCXsIBAggPCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBEYDwodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgRGA8KFggAEAEYFbACBLgCXiIICgQKAhAPEA0KEQgAEAEYFbACBLgCXsIBAggQCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBIYEAodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgSGBAKEwgAEAEYFbACBLgCXqIBBAgEEBEKEQgAEAEYFbACBLgCXsIBAggSCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBAYEgodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgQGBIKFggAEAEYFbACBLgCXiIICgQKAhASEBEKEQgAEAEYFbACBLgCXsIBAggTCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBEYEwodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgRGBMKFggAEAEYFbACBLgCXiIICgQKAhATEBEKEQgAEAEYFbACBLgCXsIBAggUCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBIYFAodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgSGBQKEwgAEAEYFbACBLgCXqIBBAgDEBUKEQgAEAEYFbACBLgCXsIBAggWCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBAYFgodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgQGBYKFggAEAEYFbACBLgCXiIICgQKAhAWEBUKEQgAEAEYFbACBLgCXsIBAggXCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBEYFwodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgRGBcKFggAEAEYFbACBLgCXiIICgQKAhAXEBUKEQgAEAEYFbACBLgCXsIBAggYCh0IABABGBWwAgS4Al7yAQ4KBAoCGAgSBAoCGBMYGAodCAAQARgVsAIEuAJe8gEOCgQKAhgDEgQKAhgTGBgKFggAEAEYFbACBLgCXiIICgQKAhAYEBUKHQgAEAEYFbACBLgCXvIBDgoECgIYBxIECgIQFRgUChYIABABGBWwAgS4Al4iCAoECgIQFBARChEIABABGBWwAgS4Al7CAQIIGQodCAAQARgVsAIEuAJe8gEOCgQKAhgIEgQKAhgTGBkKHQgAEAEYFbACBLgCXvIBDgoECgIYAxIECgIYExgZChYIABABGBWwAgS4Al4iCAoECgIQGRARCh0IABABGBWwAgS4Al7yAQ4KBAoCGAcSBAoCEBEYEAoWCAAQARgVsAIEuAJeIggKBAoCEBAQDQoRCAAQARgVsAIEuAJewgECCBoKHQgAEAEYFbACBLgCXvIBDgoECgIYCBIECgIYExgaCh0IABABGBWwAgS4Al7yAQ4KBAoCGAMSBAoCGBMYGgoWCAAQARgVsAIEuAJeIggKBAoCEBoQDQodCAAQARgVsAIEuAJe8gEOCgQKAhgHEgQKAhANGAgKFggAEAEYFbACBLgCXiIICgQKAhAIEAcKHQgAEAEYFbACBLgCXvIBDgoECgIYBxIECgIQBxgGChMIABABGBWwAgS4Al6iAQQIARAbChEIABABGBWwAgS4Al7CAQIIHAoRCAAQARgVsAIEuAJewgECCB0KHQgAEAEYFbACBLgCXvIBDgoECgIYFhIECgIYFxgdCh0IABABGBWwAgS4Al7yAQ4KBAoCGBgSBAoCCAEYHQodCAAQARgVsAIEuAJe8gEOCgQKAhgVEgQKAhAdGBwKHQgAEAEYFbACBLgCXvIBDgoECgIYGRIECgIIABgcCh0IABABGBWwAgS4Al7yAQ4KBAoCGBoSBAoCGAoYHAoWCAAQARgVsAIEuAJeIggKBAoCEBwQGwodCAAQARgVsAIEuAJe8gEOCgQKAhgUEgQKAhAbGAYKFggAEAEYFbACBLgCXiIICgQKAhAGEAUKHQgAEAEYFbACBLgCXvIBDgoECgIYAhIECgIQBRgEChYIABABGBWwAgS4Al4yCAoECgIQBBADIioKEAgAEAEYFbACBLgCXnoCCAMKFggAEAEYFbACBLgCXjIICgQKAhADEAIiEwoRCAAQARgVsAIEuAJekgICCAIqAmcwKgR0ZXN0KgNhc3QK6wIKDmcwLmRhdGEudGVzdC5wEgIAARgCIoQCChEIABABGGCwAgK4AmCCAgIIAwouCAAQFhhhsAIZuAJhWiAKEGcwLmRhdGEudGVzdC5ncWwSBAoCEAASBAoCEAEYBAoWCAAQFhhhsAIZuAJhOggKBAoCEAQQBQorCAAQAhhhsAIauAJhWh0KE2dyYXBocWwucGFyc2VfcXVlcnkSBAoCEAUYBgoWCAAQAhhhsAIauAJhOggKBAoCEAYQBwouCAAQAhhhsAIhuAJhWiAKEGcwLmRhdGEudGVzdC5hc3QSBAoCEAASBAoCEAEYCAoaCAAQAhhhsAIhuAJhagwKBAoCEAcSBAoCEAgKFggAEAEYYLACArgCYDIICgQKAggBEAMiKgoQCAAQARhgsAICuAJgegIIAwoWCAAQARhgsAICuAJgMggKBAoCEAMQAiITChEIABABGGCwAgK4AmCSAgIIAioCZzAqBHRlc3QqAXA="
+			"plan_proto": "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"
 		},
 		{
 			"note": "graphql_parse_query/success-basic-ast inline fragments and type conditions",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\ngql := `query HeroForEpisode($ep: Episode!) {\n  hero(episode: $ep) {\n    name\n    ... on Droid {\n      primaryFunction\n    }\n    ... on Human {\n      height\n    }\n  }\n}`\n\nast := {\"Operations\": [{\n\t\"Name\": \"HeroForEpisode\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"hero\",\n\t\t\"Arguments\": [{\n\t\t\t\"Name\": \"episode\",\n\t\t\t\"Value\": {\n                \"ExpectedTypeHasDefault\": false,\n\t\t\t\t\"Kind\": 0,\n\t\t\t\t\"Raw\": \"ep\",\n\t\t\t},\n\t\t}],\n\t\t\"Name\": \"hero\",\n\t\t\"SelectionSet\": [\n\t\t\t{\n\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\"Name\": \"name\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"primaryFunction\",\n\t\t\t\t\t\"Name\": \"primaryFunction\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Droid\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"height\",\n\t\t\t\t\t\"Name\": \"height\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Human\",\n\t\t\t},\n\t\t],\n\t}],\n\t\"VariableDefinitions\": [{\n\t\t\"Type\": {\n\t\t\t\"NamedType\": \"Episode\",\n\t\t\t\"NonNull\": true,\n\t\t},\n\t\t\"Used\": false,\n\t\t\"Variable\": \"ep\",\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(gql) == ast\n}\n"
+				"package test\n\ngql := `query HeroForEpisode($ep: Episode!) {\n  hero(episode: $ep) {\n    name\n    ... on Droid {\n      primaryFunction\n    }\n    ... on Human {\n      height\n    }\n  }\n}`\n\nast := {\"Operations\": [{\n\t\"Description\": \"\", \"Name\": \"HeroForEpisode\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"hero\",\n\t\t\"Arguments\": [{\n\t\t\t\"Name\": \"episode\",\n\t\t\t\"Value\": {\n                \"ExpectedTypeHasDefault\": false,\n\t\t\t\t\"Kind\": 0,\n\t\t\t\t\"Raw\": \"ep\",\n\t\t\t},\n\t\t}],\n\t\t\"Name\": \"hero\",\n\t\t\"SelectionSet\": [\n\t\t\t{\n\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\"Name\": \"name\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"primaryFunction\",\n\t\t\t\t\t\"Name\": \"primaryFunction\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Droid\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"height\",\n\t\t\t\t\t\"Name\": \"height\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Human\",\n\t\t\t},\n\t\t],\n\t}],\n\t\"VariableDefinitions\": [{\n\t\t\"Description\": \"\", \"Type\": {\n\t\t\t\"NamedType\": \"Episode\",\n\t\t\t\"NonNull\": true,\n\t\t},\n\t\t\"Used\": false,\n\t\t\"Variable\": \"ep\",\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(gql) == ast\n}\n"
 			],
 			"want_result": [
 				{
@@ -2723,6 +2789,12 @@
 						},
 						{
 							"value": "Operations"
+						},
+						{
+							"value": "Description"
+						},
+						{
+							"value": ""
 						},
 						{
 							"value": "Name"
@@ -3123,6 +3195,25 @@
 											}
 										},
 										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 7
+												},
+												"value": {
+													"type": "string_index",
+													"value": 8
+												},
+												"object": 6,
+												"file": 0,
+												"col": 1,
+												"row": 15,
+												"end_col": 4,
+												"end_row": 58
+											}
+										},
+										{
 											"type": "MakeArrayStmt",
 											"stmt": {
 												"capacity": 1,
@@ -3150,11 +3241,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 9
+													"value": 11
 												},
 												"object": 8,
 												"file": 0,
@@ -3192,11 +3283,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 11
+													"value": 13
 												},
 												"object": 10,
 												"file": 0,
@@ -3222,7 +3313,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 13
+													"value": 15
 												},
 												"value": {
 													"type": "bool",
@@ -3244,8 +3335,8 @@
 												"row": 15,
 												"end_col": 4,
 												"end_row": 58,
-												"index": 15,
-												"Index": 15,
+												"index": 17,
+												"Index": 17,
 												"target": 12
 											}
 										},
@@ -3254,7 +3345,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 14
+													"value": 16
 												},
 												"value": {
 													"type": "local",
@@ -3273,11 +3364,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 16
+													"value": 18
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 11,
 												"file": 0,
@@ -3292,7 +3383,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 12
+													"value": 14
 												},
 												"value": {
 													"type": "local",
@@ -3326,7 +3417,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 10
+													"value": 12
 												},
 												"value": {
 													"type": "local",
@@ -3345,11 +3436,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 9
+													"value": 11
 												},
 												"object": 8,
 												"file": 0,
@@ -3387,11 +3478,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 20
 												},
 												"object": 14,
 												"file": 0,
@@ -3406,11 +3497,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 20
 												},
 												"object": 14,
 												"file": 0,
@@ -3474,11 +3565,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 17,
 												"file": 0,
@@ -3493,11 +3584,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 17,
 												"file": 0,
@@ -3527,7 +3618,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -3546,11 +3637,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 20
+													"value": 22
 												},
 												"value": {
 													"type": "string_index",
-													"value": 21
+													"value": 23
 												},
 												"object": 15,
 												"file": 0,
@@ -3614,11 +3705,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 22
+													"value": 24
 												},
 												"object": 20,
 												"file": 0,
@@ -3633,11 +3724,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 22
+													"value": 24
 												},
 												"object": 20,
 												"file": 0,
@@ -3667,7 +3758,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -3686,11 +3777,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 20
+													"value": 22
 												},
 												"value": {
 													"type": "string_index",
-													"value": 23
+													"value": 25
 												},
 												"object": 18,
 												"file": 0,
@@ -3720,7 +3811,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -3754,7 +3845,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -3792,6 +3883,25 @@
 											}
 										},
 										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 3
+												},
+												"value": {
+													"type": "string_index",
+													"value": 4
+												},
+												"object": 22,
+												"file": 0,
+												"col": 1,
+												"row": 15,
+												"end_col": 4,
+												"end_row": 58
+											}
+										},
+										{
 											"type": "MakeObjectStmt",
 											"stmt": {
 												"target": 23,
@@ -3807,11 +3917,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 26
+													"value": 28
 												},
 												"value": {
 													"type": "string_index",
-													"value": 27
+													"value": 29
 												},
 												"object": 23,
 												"file": 0,
@@ -3826,7 +3936,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 28
+													"value": 30
 												},
 												"value": {
 													"type": "bool",
@@ -3845,7 +3955,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 25
+													"value": 27
 												},
 												"value": {
 													"type": "local",
@@ -3864,7 +3974,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 29
+													"value": 31
 												},
 												"value": {
 													"type": "bool",
@@ -3883,11 +3993,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 30
+													"value": 32
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"object": 22,
 												"file": 0,
@@ -3917,7 +4027,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 24
+													"value": 26
 												},
 												"value": {
 													"type": "local",
@@ -4243,13 +4353,13 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "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"
+			"plan_proto": "CsMECgMKAXgKowEKoAFxdWVyeSBIZXJvRm9yRXBpc29kZSgkZXA6IEVwaXNvZGUhKSB7CiAgaGVybyhlcGlzb2RlOiAkZXApIHsKICAgIG5hbWUKICAgIC4uLiBvbiBEcm9pZCB7CiAgICAgIHByaW1hcnlGdW5jdGlvbgogICAgfQogICAgLi4uIG9uIEh1bWFuIHsKICAgICAgaGVpZ2h0CiAgICB9CiAgfQp9CgwKCk9wZXJhdGlvbnMKDQoLRGVzY3JpcHRpb24KAgoACgYKBE5hbWUKEAoOSGVyb0ZvckVwaXNvZGUKCwoJT3BlcmF0aW9uCgcKBXF1ZXJ5Cg4KDFNlbGVjdGlvblNldAoHCgVBbGlhcwoGCgRoZXJvCgsKCUFyZ3VtZW50cwoJCgdlcGlzb2RlCgcKBVZhbHVlChgKFkV4cGVjdGVkVHlwZUhhc0RlZmF1bHQKBgoES2luZAoDCgEwCgUKA1JhdwoECgJlcAoGCgRuYW1lChEKD3ByaW1hcnlGdW5jdGlvbgoPCg1UeXBlQ29uZGl0aW9uCgcKBURyb2lkCggKBmhlaWdodAoHCgVIdW1hbgoVChNWYXJpYWJsZURlZmluaXRpb25zCgYKBFR5cGUKCwoJTmFtZWRUeXBlCgkKB0VwaXNvZGUKCQoHTm9uTnVsbAoGCgRVc2VkCgoKCFZhcmlhYmxlEhUKE2dyYXBocWwucGFyc2VfcXVlcnkaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrEEQqVAQoQZzAuZGF0YS50ZXN0LmdxbBICAAEYAiIrChEIABABGAOwAgO4Ag2CAgIIAwoWCAAQARgDsAIDuAINMggKBAoCGAEQAyIqChAIABABGAOwAgO4Ag16AggDChYIABABGAOwAgO4Ag0yCAoECgIQAxACIhMKEQgAEAEYA7ACA7gCDZICAggCKgJnMCoEdGVzdCoDZ3FsCrsNChBnMC5kYXRhLnRlc3QuYXN0EgIAARgCItAMChEIABABGA+wAgS4AjqCAgIIAwoRCAAQARgPsAIEuAI6wgECCAQKEwgAEAEYD7ACBLgCOqIBBAgBEAUKEQgAEAEYD7ACBLgCOsIBAggGCh0IABABGA+wAgS4AjryAQ4KBAoCGAMSBAoCGAQYBgodCAAQARgPsAIEuAI68gEOCgQKAhgFEgQKAhgGGAYKHQgAEAEYD7ACBLgCOvIBDgoECgIYBxIECgIYCBgGChMIABABGA+wAgS4AjqiAQQIARAHChEIABABGA+wAgS4AjrCAQIICAodCAAQARgPsAIEuAI68gEOCgQKAhgKEgQKAhgLGAgKEwgAEAEYD7ACBLgCOqIBBAgBEAkKEQgAEAEYD7ACBLgCOsIBAggKCh0IABABGA+wAgS4AjryAQ4KBAoCGAUSBAoCGA0YCgoRCAAQARgPsAIEuAI6wgECCAsKHQgAEAEYD7ACBLgCOvIBDgoECgIYDxIECgIIABgLChMIABABGA+wAgS4Ajq6AQQIERAMCh0IABABGA+wAgS4AjryAQ4KBAoCGBASBAoCEAwYCwodCAAQARgPsAIEuAI68gEOCgQKAhgSEgQKAhgTGAsKHQgAEAEYD7ACBLgCOvIBDgoECgIYDhIECgIQCxgKChYIABABGA+wAgS4AjoiCAoECgIQChAJCh0IABABGA+wAgS4AjryAQ4KBAoCGAwSBAoCEAkYCAodCAAQARgPsAIEuAI68gEOCgQKAhgFEgQKAhgLGAgKEwgAEAEYD7ACBLgCOqIBBAgDEA0KEQgAEAEYD7ACBLgCOsIBAggOCh0IABABGA+wAgS4AjryAQ4KBAoCGAoSBAoCGBQYDgodCAAQARgPsAIEuAI68gEOCgQKAhgFEgQKAhgUGA4KFggAEAEYD7ACBLgCOiIICgQKAhAOEA0KEQgAEAEYD7ACBLgCOsIBAggPChMIABABGA+wAgS4AjqiAQQIARAQChEIABABGA+wAgS4AjrCAQIIEQodCAAQARgPsAIEuAI68gEOCgQKAhgKEgQKAhgVGBEKHQgAEAEYD7ACBLgCOvIBDgoECgIYBRIECgIYFRgRChYIABABGA+wAgS4AjoiCAoECgIQERAQCh0IABABGA+wAgS4AjryAQ4KBAoCGAkSBAoCEBAYDwodCAAQARgPsAIEuAI68gEOCgQKAhgWEgQKAhgXGA8KFggAEAEYD7ACBLgCOiIICgQKAhAPEA0KEQgAEAEYD7ACBLgCOsIBAggSChMIABABGA+wAgS4AjqiAQQIARATChEIABABGA+wAgS4AjrCAQIIFAodCAAQARgPsAIEuAI68gEOCgQKAhgKEgQKAhgYGBQKHQgAEAEYD7ACBLgCOvIBDgoECgIYBRIECgIYGBgUChYIABABGA+wAgS4AjoiCAoECgIQFBATCh0IABABGA+wAgS4AjryAQ4KBAoCGAkSBAoCEBMYEgodCAAQARgPsAIEuAI68gEOCgQKAhgWEgQKAhgZGBIKFggAEAEYD7ACBLgCOiIICgQKAhASEA0KHQgAEAEYD7ACBLgCOvIBDgoECgIYCRIECgIQDRgIChYIABABGA+wAgS4AjoiCAoECgIQCBAHCh0IABABGA+wAgS4AjryAQ4KBAoCGAkSBAoCEAcYBgoTCAAQARgPsAIEuAI6ogEECAEQFQoRCAAQARgPsAIEuAI6wgECCBYKHQgAEAEYD7ACBLgCOvIBDgoECgIYAxIECgIYBBgWChEIABABGA+wAgS4AjrCAQIIFwodCAAQARgPsAIEuAI68gEOCgQKAhgcEgQKAhgdGBcKHQgAEAEYD7ACBLgCOvIBDgoECgIYHhIECgIIARgXCh0IABABGA+wAgS4AjryAQ4KBAoCGBsSBAoCEBcYFgodCAAQARgPsAIEuAI68gEOCgQKAhgfEgQKAggAGBYKHQgAEAEYD7ACBLgCOvIBDgoECgIYIBIECgIYExgWChYIABABGA+wAgS4AjoiCAoECgIQFhAVCh0IABABGA+wAgS4AjryAQ4KBAoCGBoSBAoCEBUYBgoWCAAQARgPsAIEuAI6IggKBAoCEAYQBQodCAAQARgPsAIEuAI68gEOCgQKAhgCEgQKAhAFGAQKFggAEAEYD7ACBLgCOjIICgQKAhAEEAMiKgoQCAAQARgPsAIEuAI6egIIAwoWCAAQARgPsAIEuAI6MggKBAoCEAMQAiITChEIABABGA+wAgS4AjqSAgIIAioCZzAqBHRlc3QqA2FzdArrAgoOZzAuZGF0YS50ZXN0LnASAgABGAIihAIKEQgAEAEYPLACArgCPIICAggDCi4IABAWGD2wAhm4Aj1aIAoQZzAuZGF0YS50ZXN0LmdxbBIECgIQABIECgIQARgEChYIABAWGD2wAhm4Aj06CAoECgIQBBAFCisIABACGD2wAhq4Aj1aHQoTZ3JhcGhxbC5wYXJzZV9xdWVyeRIECgIQBRgGChYIABACGD2wAhq4Aj06CAoECgIQBhAHCi4IABACGD2wAiG4Aj1aIAoQZzAuZGF0YS50ZXN0LmFzdBIECgIQABIECgIQARgIChoIABACGD2wAiG4Aj1qDAoECgIQBxIECgIQCAoWCAAQARg8sAICuAI8MggKBAoCCAEQAyIqChAIABABGDywAgK4Ajx6AggDChYIABABGDywAgK4AjwyCAoECgIQAxACIhMKEQgAEAEYPLACArgCPJICAggCKgJnMCoEdGVzdCoBcA=="
 		},
 		{
 			"note": "graphql_parse_query/success-basic-ast meta fields and introspection",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\ngql := `{\n  search(text: \"an\") {\n    __typename\n    ... on Human {\n      name\n    }\n    ... on Droid {\n      name\n    }\n    ... on Starship {\n      name\n    }\n  }\n}`\n\nast := {\"Operations\": [{\n\t\"Name\": \"\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"search\",\n\t\t\"Arguments\": [{\n\t\t\t\"Name\": \"text\",\n\t\t\t\"Value\": {\n                \"ExpectedTypeHasDefault\": false,\n\t\t\t\t\"Kind\": 3,\n\t\t\t\t\"Raw\": \"an\",\n\t\t\t},\n\t\t}],\n\t\t\"Name\": \"search\",\n\t\t\"SelectionSet\": [\n\t\t\t{\n\t\t\t\t\"Alias\": \"__typename\",\n\t\t\t\t\"Name\": \"__typename\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Human\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Droid\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Starship\",\n\t\t\t},\n\t\t],\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(gql) == ast\n}\n"
+				"package test\n\ngql := `{\n  search(text: \"an\") {\n    __typename\n    ... on Human {\n      name\n    }\n    ... on Droid {\n      name\n    }\n    ... on Starship {\n      name\n    }\n  }\n}`\n\nast := {\"Operations\": [{\n\t\"Description\": \"\", \"Name\": \"\",\n\t\"Operation\": \"query\",\n\t\"SelectionSet\": [{\n\t\t\"Alias\": \"search\",\n\t\t\"Arguments\": [{\n\t\t\t\"Name\": \"text\",\n\t\t\t\"Value\": {\n                \"ExpectedTypeHasDefault\": false,\n\t\t\t\t\"Kind\": 3,\n\t\t\t\t\"Raw\": \"an\",\n\t\t\t},\n\t\t}],\n\t\t\"Name\": \"search\",\n\t\t\"SelectionSet\": [\n\t\t\t{\n\t\t\t\t\"Alias\": \"__typename\",\n\t\t\t\t\"Name\": \"__typename\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Human\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Droid\",\n\t\t\t},\n\t\t\t{\n\t\t\t\t\"SelectionSet\": [{\n\t\t\t\t\t\"Alias\": \"name\",\n\t\t\t\t\t\"Name\": \"name\",\n\t\t\t\t}],\n\t\t\t\t\"TypeCondition\": \"Starship\",\n\t\t\t},\n\t\t],\n\t}],\n}]}\n\np if {\n\tgraphql.parse_query(gql) == ast\n}\n"
 			],
 			"want_result": [
 				{
@@ -4272,10 +4382,13 @@
 							"value": "Operations"
 						},
 						{
-							"value": "Name"
+							"value": "Description"
 						},
 						{
 							"value": ""
+						},
+						{
+							"value": "Name"
 						},
 						{
 							"value": "Operation"
@@ -4638,7 +4751,26 @@
 												},
 												"value": {
 													"type": "string_index",
+													"value": 4
+												},
+												"object": 6,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 4,
+												"end_row": 60
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
 													"value": 6
+												},
+												"value": {
+													"type": "string_index",
+													"value": 7
 												},
 												"object": 6,
 												"file": 0,
@@ -4676,11 +4808,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 9
+													"value": 10
 												},
 												"object": 8,
 												"file": 0,
@@ -4718,11 +4850,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 11
+													"value": 12
 												},
 												"object": 10,
 												"file": 0,
@@ -4748,7 +4880,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 13
+													"value": 14
 												},
 												"value": {
 													"type": "bool",
@@ -4770,8 +4902,8 @@
 												"row": 18,
 												"end_col": 4,
 												"end_row": 60,
-												"index": 15,
-												"Index": 15,
+												"index": 16,
+												"Index": 16,
 												"target": 12
 											}
 										},
@@ -4780,7 +4912,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 14
+													"value": 15
 												},
 												"value": {
 													"type": "local",
@@ -4799,11 +4931,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 16
+													"value": 17
 												},
 												"value": {
 													"type": "string_index",
-													"value": 17
+													"value": 18
 												},
 												"object": 11,
 												"file": 0,
@@ -4818,7 +4950,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 12
+													"value": 13
 												},
 												"value": {
 													"type": "local",
@@ -4852,7 +4984,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 10
+													"value": 11
 												},
 												"value": {
 													"type": "local",
@@ -4871,11 +5003,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 9
+													"value": 10
 												},
 												"object": 8,
 												"file": 0,
@@ -4913,11 +5045,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 19
 												},
 												"object": 14,
 												"file": 0,
@@ -4932,11 +5064,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 18
+													"value": 19
 												},
 												"object": 14,
 												"file": 0,
@@ -5000,11 +5132,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 20
 												},
 												"object": 17,
 												"file": 0,
@@ -5019,11 +5151,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 20
 												},
 												"object": 17,
 												"file": 0,
@@ -5053,7 +5185,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -5072,11 +5204,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 20
+													"value": 21
 												},
 												"value": {
 													"type": "string_index",
-													"value": 21
+													"value": 22
 												},
 												"object": 15,
 												"file": 0,
@@ -5140,11 +5272,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 20
 												},
 												"object": 20,
 												"file": 0,
@@ -5159,11 +5291,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 20
 												},
 												"object": 20,
 												"file": 0,
@@ -5193,7 +5325,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -5212,11 +5344,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 20
+													"value": 21
 												},
 												"value": {
 													"type": "string_index",
-													"value": 22
+													"value": 23
 												},
 												"object": 18,
 												"file": 0,
@@ -5280,11 +5412,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 20
 												},
 												"object": 23,
 												"file": 0,
@@ -5299,11 +5431,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 3
+													"value": 5
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 20
 												},
 												"object": 23,
 												"file": 0,
@@ -5333,7 +5465,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -5352,11 +5484,11 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 20
+													"value": 21
 												},
 												"value": {
 													"type": "string_index",
-													"value": 23
+													"value": 24
 												},
 												"object": 21,
 												"file": 0,
@@ -5386,7 +5518,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -5420,7 +5552,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -5746,7 +5878,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CsQDCgMKAXgKnwEKnAF7CiAgc2VhcmNoKHRleHQ6ICJhbiIpIHsKICAgIF9fdHlwZW5hbWUKICAgIC4uLiBvbiBIdW1hbiB7CiAgICAgIG5hbWUKICAgIH0KICAgIC4uLiBvbiBEcm9pZCB7CiAgICAgIG5hbWUKICAgIH0KICAgIC4uLiBvbiBTdGFyc2hpcCB7CiAgICAgIG5hbWUKICAgIH0KICB9Cn0KDAoKT3BlcmF0aW9ucwoGCgROYW1lCgIKAAoLCglPcGVyYXRpb24KBwoFcXVlcnkKDgoMU2VsZWN0aW9uU2V0CgcKBUFsaWFzCggKBnNlYXJjaAoLCglBcmd1bWVudHMKBgoEdGV4dAoHCgVWYWx1ZQoYChZFeHBlY3RlZFR5cGVIYXNEZWZhdWx0CgYKBEtpbmQKAwoBMwoFCgNSYXcKBAoCYW4KDAoKX190eXBlbmFtZQoGCgRuYW1lCg8KDVR5cGVDb25kaXRpb24KBwoFSHVtYW4KBwoFRHJvaWQKCgoIU3RhcnNoaXASFQoTZ3JhcGhxbC5wYXJzZV9xdWVyeRoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGuAQCpUBChBnMC5kYXRhLnRlc3QuZ3FsEgIAARgCIisKEQgAEAEYA7ACA7gCEIICAggDChYIABABGAOwAgO4AhAyCAoECgIYARADIioKEAgAEAEYA7ACA7gCEHoCCAMKFggAEAEYA7ACA7gCEDIICgQKAhADEAIiEwoRCAAQARgDsAIDuAIQkgICCAIqAmcwKgR0ZXN0KgNncWwK1wwKEGcwLmRhdGEudGVzdC5hc3QSAgABGAIi7AsKEQgAEAEYErACBLgCPIICAggDChEIABABGBKwAgS4AjzCAQIIBAoTCAAQARgSsAIEuAI8ogEECAEQBQoRCAAQARgSsAIEuAI8wgECCAYKHQgAEAEYErACBLgCPPIBDgoECgIYAxIECgIYBBgGCh0IABABGBKwAgS4AjzyAQ4KBAoCGAUSBAoCGAYYBgoTCAAQARgSsAIEuAI8ogEECAEQBwoRCAAQARgSsAIEuAI8wgECCAgKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIYCRgIChMIABABGBKwAgS4AjyiAQQIARAJChEIABABGBKwAgS4AjzCAQIICgodCAAQARgSsAIEuAI88gEOCgQKAhgDEgQKAhgLGAoKEQgAEAEYErACBLgCPMIBAggLCh0IABABGBKwAgS4AjzyAQ4KBAoCGA0SBAoCCAAYCwoTCAAQARgSsAIEuAI8ugEECA8QDAodCAAQARgSsAIEuAI88gEOCgQKAhgOEgQKAhAMGAsKHQgAEAEYErACBLgCPPIBDgoECgIYEBIECgIYERgLCh0IABABGBKwAgS4AjzyAQ4KBAoCGAwSBAoCEAsYCgoWCAAQARgSsAIEuAI8IggKBAoCEAoQCQodCAAQARgSsAIEuAI88gEOCgQKAhgKEgQKAhAJGAgKHQgAEAEYErACBLgCPPIBDgoECgIYAxIECgIYCRgIChMIABABGBKwAgS4AjyiAQQIBBANChEIABABGBKwAgS4AjzCAQIIDgodCAAQARgSsAIEuAI88gEOCgQKAhgIEgQKAhgSGA4KHQgAEAEYErACBLgCPPIBDgoECgIYAxIECgIYEhgOChYIABABGBKwAgS4AjwiCAoECgIQDhANChEIABABGBKwAgS4AjzCAQIIDwoTCAAQARgSsAIEuAI8ogEECAEQEAoRCAAQARgSsAIEuAI8wgECCBEKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIYExgRCh0IABABGBKwAgS4AjzyAQ4KBAoCGAMSBAoCGBMYEQoWCAAQARgSsAIEuAI8IggKBAoCEBEQEAodCAAQARgSsAIEuAI88gEOCgQKAhgHEgQKAhAQGA8KHQgAEAEYErACBLgCPPIBDgoECgIYFBIECgIYFRgPChYIABABGBKwAgS4AjwiCAoECgIQDxANChEIABABGBKwAgS4AjzCAQIIEgoTCAAQARgSsAIEuAI8ogEECAEQEwoRCAAQARgSsAIEuAI8wgECCBQKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIYExgUCh0IABABGBKwAgS4AjzyAQ4KBAoCGAMSBAoCGBMYFAoWCAAQARgSsAIEuAI8IggKBAoCEBQQEwodCAAQARgSsAIEuAI88gEOCgQKAhgHEgQKAhATGBIKHQgAEAEYErACBLgCPPIBDgoECgIYFBIECgIYFhgSChYIABABGBKwAgS4AjwiCAoECgIQEhANChEIABABGBKwAgS4AjzCAQIIFQoTCAAQARgSsAIEuAI8ogEECAEQFgoRCAAQARgSsAIEuAI8wgECCBcKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIYExgXCh0IABABGBKwAgS4AjzyAQ4KBAoCGAMSBAoCGBMYFwoWCAAQARgSsAIEuAI8IggKBAoCEBcQFgodCAAQARgSsAIEuAI88gEOCgQKAhgHEgQKAhAWGBUKHQgAEAEYErACBLgCPPIBDgoECgIYFBIECgIYFxgVChYIABABGBKwAgS4AjwiCAoECgIQFRANCh0IABABGBKwAgS4AjzyAQ4KBAoCGAcSBAoCEA0YCAoWCAAQARgSsAIEuAI8IggKBAoCEAgQBwodCAAQARgSsAIEuAI88gEOCgQKAhgHEgQKAhAHGAYKFggAEAEYErACBLgCPCIICgQKAhAGEAUKHQgAEAEYErACBLgCPPIBDgoECgIYAhIECgIQBRgEChYIABABGBKwAgS4AjwyCAoECgIQBBADIioKEAgAEAEYErACBLgCPHoCCAMKFggAEAEYErACBLgCPDIICgQKAhADEAIiEwoRCAAQARgSsAIEuAI8kgICCAIqAmcwKgR0ZXN0KgNhc3QK6wIKDmcwLmRhdGEudGVzdC5wEgIAARgCIoQCChEIABABGD6wAgK4Aj6CAgIIAwouCAAQFhg/sAIZuAI/WiAKEGcwLmRhdGEudGVzdC5ncWwSBAoCEAASBAoCEAEYBAoWCAAQFhg/sAIZuAI/OggKBAoCEAQQBQorCAAQAhg/sAIauAI/Wh0KE2dyYXBocWwucGFyc2VfcXVlcnkSBAoCEAUYBgoWCAAQAhg/sAIauAI/OggKBAoCEAYQBwouCAAQAhg/sAIhuAI/WiAKEGcwLmRhdGEudGVzdC5hc3QSBAoCEAASBAoCEAEYCAoaCAAQAhg/sAIhuAI/agwKBAoCEAcSBAoCEAgKFggAEAEYPrACArgCPjIICgQKAggBEAMiKgoQCAAQARg+sAICuAI+egIIAwoWCAAQARg+sAICuAI+MggKBAoCEAMQAiITChEIABABGD6wAgK4Aj6SAgIIAioCZzAqBHRlc3QqAXA="
+			"plan_proto": "CtMDCgMKAXgKnwEKnAF7CiAgc2VhcmNoKHRleHQ6ICJhbiIpIHsKICAgIF9fdHlwZW5hbWUKICAgIC4uLiBvbiBIdW1hbiB7CiAgICAgIG5hbWUKICAgIH0KICAgIC4uLiBvbiBEcm9pZCB7CiAgICAgIG5hbWUKICAgIH0KICAgIC4uLiBvbiBTdGFyc2hpcCB7CiAgICAgIG5hbWUKICAgIH0KICB9Cn0KDAoKT3BlcmF0aW9ucwoNCgtEZXNjcmlwdGlvbgoCCgAKBgoETmFtZQoLCglPcGVyYXRpb24KBwoFcXVlcnkKDgoMU2VsZWN0aW9uU2V0CgcKBUFsaWFzCggKBnNlYXJjaAoLCglBcmd1bWVudHMKBgoEdGV4dAoHCgVWYWx1ZQoYChZFeHBlY3RlZFR5cGVIYXNEZWZhdWx0CgYKBEtpbmQKAwoBMwoFCgNSYXcKBAoCYW4KDAoKX190eXBlbmFtZQoGCgRuYW1lCg8KDVR5cGVDb25kaXRpb24KBwoFSHVtYW4KBwoFRHJvaWQKCgoIU3RhcnNoaXASFQoTZ3JhcGhxbC5wYXJzZV9xdWVyeRoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGv8QCpUBChBnMC5kYXRhLnRlc3QuZ3FsEgIAARgCIisKEQgAEAEYA7ACA7gCEIICAggDChYIABABGAOwAgO4AhAyCAoECgIYARADIioKEAgAEAEYA7ACA7gCEHoCCAMKFggAEAEYA7ACA7gCEDIICgQKAhADEAIiEwoRCAAQARgDsAIDuAIQkgICCAIqAmcwKgR0ZXN0KgNncWwK9gwKEGcwLmRhdGEudGVzdC5hc3QSAgABGAIiiwwKEQgAEAEYErACBLgCPIICAggDChEIABABGBKwAgS4AjzCAQIIBAoTCAAQARgSsAIEuAI8ogEECAEQBQoRCAAQARgSsAIEuAI8wgECCAYKHQgAEAEYErACBLgCPPIBDgoECgIYAxIECgIYBBgGCh0IABABGBKwAgS4AjzyAQ4KBAoCGAUSBAoCGAQYBgodCAAQARgSsAIEuAI88gEOCgQKAhgGEgQKAhgHGAYKEwgAEAEYErACBLgCPKIBBAgBEAcKEQgAEAEYErACBLgCPMIBAggICh0IABABGBKwAgS4AjzyAQ4KBAoCGAkSBAoCGAoYCAoTCAAQARgSsAIEuAI8ogEECAEQCQoRCAAQARgSsAIEuAI8wgECCAoKHQgAEAEYErACBLgCPPIBDgoECgIYBRIECgIYDBgKChEIABABGBKwAgS4AjzCAQIICwodCAAQARgSsAIEuAI88gEOCgQKAhgOEgQKAggAGAsKEwgAEAEYErACBLgCPLoBBAgQEAwKHQgAEAEYErACBLgCPPIBDgoECgIYDxIECgIQDBgLCh0IABABGBKwAgS4AjzyAQ4KBAoCGBESBAoCGBIYCwodCAAQARgSsAIEuAI88gEOCgQKAhgNEgQKAhALGAoKFggAEAEYErACBLgCPCIICgQKAhAKEAkKHQgAEAEYErACBLgCPPIBDgoECgIYCxIECgIQCRgICh0IABABGBKwAgS4AjzyAQ4KBAoCGAUSBAoCGAoYCAoTCAAQARgSsAIEuAI8ogEECAQQDQoRCAAQARgSsAIEuAI8wgECCA4KHQgAEAEYErACBLgCPPIBDgoECgIYCRIECgIYExgOCh0IABABGBKwAgS4AjzyAQ4KBAoCGAUSBAoCGBMYDgoWCAAQARgSsAIEuAI8IggKBAoCEA4QDQoRCAAQARgSsAIEuAI8wgECCA8KEwgAEAEYErACBLgCPKIBBAgBEBAKEQgAEAEYErACBLgCPMIBAggRCh0IABABGBKwAgS4AjzyAQ4KBAoCGAkSBAoCGBQYEQodCAAQARgSsAIEuAI88gEOCgQKAhgFEgQKAhgUGBEKFggAEAEYErACBLgCPCIICgQKAhAREBAKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIQEBgPCh0IABABGBKwAgS4AjzyAQ4KBAoCGBUSBAoCGBYYDwoWCAAQARgSsAIEuAI8IggKBAoCEA8QDQoRCAAQARgSsAIEuAI8wgECCBIKEwgAEAEYErACBLgCPKIBBAgBEBMKEQgAEAEYErACBLgCPMIBAggUCh0IABABGBKwAgS4AjzyAQ4KBAoCGAkSBAoCGBQYFAodCAAQARgSsAIEuAI88gEOCgQKAhgFEgQKAhgUGBQKFggAEAEYErACBLgCPCIICgQKAhAUEBMKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIQExgSCh0IABABGBKwAgS4AjzyAQ4KBAoCGBUSBAoCGBcYEgoWCAAQARgSsAIEuAI8IggKBAoCEBIQDQoRCAAQARgSsAIEuAI8wgECCBUKEwgAEAEYErACBLgCPKIBBAgBEBYKEQgAEAEYErACBLgCPMIBAggXCh0IABABGBKwAgS4AjzyAQ4KBAoCGAkSBAoCGBQYFwodCAAQARgSsAIEuAI88gEOCgQKAhgFEgQKAhgUGBcKFggAEAEYErACBLgCPCIICgQKAhAXEBYKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIQFhgVCh0IABABGBKwAgS4AjzyAQ4KBAoCGBUSBAoCGBgYFQoWCAAQARgSsAIEuAI8IggKBAoCEBUQDQodCAAQARgSsAIEuAI88gEOCgQKAhgIEgQKAhANGAgKFggAEAEYErACBLgCPCIICgQKAhAIEAcKHQgAEAEYErACBLgCPPIBDgoECgIYCBIECgIQBxgGChYIABABGBKwAgS4AjwiCAoECgIQBhAFCh0IABABGBKwAgS4AjzyAQ4KBAoCGAISBAoCEAUYBAoWCAAQARgSsAIEuAI8MggKBAoCEAQQAyIqChAIABABGBKwAgS4Ajx6AggDChYIABABGBKwAgS4AjwyCAoECgIQAxACIhMKEQgAEAEYErACBLgCPJICAggCKgJnMCoEdGVzdCoDYXN0CusCCg5nMC5kYXRhLnRlc3QucBICAAEYAiKEAgoRCAAQARg+sAICuAI+ggICCAMKLggAEBYYP7ACGbgCP1ogChBnMC5kYXRhLnRlc3QuZ3FsEgQKAhAAEgQKAhABGAQKFggAEBYYP7ACGbgCPzoICgQKAhAEEAUKKwgAEAIYP7ACGrgCP1odChNncmFwaHFsLnBhcnNlX3F1ZXJ5EgQKAhAFGAYKFggAEAIYP7ACGrgCPzoICgQKAhAGEAcKLggAEAIYP7ACIbgCP1ogChBnMC5kYXRhLnRlc3QuYXN0EgQKAhAAEgQKAhABGAgKGggAEAIYP7ACIbgCP2oMCgQKAhAHEgQKAhAIChYIABABGD6wAgK4Aj4yCAoECgIIARADIioKEAgAEAEYPrACArgCPnoCCAMKFggAEAEYPrACArgCPjIICgQKAhADEAIiEwoRCAAQARg+sAICuAI+kgICCAIqAmcwKgR0ZXN0KgFw"
 		}
 	]
 }

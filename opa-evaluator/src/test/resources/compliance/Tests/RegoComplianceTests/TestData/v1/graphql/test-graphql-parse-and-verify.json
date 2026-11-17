@@ -4,7 +4,7 @@
 			"note": "graphql_parse_and_verify/success extending non-existent types",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\nschema := `\n  extend type User {\n      id: ID!\n  }\n  extend type Product {\n      upc: String!\n  }\n  union _Entity = Product | User\n  extend type Query {\n    entity: _Entity\n  }\n`\n\nquery := `\n  {\n    entity {\n      ... on User {\n      id\n      }\n    }\n  }\n`\n\nq_ast := {\"Operations\": [{\"Name\": \"\", \"Operation\": \"query\", \"SelectionSet\": [{\"Alias\": \"entity\", \"Name\": \"entity\", \"SelectionSet\": [{\"SelectionSet\": [{\"Alias\": \"id\", \"Name\": \"id\"}], \"TypeCondition\": \"User\"}]}]}]}\n\np if {\n\t[valid, q_ast, _] = graphql.parse_and_verify(query, schema)\n\tvalid\n}\n"
+				"package test\n\nschema := `\n  extend type User {\n      id: ID!\n  }\n  extend type Product {\n      upc: String!\n  }\n  union _Entity = Product | User\n  extend type Query {\n    entity: _Entity\n  }\n`\n\nquery := `\n  {\n    entity {\n      ... on User {\n      id\n      }\n    }\n  }\n`\n\nq_ast := {\"Operations\": [{\"Description\": \"\", \"Name\": \"\", \"Operation\": \"query\", \"SelectionSet\": [{\"Alias\": \"entity\", \"Name\": \"entity\", \"SelectionSet\": [{\"SelectionSet\": [{\"Alias\": \"id\", \"Name\": \"id\"}], \"TypeCondition\": \"User\"}]}]}]}\n\np if {\n\t[valid, q_ast, _] = graphql.parse_and_verify(query, schema)\n\tvalid\n}\n"
 			],
 			"want_result": [
 				{
@@ -30,10 +30,13 @@
 							"value": "Operations"
 						},
 						{
-							"value": "Name"
+							"value": "Description"
 						},
 						{
 							"value": ""
+						},
+						{
+							"value": "Name"
 						},
 						{
 							"value": "Operation"
@@ -443,7 +446,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -454,7 +457,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -466,7 +469,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -477,7 +480,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -496,7 +499,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -509,13 +512,32 @@
 												},
 												"value": {
 													"type": "string_index",
-													"value": 7
+													"value": 5
 												},
 												"object": 6,
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
+												"end_row": 26
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 7
+												},
+												"value": {
+													"type": "string_index",
+													"value": 8
+												},
+												"object": 6,
+												"file": 0,
+												"col": 1,
+												"row": 26,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -527,7 +549,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -538,7 +560,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -547,17 +569,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 9
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 11
 												},
 												"object": 8,
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -566,17 +588,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 11
 												},
 												"object": 8,
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -588,7 +610,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -599,7 +621,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -611,7 +633,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -622,7 +644,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -631,17 +653,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 9
+													"value": 10
 												},
 												"value": {
 													"type": "string_index",
-													"value": 11
+													"value": 12
 												},
 												"object": 12,
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -650,17 +672,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"value": {
 													"type": "string_index",
-													"value": 11
+													"value": 12
 												},
 												"object": 12,
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -675,7 +697,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -684,7 +706,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -694,7 +716,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -703,17 +725,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 12
+													"value": 13
 												},
 												"value": {
 													"type": "string_index",
-													"value": 13
+													"value": 14
 												},
 												"object": 10,
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -728,7 +750,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -737,7 +759,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -747,7 +769,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -762,7 +784,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -771,7 +793,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 9
 												},
 												"value": {
 													"type": "local",
@@ -781,7 +803,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -796,7 +818,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -815,7 +837,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -830,7 +852,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										}
@@ -845,7 +867,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										},
@@ -860,7 +882,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										}
@@ -875,7 +897,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 26,
-												"end_col": 213,
+												"end_col": 232,
 												"end_row": 26
 											}
 										}
@@ -1365,7 +1387,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "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"
+			"plan_proto": "Cq8DCgMKAXgKQwpBCiAgewogICAgZW50aXR5IHsKICAgICAgLi4uIG9uIFVzZXIgewogICAgICBpZAogICAgICB9CiAgICB9CiAgfQoKqQEKpgEKICBleHRlbmQgdHlwZSBVc2VyIHsKICAgICAgaWQ6IElEIQogIH0KICBleHRlbmQgdHlwZSBQcm9kdWN0IHsKICAgICAgdXBjOiBTdHJpbmchCiAgfQogIHVuaW9uIF9FbnRpdHkgPSBQcm9kdWN0IHwgVXNlcgogIGV4dGVuZCB0eXBlIFF1ZXJ5IHsKICAgIGVudGl0eTogX0VudGl0eQogIH0KCgwKCk9wZXJhdGlvbnMKDQoLRGVzY3JpcHRpb24KAgoACgYKBE5hbWUKCwoJT3BlcmF0aW9uCgcKBXF1ZXJ5Cg4KDFNlbGVjdGlvblNldAoHCgVBbGlhcwoICgZlbnRpdHkKBAoCaWQKDwoNVHlwZUNvbmRpdGlvbgoGCgRVc2VyEhoKGGdyYXBocWwucGFyc2VfYW5kX3ZlcmlmeRoPCg1tb2R1bGUtMC5yZWdvGgkKBzxxdWVyeT4SlwEKlAEKBGV2YWwSiwEKLAgBEAEYAbACELgCAVoeCg5nMC5kYXRhLnRlc3QucBIECgIQABIECgIQARgCChYIARABGAGwAhC4AgE6CAoECgIQAhADChEIARABGAGwAhC4AgHCAQIIBAodCAEQARgBsAIQuAIB8gEOCgQKAhgAEgQKAhADGAQKEQgBEAEYAbACELgCAYoCAggEGrQPCpkBChJnMC5kYXRhLnRlc3QucXVlcnkSAgABGAIiKwoRCAAQARgQsAICuAIYggICCAMKFggAEAEYELACArgCGDIICgQKAhgBEAMiKgoQCAAQARgQsAICuAIYegIIAwoWCAAQARgQsAICuAIYMggKBAoCEAMQAiITChEIABABGBCwAgK4AhiSAgIIAioCZzAqBHRlc3QqBXF1ZXJ5CpsBChNnMC5kYXRhLnRlc3Quc2NoZW1hEgIAARgCIisKEQgAEAEYA7ACArgCDoICAggDChYIABABGAOwAgK4Ag4yCAoECgIYAhADIioKEAgAEAEYA7ACArgCDnoCCAMKFggAEAEYA7ACArgCDjIICgQKAhADEAIiEwoRCAAQARgDsAICuAIOkgICCAIqAmcwKgR0ZXN0KgZzY2hlbWEKvwYKEmcwLmRhdGEudGVzdC5xX2FzdBICAAEYAiLNBQoSCAAQARgasALoAbgCGoICAggDChIIABABGBqwAugBuAIawgECCAQKFAgAEAEYGrAC6AG4AhqiAQQIARAFChIIABABGBqwAugBuAIawgECCAYKHggAEAEYGrAC6AG4AhryAQ4KBAoCGAQSBAoCGAUYBgoeCAAQARgasALoAbgCGvIBDgoECgIYBhIECgIYBRgGCh4IABABGBqwAugBuAIa8gEOCgQKAhgHEgQKAhgIGAYKFAgAEAEYGrAC6AG4AhqiAQQIARAHChIIABABGBqwAugBuAIawgECCAgKHggAEAEYGrAC6AG4AhryAQ4KBAoCGAoSBAoCGAsYCAoeCAAQARgasALoAbgCGvIBDgoECgIYBhIECgIYCxgIChQIABABGBqwAugBuAIaogEECAEQCQoSCAAQARgasALoAbgCGsIBAggKChQIABABGBqwAugBuAIaogEECAEQCwoSCAAQARgasALoAbgCGsIBAggMCh4IABABGBqwAugBuAIa8gEOCgQKAhgKEgQKAhgMGAwKHggAEAEYGrAC6AG4AhryAQ4KBAoCGAYSBAoCGAwYDAoXCAAQARgasALoAbgCGiIICgQKAhAMEAsKHggAEAEYGrAC6AG4AhryAQ4KBAoCGAkSBAoCEAsYCgoeCAAQARgasALoAbgCGvIBDgoECgIYDRIECgIYDhgKChcIABABGBqwAugBuAIaIggKBAoCEAoQCQoeCAAQARgasALoAbgCGvIBDgoECgIYCRIECgIQCRgIChcIABABGBqwAugBuAIaIggKBAoCEAgQBwoeCAAQARgasALoAbgCGvIBDgoECgIYCRIECgIQBxgGChcIABABGBqwAugBuAIaIggKBAoCEAYQBQoeCAAQARgasALoAbgCGvIBDgoECgIYAxIECgIQBRgEChcIABABGBqwAugBuAIaMggKBAoCEAQQAyIsChEIABABGBqwAugBuAIaegIIAwoXCAAQARgasALoAbgCGjIICgQKAhADEAIiFAoSCAAQARgasALoAbgCGpICAggCKgJnMCoEdGVzdCoFcV9hc3QKtQYKDmcwLmRhdGEudGVzdC5wEgIAARgCIs4FChEIABABGBywAgK4AhyCAgIIAwowCAAQLxgdsAI0uAIdWiIKEmcwLmRhdGEudGVzdC5xdWVyeRIECgIQABIECgIQARgEChYIABAvGB2wAjS4Ah06CAoECgIQBBAFCjEIABA2GB2wAjy4Ah1aIwoTZzAuZGF0YS50ZXN0LnNjaGVtYRIECgIQABIECgIQARgGChYIABA2GB2wAjy4Ah06CAoECgIQBhAHCjYIABAWGB2wAj24Ah1aKAoYZ3JhcGhxbC5wYXJzZV9hbmRfdmVyaWZ5EgQKAhAFEgQKAhAHGAgKFggAEBYYHbACPbgCHToICgQKAhAIEAkKMAgAEAoYHbACD7gCHVoiChJnMC5kYXRhLnRlc3QucV9hc3QSBAoCEAASBAoCEAEYCgoWCAAQChgdsAIPuAIdOggKBAoCEAoQCwoUCAAQAhgdsAI9uAIdcgYKBAoCEAkKFwgAEAIYHbACPbgCHZoBCAoECgIQCRANChMIABACGB2wAj24Ah2yAQQIAxAMChoIABACGB2wAj24Ah1qDAoECgIQDRIECgIQDAoTCAAQAhgdsAI9uAIdsgEECAAQDgoSCAAQAhgdsAI9uAIdKgQIABAOChwIABACGB2wAj24Ah1iDgoECgIQCRIECgIQDhgPChYIABACGB2wAj24Ah06CAoECgIQDxAQChIIABACGB2wAj24Ah0qBAgBEA4KHAgAEAIYHbACPbgCHWIOCgQKAhAJEgQKAhAOGA8KGggAEAIYHbACPbgCHWoMCgQKAhAPEgQKAhALChIIABACGB2wAj24Ah0qBAgCEA4KHAgAEAIYHbACPbgCHWIOCgQKAhAJEgQKAhAOGA8KFggAEAIYHbACPbgCHToICgQKAhAPEBEKGwgAEAIYHrACB7gCHtoBDAoECgIQEBIECgIIAAoWCAAQARgcsAICuAIcMggKBAoCCAEQAyIqChAIABABGBywAgK4Ahx6AggDChYIABABGBywAgK4AhwyCAoECgIQAxACIhMKEQgAEAEYHLACArgCHJICAggCKgJnMCoEdGVzdCoBcA=="
 		},
 		{
 			"note": "graphql_parse_and_verify/success validation rules are independent case 1",
@@ -2217,7 +2239,7 @@
 			"note": "graphql_parse_and_verify/success validation rules are independent case 2",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\nschema := `\n  type Query {\n      x: Int\n  }\n  extend type Query {\n      myAction(myEnum: Locale!): SomeResult!\n  }\n  type SomeResult {\n      id: String\n  }\n  enum Locale {\n      EN\n      LT\n      DE\n  }\n`\n\nquery := `\n  query SomeOperation ($locale: Locale! = DE) {\n    myAction(myEnum: $locale) {\n      id\n    }\n  }\n`\n\nq_ast := {\"Operations\": [{\"Name\": \"SomeOperation\", \"Operation\": \"query\", \"SelectionSet\": [{\"Alias\": \"myAction\", \"Arguments\": [{\"Name\": \"myEnum\", \"Value\": {\"ExpectedTypeHasDefault\": false, \"Kind\": 0, \"Raw\": \"locale\"}}], \"Name\": \"myAction\", \"SelectionSet\": [{\"Alias\": \"id\", \"Name\": \"id\"}]}], \"VariableDefinitions\": [{\"DefaultValue\": {\"ExpectedTypeHasDefault\": false, \"Kind\": 7, \"Raw\": \"DE\"}, \"Type\": {\"NamedType\": \"Locale\", \"NonNull\": true}, \"Used\": false, \"Variable\": \"locale\"}]}]}\n\np if {\n\t[valid, q_ast, _] = graphql.parse_and_verify(query, schema)\n\tvalid\n}\n"
+				"package test\n\nschema := `\n  type Query {\n      x: Int\n  }\n  extend type Query {\n      myAction(myEnum: Locale!): SomeResult!\n  }\n  type SomeResult {\n      id: String\n  }\n  enum Locale {\n      EN\n      LT\n      DE\n  }\n`\n\nquery := `\n  query SomeOperation ($locale: Locale! = DE) {\n    myAction(myEnum: $locale) {\n      id\n    }\n  }\n`\n\nq_ast := {\"Operations\": [{\"Description\": \"\", \"Name\": \"SomeOperation\", \"Operation\": \"query\", \"SelectionSet\": [{\"Alias\": \"myAction\", \"Arguments\": [{\"Name\": \"myEnum\", \"Value\": {\"ExpectedTypeHasDefault\": false, \"Kind\": 0, \"Raw\": \"locale\"}}], \"Name\": \"myAction\", \"SelectionSet\": [{\"Alias\": \"id\", \"Name\": \"id\"}]}], \"VariableDefinitions\": [{\"Description\": \"\", \"DefaultValue\": {\"ExpectedTypeHasDefault\": false, \"Kind\": 7, \"Raw\": \"DE\"}, \"Type\": {\"NamedType\": \"Locale\", \"NonNull\": true}, \"Used\": false, \"Variable\": \"locale\"}]}]}\n\np if {\n\t[valid, q_ast, _] = graphql.parse_and_verify(query, schema)\n\tvalid\n}\n"
 			],
 			"want_result": [
 				{
@@ -2241,6 +2263,12 @@
 						},
 						{
 							"value": "Operations"
+						},
+						{
+							"value": "Description"
+						},
+						{
+							"value": ""
 						},
 						{
 							"value": "Name"
@@ -2704,7 +2732,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2715,7 +2743,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2727,7 +2755,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2738,7 +2766,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2757,7 +2785,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2776,7 +2804,26 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
+												"end_row": 28
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 8
+												},
+												"value": {
+													"type": "string_index",
+													"value": 9
+												},
+												"object": 6,
+												"file": 0,
+												"col": 1,
+												"row": 28,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2788,7 +2835,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2799,7 +2846,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2808,17 +2855,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 9
+													"value": 11
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 12
 												},
 												"object": 8,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2830,7 +2877,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2841,7 +2888,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2850,17 +2897,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"value": {
 													"type": "string_index",
-													"value": 12
+													"value": 14
 												},
 												"object": 10,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2871,7 +2918,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2880,7 +2927,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 14
+													"value": 16
 												},
 												"value": {
 													"type": "bool",
@@ -2890,7 +2937,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2900,11 +2947,49 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28,
-												"index": 16,
-												"Index": 16,
+												"index": 18,
+												"Index": 18,
 												"target": 12
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 17
+												},
+												"value": {
+													"type": "local",
+													"value": 12
+												},
+												"object": 11,
+												"file": 0,
+												"col": 1,
+												"row": 28,
+												"end_col": 519,
+												"end_row": 28
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 19
+												},
+												"value": {
+													"type": "string_index",
+													"value": 20
+												},
+												"object": 11,
+												"file": 0,
+												"col": 1,
+												"row": 28,
+												"end_col": 519,
+												"end_row": 28
 											}
 										},
 										{
@@ -2916,51 +3001,13 @@
 												},
 												"value": {
 													"type": "local",
-													"value": 12
-												},
-												"object": 11,
-												"file": 0,
-												"col": 1,
-												"row": 28,
-												"end_col": 481,
-												"end_row": 28
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 17
-												},
-												"value": {
-													"type": "string_index",
-													"value": 18
-												},
-												"object": 11,
-												"file": 0,
-												"col": 1,
-												"row": 28,
-												"end_col": 481,
-												"end_row": 28
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 13
-												},
-												"value": {
-													"type": "local",
 													"value": 11
 												},
 												"object": 10,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2975,7 +3022,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -2984,7 +3031,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 11
+													"value": 13
 												},
 												"value": {
 													"type": "local",
@@ -2994,7 +3041,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3003,17 +3050,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"value": {
 													"type": "string_index",
-													"value": 10
+													"value": 12
 												},
 												"object": 8,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3025,7 +3072,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3036,7 +3083,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3045,17 +3092,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 9
+													"value": 11
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 14,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3064,17 +3111,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"value": {
 													"type": "string_index",
-													"value": 19
+													"value": 21
 												},
 												"object": 14,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3089,7 +3136,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3098,7 +3145,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "local",
@@ -3108,7 +3155,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3123,7 +3170,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3132,7 +3179,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"value": {
 													"type": "local",
@@ -3142,7 +3189,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3154,7 +3201,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3165,7 +3212,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3176,7 +3223,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3185,7 +3232,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 14
+													"value": 16
 												},
 												"value": {
 													"type": "bool",
@@ -3195,7 +3242,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3205,10 +3252,10 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28,
-												"index": 22,
-												"Index": 22,
+												"index": 24,
+												"Index": 24,
 												"target": 18
 											}
 										},
@@ -3217,7 +3264,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 15
+													"value": 17
 												},
 												"value": {
 													"type": "local",
@@ -3227,7 +3274,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3236,17 +3283,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 17
+													"value": 19
 												},
 												"value": {
 													"type": "string_index",
-													"value": 23
+													"value": 25
 												},
 												"object": 17,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3255,7 +3302,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 21
+													"value": 23
 												},
 												"value": {
 													"type": "local",
@@ -3265,7 +3312,26 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
+												"end_row": 28
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 4
+												},
+												"value": {
+													"type": "string_index",
+													"value": 5
+												},
+												"object": 16,
+												"file": 0,
+												"col": 1,
+												"row": 28,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3276,26 +3342,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
-												"end_row": 28
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 25
-												},
-												"value": {
-													"type": "string_index",
-													"value": 26
-												},
-												"object": 19,
-												"file": 0,
-												"col": 1,
-												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3307,52 +3354,14 @@
 													"value": 27
 												},
 												"value": {
-													"type": "bool",
-													"value": true
+													"type": "string_index",
+													"value": 28
 												},
 												"object": 19,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
-												"end_row": 28
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 24
-												},
-												"value": {
-													"type": "local",
-													"value": 19
-												},
-												"object": 16,
-												"file": 0,
-												"col": 1,
-												"row": 28,
-												"end_col": 481,
-												"end_row": 28
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 28
-												},
-												"value": {
-													"type": "bool",
-													"value": false
-												},
-												"object": 16,
-												"file": 0,
-												"col": 1,
-												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3364,14 +3373,71 @@
 													"value": 29
 												},
 												"value": {
+													"type": "bool",
+													"value": true
+												},
+												"object": 19,
+												"file": 0,
+												"col": 1,
+												"row": 28,
+												"end_col": 519,
+												"end_row": 28
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
 													"type": "string_index",
-													"value": 18
+													"value": 26
+												},
+												"value": {
+													"type": "local",
+													"value": 19
 												},
 												"object": 16,
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
+												"end_row": 28
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 30
+												},
+												"value": {
+													"type": "bool",
+													"value": false
+												},
+												"object": 16,
+												"file": 0,
+												"col": 1,
+												"row": 28,
+												"end_col": 519,
+												"end_row": 28
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 31
+												},
+												"value": {
+													"type": "string_index",
+													"value": 20
+												},
+												"object": 16,
+												"file": 0,
+												"col": 1,
+												"row": 28,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3386,7 +3452,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3395,7 +3461,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 20
+													"value": 22
 												},
 												"value": {
 													"type": "local",
@@ -3405,7 +3471,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3420,7 +3486,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3439,7 +3505,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3454,7 +3520,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										}
@@ -3469,7 +3535,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										},
@@ -3484,7 +3550,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										}
@@ -3499,7 +3565,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 28,
-												"end_col": 481,
+												"end_col": 519,
 												"end_row": 28
 											}
 										}
@@ -3989,7 +4055,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "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"
+			"plan_proto": "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EggAEAEYHLAChwS4AhzCAQIIDgoeCAAQARgcsAKHBLgCHPIBDgoECgIYCxIECgIYFRgOCh4IABABGBywAocEuAIc8gEOCgQKAhgGEgQKAhgVGA4KFwgAEAEYHLAChwS4AhwiCAoECgIQDhANCh4IABABGBywAocEuAIc8gEOCgQKAhgKEgQKAhANGAgKFwgAEAEYHLAChwS4AhwiCAoECgIQCBAHCh4IABABGBywAocEuAIc8gEOCgQKAhgKEgQKAhAHGAYKFAgAEAEYHLAChwS4AhyiAQQIARAPChIIABABGBywAocEuAIcwgECCBAKEggAEAEYHLAChwS4AhzCAQIIEQoeCAAQARgcsAKHBLgCHPIBDgoECgIYEBIECgIIABgRChQIABABGBywAocEuAIcugEECBgQEgoeCAAQARgcsAKHBLgCHPIBDgoECgIYERIECgIQEhgRCh4IABABGBywAocEuAIc8gEOCgQKAhgTEgQKAhgZGBEKHggAEAEYHLAChwS4AhzyAQ4KBAoCGBcSBAoCEBEYEAoeCAAQARgcsAKHBLgCHPIBDgoECgIYBBIECgIYBRgQChIIABABGBywAocEuAIcwgECCBMKHggAEAEYHLAChwS4AhzyAQ4KBAoCGBsSBAoCGBwYEwoeCAAQARgcsAKHBLgCHPIBDgoECgIYHRIECgIIARgTCh4IABABGBywAocEuAIc8gEOCgQKAhgaEgQKAhATGBAKHggAEAEYHLAChwS4AhzyAQ4KBAoCGB4SBAoCCAAYEAoeCAAQARgcsAKHBLgCHPIBDgoECgIYHxIECgIYFBgQChcIABABGBywAocEuAIcIggKBAoCEBAQDwoeCAAQARgcsAKHBLgCHPIBDgoECgIYFhIECgIQDxgGChcIABABGBywAocEuAIcIggKBAoCEAYQBQoeCAAQARgcsAKHBLgCHPIBDgoECgIYAxIECgIQBRgEChcIABABGBywAocEuAIcMggKBAoCEAQQAyIsChEIABABGBywAocEuAIcegIIAwoXCAAQARgcsAKHBLgCHDIICgQKAhADEAIiFAoSCAAQARgcsAKHBLgCHJICAggCKgJnMCoEdGVzdCoFcV9hc3QKtQYKDmcwLmRhdGEudGVzdC5wEgIAARgCIs4FChEIABABGB6wAgK4Ah6CAgIIAwowCAAQLxgfsAI0uAIfWiIKEmcwLmRhdGEudGVzdC5xdWVyeRIECgIQABIECgIQARgEChYIABAvGB+wAjS4Ah86CAoECgIQBBAFCjEIABA2GB+wAjy4Ah9aIwoTZzAuZGF0YS50ZXN0LnNjaGVtYRIECgIQABIECgIQARgGChYIABA2GB+wAjy4Ah86CAoECgIQBhAHCjYIABAWGB+wAj24Ah9aKAoYZ3JhcGhxbC5wYXJzZV9hbmRfdmVyaWZ5EgQKAhAFEgQKAhAHGAgKFggAEBYYH7ACPbgCHzoICgQKAhAIEAkKMAgAEAoYH7ACD7gCH1oiChJnMC5kYXRhLnRlc3QucV9hc3QSBAoCEAASBAoCEAEYCgoWCAAQChgfsAIPuAIfOggKBAoCEAoQCwoUCAAQAhgfsAI9uAIfcgYKBAoCEAkKFwgAEAIYH7ACPbgCH5oBCAoECgIQCRANChMIABACGB+wAj24Ah+yAQQIAxAMChoIABACGB+wAj24Ah9qDAoECgIQDRIECgIQDAoTCAAQAhgfsAI9uAIfsgEECAAQDgoSCAAQAhgfsAI9uAIfKgQIABAOChwIABACGB+wAj24Ah9iDgoECgIQCRIECgIQDhgPChYIABACGB+wAj24Ah86CAoECgIQDxAQChIIABACGB+wAj24Ah8qBAgBEA4KHAgAEAIYH7ACPbgCH2IOCgQKAhAJEgQKAhAOGA8KGggAEAIYH7ACPbgCH2oMCgQKAhAPEgQKAhALChIIABACGB+wAj24Ah8qBAgCEA4KHAgAEAIYH7ACPbgCH2IOCgQKAhAJEgQKAhAOGA8KFggAEAIYH7ACPbgCHzoICgQKAhAPEBEKGwgAEAIYILACB7gCINoBDAoECgIQEBIECgIIAAoWCAAQARgesAICuAIeMggKBAoCCAEQAyIqChAIABABGB6wAgK4Ah56AggDChYIABABGB6wAgK4Ah4yCAoECgIQAxACIhMKEQgAEAEYHrACArgCHpICAggCKgJnMCoEdGVzdCoBcA=="
 		},
 		{
 			"note": "graphql_parse_and_verify/success deprecating types",
@@ -4871,7 +4937,7 @@
 			"note": "graphql_parse_and_verify/success no unused variables",
 			"query": "data.test.p = x",
 			"modules": [
-				"package test\n\nschema := `\n  type Query {\n    bar: String!\n  }\n`\n\nquery := `\n  query Foo($flag: Boolean!) {\n    ...Bar\n  }\n  fragment Bar on Query {\n    bar @include(if: $flag)\n  }\n`\n\nq_ast := {\"Fragments\": [{\"Name\": \"Bar\", \"SelectionSet\": [{\"Alias\": \"bar\", \"Directives\": [{\"Arguments\": [{\"Name\": \"if\", \"Value\": {\"ExpectedTypeHasDefault\": false, \"Kind\": 0, \"Raw\": \"flag\"}}], \"Location\": \"\", \"Name\": \"include\"}], \"Name\": \"bar\"}], \"TypeCondition\": \"Query\"}], \"Operations\": [{\"Name\": \"Foo\", \"Operation\": \"query\", \"SelectionSet\": [{\"Name\": \"Bar\"}], \"VariableDefinitions\": [{\"Type\": {\"NamedType\": \"Boolean\", \"NonNull\": true}, \"Used\": false, \"Variable\": \"flag\"}]}]}\n\np if {\n\t[valid, q_ast, _] = graphql.parse_and_verify(query, schema)\n\tvalid\n}\n"
+				"package test\n\nschema := `\n  type Query {\n    bar: String!\n  }\n`\n\nquery := `\n  query Foo($flag: Boolean!) {\n    ...Bar\n  }\n  fragment Bar on Query {\n    bar @include(if: $flag)\n  }\n`\n\nq_ast := {\"Fragments\": [{\"Description\": \"\", \"Name\": \"Bar\", \"SelectionSet\": [{\"Alias\": \"bar\", \"Directives\": [{\"Arguments\": [{\"Name\": \"if\", \"Value\": {\"ExpectedTypeHasDefault\": false, \"Kind\": 0, \"Raw\": \"flag\"}}], \"Location\": \"\", \"Name\": \"include\"}], \"Name\": \"bar\"}], \"TypeCondition\": \"Query\"}], \"Operations\": [{\"Description\": \"\", \"Name\": \"Foo\", \"Operation\": \"query\", \"SelectionSet\": [{\"Name\": \"Bar\"}], \"VariableDefinitions\": [{\"Description\": \"\", \"Type\": {\"NamedType\": \"Boolean\", \"NonNull\": true}, \"Used\": false, \"Variable\": \"flag\"}]}]}\n\np if {\n\t[valid, q_ast, _] = graphql.parse_and_verify(query, schema)\n\tvalid\n}\n"
 			],
 			"want_result": [
 				{
@@ -4895,6 +4961,12 @@
 						},
 						{
 							"value": "Fragments"
+						},
+						{
+							"value": "Description"
+						},
+						{
+							"value": ""
 						},
 						{
 							"value": "Name"
@@ -4940,9 +5012,6 @@
 						},
 						{
 							"value": "Location"
-						},
-						{
-							"value": ""
 						},
 						{
 							"value": "include"
@@ -5370,7 +5439,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5381,7 +5450,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5393,7 +5462,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5404,7 +5473,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5423,7 +5492,26 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 6
+												},
+												"value": {
+													"type": "string_index",
+													"value": 7
+												},
+												"object": 6,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5435,7 +5523,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5446,7 +5534,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5455,17 +5543,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 7
+													"value": 9
 												},
 												"value": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"object": 8,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5477,7 +5565,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5488,7 +5576,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5500,7 +5588,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5511,7 +5599,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5520,17 +5608,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"value": {
 													"type": "string_index",
-													"value": 11
+													"value": 13
 												},
 												"object": 12,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5541,7 +5629,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5550,7 +5638,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 13
+													"value": 15
 												},
 												"value": {
 													"type": "bool",
@@ -5560,7 +5648,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5570,30 +5658,11 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18,
-												"index": 15,
-												"Index": 15,
+												"index": 17,
+												"Index": 17,
 												"target": 14
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 14
-												},
-												"value": {
-													"type": "local",
-													"value": 14
-												},
-												"object": 13,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
-												"end_row": 18
 											}
 										},
 										{
@@ -5604,14 +5673,14 @@
 													"value": 16
 												},
 												"value": {
-													"type": "string_index",
-													"value": 17
+													"type": "local",
+													"value": 14
 												},
 												"object": 13,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5620,7 +5689,26 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 12
+													"value": 18
+												},
+												"value": {
+													"type": "string_index",
+													"value": 19
+												},
+												"object": 13,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 14
 												},
 												"value": {
 													"type": "local",
@@ -5630,7 +5718,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5645,7 +5733,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5654,7 +5742,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 10
+													"value": 12
 												},
 												"value": {
 													"type": "local",
@@ -5664,7 +5752,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5672,37 +5760,37 @@
 											"type": "ObjectInsertStmt",
 											"stmt": {
 												"key": {
-													"type": "string_index",
-													"value": 18
-												},
-												"value": {
-													"type": "string_index",
-													"value": 19
-												},
-												"object": 10,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
-												"end_row": 18
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 4
-												},
-												"value": {
 													"type": "string_index",
 													"value": 20
 												},
+												"value": {
+													"type": "string_index",
+													"value": 5
+												},
 												"object": 10,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 6
+												},
+												"value": {
+													"type": "string_index",
+													"value": 21
+												},
+												"object": 10,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5717,7 +5805,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5726,7 +5814,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 9
+													"value": 11
 												},
 												"value": {
 													"type": "local",
@@ -5736,7 +5824,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5745,17 +5833,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 4
+													"value": 6
 												},
 												"value": {
 													"type": "string_index",
-													"value": 8
+													"value": 10
 												},
 												"object": 8,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5770,7 +5858,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5779,7 +5867,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 6
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -5789,7 +5877,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5798,17 +5886,17 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 21
+													"value": 22
 												},
 												"value": {
 													"type": "string_index",
-													"value": 22
+													"value": 23
 												},
 												"object": 6,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5823,7 +5911,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5842,7 +5930,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5854,7 +5942,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5865,68 +5953,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
-												"end_row": 18
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 4
-												},
-												"value": {
-													"type": "string_index",
-													"value": 24
-												},
-												"object": 16,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
-												"end_row": 18
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 25
-												},
-												"value": {
-													"type": "string_index",
-													"value": 26
-												},
-												"object": 16,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
-												"end_row": 18
-											}
-										},
-										{
-											"type": "MakeArrayStmt",
-											"stmt": {
-												"capacity": 1,
-												"target": 17,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
-												"end_row": 18
-											}
-										},
-										{
-											"type": "MakeObjectStmt",
-											"stmt": {
-												"target": 18,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5941,11 +5968,91 @@
 													"type": "string_index",
 													"value": 5
 												},
+												"object": 16,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 6
+												},
+												"value": {
+													"type": "string_index",
+													"value": 25
+												},
+												"object": 16,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 26
+												},
+												"value": {
+													"type": "string_index",
+													"value": 27
+												},
+												"object": 16,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "MakeArrayStmt",
+											"stmt": {
+												"capacity": 1,
+												"target": 17,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "MakeObjectStmt",
+											"stmt": {
+												"target": 18,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 6
+												},
+												"value": {
+													"type": "string_index",
+													"value": 7
+												},
 												"object": 18,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5960,7 +6067,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5969,7 +6076,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 6
+													"value": 8
 												},
 												"value": {
 													"type": "local",
@@ -5979,7 +6086,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -5991,7 +6098,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6002,7 +6109,26 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 4
+												},
+												"value": {
+													"type": "string_index",
+													"value": 5
+												},
+												"object": 20,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6013,7 +6139,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6021,56 +6147,18 @@
 											"type": "ObjectInsertStmt",
 											"stmt": {
 												"key": {
-													"type": "string_index",
-													"value": 29
-												},
-												"value": {
 													"type": "string_index",
 													"value": 30
 												},
-												"object": 21,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
-												"end_row": 18
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
+												"value": {
 													"type": "string_index",
 													"value": 31
 												},
-												"value": {
-													"type": "bool",
-													"value": true
-												},
 												"object": 21,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
-												"end_row": 18
-											}
-										},
-										{
-											"type": "ObjectInsertStmt",
-											"stmt": {
-												"key": {
-													"type": "string_index",
-													"value": 28
-												},
-												"value": {
-													"type": "local",
-													"value": 21
-												},
-												"object": 20,
-												"file": 0,
-												"col": 1,
-												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6083,13 +6171,32 @@
 												},
 												"value": {
 													"type": "bool",
-													"value": false
+													"value": true
+												},
+												"object": 21,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 29
+												},
+												"value": {
+													"type": "local",
+													"value": 21
 												},
 												"object": 20,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6101,14 +6208,33 @@
 													"value": 33
 												},
 												"value": {
-													"type": "string_index",
-													"value": 17
+													"type": "bool",
+													"value": false
 												},
 												"object": 20,
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
+												"end_row": 18
+											}
+										},
+										{
+											"type": "ObjectInsertStmt",
+											"stmt": {
+												"key": {
+													"type": "string_index",
+													"value": 34
+												},
+												"value": {
+													"type": "string_index",
+													"value": 19
+												},
+												"object": 20,
+												"file": 0,
+												"col": 1,
+												"row": 18,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6123,7 +6249,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6132,7 +6258,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 27
+													"value": 28
 												},
 												"value": {
 													"type": "local",
@@ -6142,7 +6268,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6157,7 +6283,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6166,7 +6292,7 @@
 											"stmt": {
 												"key": {
 													"type": "string_index",
-													"value": 23
+													"value": 24
 												},
 												"value": {
 													"type": "local",
@@ -6176,7 +6302,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6191,7 +6317,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										}
@@ -6206,7 +6332,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										},
@@ -6221,7 +6347,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										}
@@ -6236,7 +6362,7 @@
 												"file": 0,
 												"col": 1,
 												"row": 18,
-												"end_col": 476,
+												"end_col": 533,
 												"end_row": 18
 											}
 										}
@@ -6726,7 +6852,7 @@
 				}
 			],
 			"ignore": false,
-			"plan_proto": "CqUECgMKAXgKawppCiAgcXVlcnkgRm9vKCRmbGFnOiBCb29sZWFuISkgewogICAgLi4uQmFyCiAgfQogIGZyYWdtZW50IEJhciBvbiBRdWVyeSB7CiAgICBiYXIgQGluY2x1ZGUoaWY6ICRmbGFnKQogIH0KCicKJQogIHR5cGUgUXVlcnkgewogICAgYmFyOiBTdHJpbmchCiAgfQoKCwoJRnJhZ21lbnRzCgYKBE5hbWUKBQoDQmFyCg4KDFNlbGVjdGlvblNldAoHCgVBbGlhcwoFCgNiYXIKDAoKRGlyZWN0aXZlcwoLCglBcmd1bWVudHMKBAoCaWYKBwoFVmFsdWUKGAoWRXhwZWN0ZWRUeXBlSGFzRGVmYXVsdAoGCgRLaW5kCgMKATAKBQoDUmF3CgYKBGZsYWcKCgoITG9jYXRpb24KAgoACgkKB2luY2x1ZGUKDwoNVHlwZUNvbmRpdGlvbgoHCgVRdWVyeQoMCgpPcGVyYXRpb25zCgUKA0ZvbwoLCglPcGVyYXRpb24KBwoFcXVlcnkKFQoTVmFyaWFibGVEZWZpbml0aW9ucwoGCgRUeXBlCgsKCU5hbWVkVHlwZQoJCgdCb29sZWFuCgkKB05vbk51bGwKBgoEVXNlZAoKCghWYXJpYWJsZRIaChhncmFwaHFsLnBhcnNlX2FuZF92ZXJpZnkaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBr7FAqZAQoSZzAuZGF0YS50ZXN0LnF1ZXJ5EgIAARgCIisKEQgAEAEYCbACArgCEIICAggDChYIABABGAmwAgK4AhAyCAoECgIYARADIioKEAgAEAEYCbACArgCEHoCCAMKFggAEAEYCbACArgCEDIICgQKAhADEAIiEwoRCAAQARgJsAICuAIQkgICCAIqAmcwKgR0ZXN0KgVxdWVyeQqbAQoTZzAuZGF0YS50ZXN0LnNjaGVtYRICAAEYAiIrChEIABABGAOwAgK4AgeCAgIIAwoWCAAQARgDsAICuAIHMggKBAoCGAIQAyIqChAIABABGAOwAgK4Agd6AggDChYIABABGAOwAgK4AgcyCAoECgIQAxACIhMKEQgAEAEYA7ACArgCB5ICAggCKgJnMCoEdGVzdCoGc2NoZW1hCoYMChJnMC5kYXRhLnRlc3QucV9hc3QSAgABGAIilAsKEggAEAEYErAC3AO4AhKCAgIIAwoSCAAQARgSsALcA7gCEsIBAggEChQIABABGBKwAtwDuAISogEECAEQBQoSCAAQARgSsALcA7gCEsIBAggGCh4IABABGBKwAtwDuAIS8gEOCgQKAhgEEgQKAhgFGAYKFAgAEAEYErAC3AO4AhKiAQQIARAHChIIABABGBKwAtwDuAISwgECCAgKHggAEAEYErAC3AO4AhLyAQ4KBAoCGAcSBAoCGAgYCAoUCAAQARgSsALcA7gCEqIBBAgBEAkKEggAEAEYErAC3AO4AhLCAQIICgoUCAAQARgSsALcA7gCEqIBBAgBEAsKEggAEAEYErAC3AO4AhLCAQIIDAoeCAAQARgSsALcA7gCEvIBDgoECgIYBBIECgIYCxgMChIIABABGBKwAtwDuAISwgECCA0KHggAEAEYErAC3AO4AhLyAQ4KBAoCGA0SBAoCCAAYDQoUCAAQARgSsALcA7gCEroBBAgPEA4KHggAEAEYErAC3AO4AhLyAQ4KBAoCGA4SBAoCEA4YDQoeCAAQARgSsALcA7gCEvIBDgoECgIYEBIECgIYERgNCh4IABABGBKwAtwDuAIS8gEOCgQKAhgMEgQKAhANGAwKFwgAEAEYErAC3AO4AhIiCAoECgIQDBALCh4IABABGBKwAtwDuAIS8gEOCgQKAhgKEgQKAhALGAoKHggAEAEYErAC3AO4AhLyAQ4KBAoCGBISBAoCGBMYCgoeCAAQARgSsALcA7gCEvIBDgoECgIYBBIECgIYFBgKChcIABABGBKwAtwDuAISIggKBAoCEAoQCQoeCAAQARgSsALcA7gCEvIBDgoECgIYCRIECgIQCRgICh4IABABGBKwAtwDuAIS8gEOCgQKAhgEEgQKAhgIGAgKFwgAEAEYErAC3AO4AhIiCAoECgIQCBAHCh4IABABGBKwAtwDuAIS8gEOCgQKAhgGEgQKAhAHGAYKHggAEAEYErAC3AO4AhLyAQ4KBAoCGBUSBAoCGBYYBgoXCAAQARgSsALcA7gCEiIICgQKAhAGEAUKHggAEAEYErAC3AO4AhLyAQ4KBAoCGAMSBAoCEAUYBAoUCAAQARgSsALcA7gCEqIBBAgBEA8KEggAEAEYErAC3AO4AhLCAQIIEAoeCAAQARgSsALcA7gCEvIBDgoECgIYBBIECgIYGBgQCh4IABABGBKwAtwDuAIS8gEOCgQKAhgZEgQKAhgaGBAKFAgAEAEYErAC3AO4AhKiAQQIARARChIIABABGBKwAtwDuAISwgECCBIKHggAEAEYErAC3AO4AhLyAQ4KBAoCGAQSBAoCGAUYEgoXCAAQARgSsALcA7gCEiIICgQKAhASEBEKHggAEAEYErAC3AO4AhLyAQ4KBAoCGAYSBAoCEBEYEAoUCAAQARgSsALcA7gCEqIBBAgBEBMKEggAEAEYErAC3AO4AhLCAQIIFAoSCAAQARgSsALcA7gCEsIBAggVCh4IABABGBKwAtwDuAIS8gEOCgQKAhgdEgQKAhgeGBUKHggAEAEYErAC3AO4AhLyAQ4KBAoCGB8SBAoCCAEYFQoeCAAQARgSsALcA7gCEvIBDgoECgIYHBIECgIQFRgUCh4IABABGBKwAtwDuAIS8gEOCgQKAhggEgQKAggAGBQKHggAEAEYErAC3AO4AhLyAQ4KBAoCGCESBAoCGBEYFAoXCAAQARgSsALcA7gCEiIICgQKAhAUEBMKHggAEAEYErAC3AO4AhLyAQ4KBAoCGBsSBAoCEBMYEAoXCAAQARgSsALcA7gCEiIICgQKAhAQEA8KHggAEAEYErAC3AO4AhLyAQ4KBAoCGBcSBAoCEA8YBAoXCAAQARgSsALcA7gCEjIICgQKAhAEEAMiLAoRCAAQARgSsALcA7gCEnoCCAMKFwgAEAEYErAC3AO4AhIyCAoECgIQAxACIhQKEggAEAEYErAC3AO4AhKSAgIIAioCZzAqBHRlc3QqBXFfYXN0CrUGCg5nMC5kYXRhLnRlc3QucBICAAEYAiLOBQoRCAAQARgUsAICuAIUggICCAMKMAgAEC8YFbACNLgCFVoiChJnMC5kYXRhLnRlc3QucXVlcnkSBAoCEAASBAoCEAEYBAoWCAAQLxgVsAI0uAIVOggKBAoCEAQQBQoxCAAQNhgVsAI8uAIVWiMKE2cwLmRhdGEudGVzdC5zY2hlbWESBAoCEAASBAoCEAEYBgoWCAAQNhgVsAI8uAIVOggKBAoCEAYQBwo2CAAQFhgVsAI9uAIVWigKGGdyYXBocWwucGFyc2VfYW5kX3ZlcmlmeRIECgIQBRIECgIQBxgIChYIABAWGBWwAj24AhU6CAoECgIQCBAJCjAIABAKGBWwAg+4AhVaIgoSZzAuZGF0YS50ZXN0LnFfYXN0EgQKAhAAEgQKAhABGAoKFggAEAoYFbACD7gCFToICgQKAhAKEAsKFAgAEAIYFbACPbgCFXIGCgQKAhAJChcIABACGBWwAj24AhWaAQgKBAoCEAkQDQoTCAAQAhgVsAI9uAIVsgEECAMQDAoaCAAQAhgVsAI9uAIVagwKBAoCEA0SBAoCEAwKEwgAEAIYFbACPbgCFbIBBAgAEA4KEggAEAIYFbACPbgCFSoECAAQDgocCAAQAhgVsAI9uAIVYg4KBAoCEAkSBAoCEA4YDwoWCAAQAhgVsAI9uAIVOggKBAoCEA8QEAoSCAAQAhgVsAI9uAIVKgQIARAOChwIABACGBWwAj24AhViDgoECgIQCRIECgIQDhgPChoIABACGBWwAj24AhVqDAoECgIQDxIECgIQCwoSCAAQAhgVsAI9uAIVKgQIAhAOChwIABACGBWwAj24AhViDgoECgIQCRIECgIQDhgPChYIABACGBWwAj24AhU6CAoECgIQDxARChsIABACGBawAge4AhbaAQwKBAoCEBASBAoCCAAKFggAEAEYFLACArgCFDIICgQKAggBEAMiKgoQCAAQARgUsAICuAIUegIIAwoWCAAQARgUsAICuAIUMggKBAoCEAMQAiITChEIABABGBSwAgK4AhSSAgIIAioCZzAqBHRlc3QqAXA="
+			"plan_proto": "CrQECgMKAXgKawppCiAgcXVlcnkgRm9vKCRmbGFnOiBCb29sZWFuISkgewogICAgLi4uQmFyCiAgfQogIGZyYWdtZW50IEJhciBvbiBRdWVyeSB7CiAgICBiYXIgQGluY2x1ZGUoaWY6ICRmbGFnKQogIH0KCicKJQogIHR5cGUgUXVlcnkgewogICAgYmFyOiBTdHJpbmchCiAgfQoKCwoJRnJhZ21lbnRzCg0KC0Rlc2NyaXB0aW9uCgIKAAoGCgROYW1lCgUKA0JhcgoOCgxTZWxlY3Rpb25TZXQKBwoFQWxpYXMKBQoDYmFyCgwKCkRpcmVjdGl2ZXMKCwoJQXJndW1lbnRzCgQKAmlmCgcKBVZhbHVlChgKFkV4cGVjdGVkVHlwZUhhc0RlZmF1bHQKBgoES2luZAoDCgEwCgUKA1JhdwoGCgRmbGFnCgoKCExvY2F0aW9uCgkKB2luY2x1ZGUKDwoNVHlwZUNvbmRpdGlvbgoHCgVRdWVyeQoMCgpPcGVyYXRpb25zCgUKA0ZvbwoLCglPcGVyYXRpb24KBwoFcXVlcnkKFQoTVmFyaWFibGVEZWZpbml0aW9ucwoGCgRUeXBlCgsKCU5hbWVkVHlwZQoJCgdCb29sZWFuCgkKB05vbk51bGwKBgoEVXNlZAoKCghWYXJpYWJsZRIaChhncmFwaHFsLnBhcnNlX2FuZF92ZXJpZnkaDwoNbW9kdWxlLTAucmVnbxoJCgc8cXVlcnk+EpcBCpQBCgRldmFsEosBCiwIARABGAGwAhC4AgFaHgoOZzAuZGF0YS50ZXN0LnASBAoCEAASBAoCEAEYAgoWCAEQARgBsAIQuAIBOggKBAoCEAIQAwoRCAEQARgBsAIQuAIBwgECCAQKHQgBEAEYAbACELgCAfIBDgoECgIYABIECgIQAxgEChEIARABGAGwAhC4AgGKAgIIBBrbFQqZAQoSZzAuZGF0YS50ZXN0LnF1ZXJ5EgIAARgCIisKEQgAEAEYCbACArgCEIICAggDChYIABABGAmwAgK4AhAyCAoECgIYARADIioKEAgAEAEYCbACArgCEHoCCAMKFggAEAEYCbACArgCEDIICgQKAhADEAIiEwoRCAAQARgJsAICuAIQkgICCAIqAmcwKgR0ZXN0KgVxdWVyeQqbAQoTZzAuZGF0YS50ZXN0LnNjaGVtYRICAAEYAiIrChEIABABGAOwAgK4AgeCAgIIAwoWCAAQARgDsAICuAIHMggKBAoCGAIQAyIqChAIABABGAOwAgK4Agd6AggDChYIABABGAOwAgK4AgcyCAoECgIQAxACIhMKEQgAEAEYA7ACArgCB5ICAggCKgJnMCoEdGVzdCoGc2NoZW1hCuYMChJnMC5kYXRhLnRlc3QucV9hc3QSAgABGAIi9AsKEggAEAEYErAClQS4AhKCAgIIAwoSCAAQARgSsAKVBLgCEsIBAggEChQIABABGBKwApUEuAISogEECAEQBQoSCAAQARgSsAKVBLgCEsIBAggGCh4IABABGBKwApUEuAIS8gEOCgQKAhgEEgQKAhgFGAYKHggAEAEYErAClQS4AhLyAQ4KBAoCGAYSBAoCGAcYBgoUCAAQARgSsAKVBLgCEqIBBAgBEAcKEggAEAEYErAClQS4AhLCAQIICAoeCAAQARgSsAKVBLgCEvIBDgoECgIYCRIECgIYChgIChQIABABGBKwApUEuAISogEECAEQCQoSCAAQARgSsAKVBLgCEsIBAggKChQIABABGBKwApUEuAISogEECAEQCwoSCAAQARgSsAKVBLgCEsIBAggMCh4IABABGBKwApUEuAIS8gEOCgQKAhgGEgQKAhgNGAwKEggAEAEYErAClQS4AhLCAQIIDQoeCAAQARgSsAKVBLgCEvIBDgoECgIYDxIECgIIABgNChQIABABGBKwApUEuAISugEECBEQDgoeCAAQARgSsAKVBLgCEvIBDgoECgIYEBIECgIQDhgNCh4IABABGBKwApUEuAIS8gEOCgQKAhgSEgQKAhgTGA0KHggAEAEYErAClQS4AhLyAQ4KBAoCGA4SBAoCEA0YDAoXCAAQARgSsAKVBLgCEiIICgQKAhAMEAsKHggAEAEYErAClQS4AhLyAQ4KBAoCGAwSBAoCEAsYCgoeCAAQARgSsAKVBLgCEvIBDgoECgIYFBIECgIYBRgKCh4IABABGBKwApUEuAIS8gEOCgQKAhgGEgQKAhgVGAoKFwgAEAEYErAClQS4AhIiCAoECgIQChAJCh4IABABGBKwApUEuAIS8gEOCgQKAhgLEgQKAhAJGAgKHggAEAEYErAClQS4AhLyAQ4KBAoCGAYSBAoCGAoYCAoXCAAQARgSsAKVBLgC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"
 		},
 		{
 			"note": "graphql_parse_and_verify/success - AST objects - Employee example",

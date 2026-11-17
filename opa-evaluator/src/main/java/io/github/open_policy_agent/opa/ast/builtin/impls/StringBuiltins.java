@@ -700,9 +700,9 @@ public class StringBuiltins {
     if (args[0] instanceof RegoString) {
       bases = List.of(getArg(args, 0, RegoString.class).getValue());
     } else if (args[0] instanceof RegoArray) {
-      bases = getStrings(getArg(args, 0, RegoArray.class));
+      bases = getStrings(getArg(args, 0, RegoArray.class), 1);
     } else if (args[0] instanceof RegoSet) {
-      bases = getStrings(getArg(args, 0, RegoSet.class));
+      bases = getStrings(getArg(args, 0, RegoSet.class), 1);
     } else {
       throw new UnsupportedOperationException(
               "Unsupported type for strings.any_suffix_match operation: "
@@ -713,9 +713,9 @@ public class StringBuiltins {
     if (args[1] instanceof RegoString) {
       matchers = List.of(getArg(args, 1, RegoString.class).getValue());
     } else if (args[1] instanceof RegoArray) {
-      matchers = getStrings(getArg(args, 1, RegoArray.class));
+      matchers = getStrings(getArg(args, 1, RegoArray.class), 2);
     } else if (args[1] instanceof RegoSet) {
-      matchers = getStrings(getArg(args, 1, RegoSet.class));
+      matchers = getStrings(getArg(args, 1, RegoSet.class), 2);
     } else {
       throw new UnsupportedOperationException(
           "Unsupported type for strings.any_suffix_match operation: "
@@ -751,9 +751,9 @@ public class StringBuiltins {
     if (args[0] instanceof RegoString) {
       bases = List.of(getArg(args, 0, RegoString.class).getValue());
     } else if (args[0] instanceof RegoArray) {
-      bases = getStrings(getArg(args, 0, RegoArray.class));
+      bases = getStrings(getArg(args, 0, RegoArray.class), 1);
     } else if (args[0] instanceof RegoSet) {
-      bases = getStrings(getArg(args, 0, RegoSet.class));
+      bases = getStrings(getArg(args, 0, RegoSet.class), 1);
     } else {
       throw new UnsupportedOperationException(
           "Unsupported type for strings.any_prefix_match operation: "
@@ -764,9 +764,9 @@ public class StringBuiltins {
     if (args[1] instanceof RegoString) {
       matchers = List.of(getArg(args, 1, RegoString.class).getValue());
     } else if (args[1] instanceof RegoArray) {
-      matchers = getStrings(getArg(args, 1, RegoArray.class));
+      matchers = getStrings(getArg(args, 1, RegoArray.class), 2);
     } else if (args[1] instanceof RegoSet) {
-      matchers = getStrings(getArg(args, 1, RegoSet.class));
+      matchers = getStrings(getArg(args, 1, RegoSet.class), 2);
     } else {
       throw new UnsupportedOperationException(
           "Unsupported type for strings.any_prefix_match operation: "
@@ -783,14 +783,14 @@ public class StringBuiltins {
     return RegoBoolean.FALSE;
   }
 
-  private static List<String> getStrings(RegoCollection ra) {
+  private static List<String> getStrings(RegoCollection ra, int operand) {
     List<String> bases;
     bases = new ArrayList<>();
     for (RegoValue v : ra.valueStream().collect(Collectors.toList())) {
       if (v instanceof RegoString) {
         bases.add(((RegoString) v).getValue());
       } else {
-        throw new TypeError("operand 0 must be array of strings but got array containing " + v.getTypeName());
+        throw new TypeError("operand " + operand + " must be array of strings but got array containing " + v.getTypeName());
       }
     }
     return bases;

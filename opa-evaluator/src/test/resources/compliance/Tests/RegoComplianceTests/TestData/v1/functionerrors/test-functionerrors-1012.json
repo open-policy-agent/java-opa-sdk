@@ -7,7 +7,7 @@
 				"package test1\n\np(a) := y if {\n\ty = a[_]\n}\n\nr := y if {\n\tdata.test1.p([1, 2, 3], y)\n}\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.test1.p produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],
@@ -523,7 +523,7 @@
 				"package test\n\nf(_) := true\n\nf(_) := false\n\nr if {\n\tdata.test.f(1)\n}\n"
 			],
 			"want_error_code": "eval_conflict_error",
-			"want_error": "functions must not produce multiple outputs for same inputs",
+			"want_error": "function data.test.f produced conflicting values for the same inputs",
 			"entrypoints": [
 				"eval"
 			],
