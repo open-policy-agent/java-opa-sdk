@@ -5,6 +5,7 @@ import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -265,7 +266,7 @@ public class CryptoBuiltins implements BuiltinProvider {
     try {
       MessageDigest digest = MessageDigest.getInstance(algorithm);
       byte[] hashBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-      return bytesToHex(hashBytes);
+      return HexFormat.of().formatHex(hashBytes);
     } catch (NoSuchAlgorithmException e) {
       throw new BuiltinError("Hash algorithm not available: " + algorithm);
     }
@@ -288,25 +289,11 @@ public class CryptoBuiltins implements BuiltinProvider {
       SecretKeySpec secretKey = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), algorithm);
       mac.init(secretKey);
       byte[] hmacBytes = mac.doFinal(message.getBytes(StandardCharsets.UTF_8));
-      return bytesToHex(hmacBytes);
+      return HexFormat.of().formatHex(hmacBytes);
     } catch (NoSuchAlgorithmException e) {
       throw new BuiltinError("HMAC algorithm not available: " + algorithm);
     } catch (InvalidKeyException e) {
       throw new BuiltinError("Invalid key for HMAC: " + e.getMessage());
     }
-  }
-
-  /**
-   * Convert a byte array to a lowercase hex string.
-   *
-   * @param bytes the byte array to convert
-   * @return lowercase hex-encoded string
-   */
-  private String bytesToHex(byte[] bytes) {
-    StringBuilder hex = new StringBuilder();
-    for (byte b : bytes) {
-      hex.append(String.format("%02x", b));
-    }
-    return hex.toString();
   }
 }
