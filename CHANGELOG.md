@@ -57,6 +57,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `crypto.md5`, `crypto.sha1`, `crypto.sha256` and `crypto.hmac.*` builtins, `uuid.parse` and
   `providers.aws.sign_req`. In a microbenchmark `hex.encode` of 10,000 characters went from about
   1.5 ms to 5 µs and a short `crypto.sha256` from about 5.4 µs to 0.19 µs ([#294](https://github.com/open-policy-agent/java-opa-sdk/pull/294)) authored by @kroekle
+- Unpaired surrogates in strings and object keys converted from Java objects, `yaml.unmarshal` and JSON string values now become U+FFFD as OPA does. JSON text with a lone high surrogate followed by a non-escape character is still rejected by the parser ([#290](https://github.com/open-policy-agent/java-opa-sdk/pull/290)) authored by @kroekle
 
 ## 0.7.0
 

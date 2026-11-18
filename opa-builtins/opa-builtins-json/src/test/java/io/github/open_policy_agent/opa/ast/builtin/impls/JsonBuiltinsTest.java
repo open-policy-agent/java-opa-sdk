@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.open_policy_agent.opa.ast.types.RegoBoolean;
+import io.github.open_policy_agent.opa.ast.types.RegoObject;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import io.github.open_policy_agent.opa.rego.EvaluationContext;
 import org.junit.jupiter.api.Test;
 
 class JsonBuiltinsTest {
@@ -48,5 +50,26 @@ class JsonBuiltinsTest {
   void isValidReturnsTrueForValidJson() {
     assertEquals(RegoBoolean.TRUE, builtins.is_valid(null, new RegoValue[] {new RegoString("{\"a\": 1}")}));
     assertEquals(RegoBoolean.TRUE, builtins.is_valid(null, new RegoValue[] {new RegoString("null")}));
+  }
+
+  @Test
+  void unmarshalGivesAnUnpairedSurrogateTheReplacementCharacterLikeOpa() {
+    final RegoValue json = new RegoString("{\"k\": \"v\\ude00\", \"pair\": \"x\\ud83d\\ude00y\"}");
+
+    final RegoObject result =
+        (RegoObject) builtins.unmarshal(new EvaluationContext.Builder().build(), new RegoValue[] {json});
+
+    assertEquals("v\uFFFD", ((RegoString) result.getProperty("k")).getValue());
+    assertEquals("x\uD83D\uDE00y", ((RegoString) result.getProperty("pair")).getValue());
+  }
+
+  @Test
+  void yamlUnmarshalGivesAnUnpairedSurrogateTheReplacementCharacterInKeysAndValues() {
+    final RegoValue yaml = new RegoString("\"k\\uD83Dz\": \"v\\uDE00\"");
+
+    final RegoObject result =
+        (RegoObject) builtins.yamlUnmarshal(new EvaluationContext.Builder().build(), new RegoValue[] {yaml});
+
+    assertEquals("v\uFFFD", ((RegoString) result.getProperty("k\uFFFDz")).getValue());
   }
 }

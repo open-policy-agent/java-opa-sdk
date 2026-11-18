@@ -257,4 +257,18 @@ class RegoValueModuleTest {
     assertThat(((RegoArray) obj.getProperty(new RegoString("b"))).getValues())
         .containsExactly(new RegoString("x"), new RegoString("y"));
   }
+
+  @Test
+  void deserializeRegoObjectReplacesUnpairedSurrogate() {
+    final RegoObject obj =
+        mapper.readValue(
+            "{\"k\": \"v\\ude00\", \"pair\": \"x\\ud83d\\ude00y\", \"nested\": {\"a\": [\"\\ud83d\"]}}",
+            RegoObject.class);
+
+    assertThat(((RegoString) obj.getProperty("k")).getValue()).isEqualTo("v\uFFFD");
+    assertThat(((RegoString) obj.getProperty("pair")).getValue()).isEqualTo("x\uD83D\uDE00y");
+    final RegoObject nested = (RegoObject) obj.getProperty("nested");
+    assertThat(((RegoArray) nested.getProperty("a")).getValues())
+        .containsExactly(new RegoString("\uFFFD"));
+  }
 }

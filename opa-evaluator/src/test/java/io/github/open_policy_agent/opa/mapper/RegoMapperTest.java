@@ -28,9 +28,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class RegoMapperTest {
 
@@ -1626,5 +1630,47 @@ class RegoMapperTest {
           .hasMessageContaining(Validated.class.getName())
           .hasRootCauseMessage("age must be >= 0");
     }
+  }
+
+  // A Go string cannot hold an unpaired surrogate, so OPA turns each one in decoded input into
+  // U+FFFD, in values and in object keys (checked with opa eval 1.21.1). A surrogate pair stays.
+  static Stream<Arguments> surrogateCases() {
+    return Stream.of(
+        Arguments.of("a\uD83Dz", "a\uFFFDz"),
+        Arguments.of("b\uDE00c", "b\uFFFDc"),
+        Arguments.of("x\uD83D\uDE00y", "x\uD83D\uDE00y"),
+        Arguments.of("end\uD83D", "end\uFFFD"),
+        Arguments.of("\uDE00\uD83D", "\uFFFD\uFFFD"),
+        Arguments.of("\uD83D\uD83D\uDE00", "\uFFFD\uD83D\uDE00"),
+        Arguments.of("plain", "plain"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("surrogateCases")
+  void toRegoValueReplacesUnpairedSurrogateInString(String input, String expected) {
+    final RegoValue value = mapper.toRegoValue(input);
+
+    assertThat(((RegoString) value).getValue()).isEqualTo(expected);
+  }
+
+  @ParameterizedTest
+  @MethodSource("surrogateCases")
+  void toRegoValueReplacesUnpairedSurrogateInKey(String input, String expected) {
+    final RegoObject object = (RegoObject) mapper.toRegoValue(Map.of(input, 1));
+
+    assertThat(object.getProperties()).hasSize(1);
+    assertThat(((RegoString) object.getProperties().keySet().iterator().next()).getValue()).isEqualTo(expected);
+  }
+
+  @Test
+  void toRegoValueKeysThatCollideAfterReplacementKeepTheLast() {
+    final Map<String, Integer> map = new java.util.LinkedHashMap<>();
+    map.put("k\uD83D", 1);
+    map.put("k\uDE00", 2);
+
+    final RegoObject object = (RegoObject) mapper.toRegoValue(map);
+
+    assertThat(object.getProperties()).hasSize(1);
+    assertThat(object.getProperty("k\uFFFD")).isEqualTo(RegoInt32.of(2));
   }
 }
