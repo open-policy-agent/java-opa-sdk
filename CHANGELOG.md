@@ -46,6 +46,13 @@ project adheres to [Semantic Versioning](http://semver.org/).
   plane. `upper` and `lower` map one code point at a time, so `upper("ß")` stays `ß` as in OPA.
   `trim`, `trim_left` and `trim_right` treat the cutset as code points, so an emoji in it no longer
   strips half of a different emoji, and the precision of `sprintf("%.2x", ...)` counts bytes ([#289](https://github.com/open-policy-agent/java-opa-sdk/pull/289)) authored by @kroekle
+- Add a per-evaluation rule result cache: a rule whose only parameters are input and data runs once
+  per evaluation and its result is reused, so a rule referenced from a loop is no longer evaluated
+  again for every iteration. It is on by default, ignores values set with `with`, is skipped while
+  a tracer, profiler or statement profiler is attached, and is turned off with
+  `withoutRuleResultCache()` on `EvaluationContext.Builder` or `PreparedQuery.Builder`, or
+  `setRuleResultCache(false)` on `Opa.DecisionOptions`. A side effect in a cached rule body, such
+  as `print()`, now happens once per evaluation ([#299](https://github.com/open-policy-agent/java-opa-sdk/pull/299)) authored by @kroekle
 
 ## 0.7.0
 

@@ -106,6 +106,32 @@ class OpaDecisionLogMaskTest {
     }
   }
 
+  @Test
+  void makeDecisionWithTheRuleResultCacheOffReturnsTheSameDecision() throws Exception {
+    writeBundle("authz.tar.gz", "/mask/plan-authz.json", "[\"authz\"]");
+    writeBundle("mask.tar.gz", "/mask/plan.json", "[\"system\", \"test\"]");
+
+    final Opa opa =
+        new Opa.Builder()
+            .withConfig(config())
+            .withDefaultEntrypoint("authz/allow")
+            .withLogger(new Logger.StandardLogger())
+            .build();
+
+    try {
+      final Opa.DecisionOptions options =
+          new Opa.DecisionOptions().setInput(MAPPER.createObjectNode().put("user", "alice"));
+      assertTrue(options.isRuleResultCache());
+
+      options.setRuleResultCache(false);
+
+      assertFalse(options.isRuleResultCache());
+      assertTrue(opa.makeDecision(options).getResult().asBoolean());
+    } finally {
+      opa.close();
+    }
+  }
+
   private Config config() {
     Config config = new Config();
     config.setServices(

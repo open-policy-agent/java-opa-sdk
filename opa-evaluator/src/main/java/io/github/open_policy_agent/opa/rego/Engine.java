@@ -529,6 +529,7 @@ public class Engine {
       private boolean printHookSet;
       private RegoValue runtime;
       private boolean runtimeSet;
+      private boolean ruleResultCache = true;
       private boolean strictBuiltinErrors;
 
       private Builder withEngine(Engine engine) {
@@ -604,6 +605,18 @@ public class Engine {
       }
 
       /**
+       * Turns off the rule result cache for this query; it is on by default. See {@link
+       * EvaluationContext.Builder#withoutRuleResultCache()} for what it caches and when it is
+       * bypassed.
+       *
+       * @return this builder
+       */
+      public Builder withoutRuleResultCache() {
+        this.ruleResultCache = false;
+        return this;
+      }
+
+      /**
        * Override the default entrypoint for this evaluation. This allows evaluating different
        * entrypoints using the same Engine instance.
        *
@@ -671,6 +684,9 @@ public class Engine {
         }
         if (strictBuiltinErrors) {
           contextBuilder.withStrictBuiltinErrors();
+        }
+        if (!ruleResultCache) {
+          contextBuilder.withoutRuleResultCache();
         }
 
         // Warm up the plan by pre-computing expensive values

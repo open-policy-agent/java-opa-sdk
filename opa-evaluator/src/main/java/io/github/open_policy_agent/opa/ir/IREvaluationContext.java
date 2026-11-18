@@ -2,8 +2,10 @@ package io.github.open_policy_agent.opa.ir;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
+import io.github.open_policy_agent.opa.ast.types.RegoValue;
 import io.github.open_policy_agent.opa.ir.policy.Func;
 import io.github.open_policy_agent.opa.rego.EvaluationContext;
 
@@ -12,6 +14,9 @@ public class IREvaluationContext extends EvaluationContext {
   Map<String, Func> functionsByPath;
   ArrayList<String> staticStrings;
   NumberConstants numberConstants;
+  private RegoValue rootInput;
+  private RegoValue rootData;
+  private Map<Func, RegoValue> ruleResults;
 
   // private constructor to enforce the use of the Builder
   private IREvaluationContext(Builder builder) {
@@ -23,6 +28,39 @@ public class IREvaluationContext extends EvaluationContext {
         builder.numberConstants != null
             ? builder.numberConstants
             : new NumberConstants(builder.staticStrings.size());
+  }
+
+  /** The input and data this evaluation started with; only calls on exactly these are cached. */
+  void setRoots(RegoValue input, RegoValue data) {
+    this.rootInput = input;
+    this.rootData = data;
+  }
+
+  boolean cachesRuleResults() {
+    return ruleResultCacheActive();
+  }
+
+  // Identity, not equality: a copy of the input made by `with` must not count as the evaluation's own.
+  // Data is never null in a real evaluation, so unset roots never match.
+  @SuppressWarnings("PMD.CompareObjectsWithEquals")
+  boolean isRootCall(RegoValue input, RegoValue data) {
+    return rootData != null && input == rootInput && data == rootData;
+  }
+
+  boolean hasCachedRuleResult(Func func) {
+    return ruleResults != null && ruleResults.containsKey(func);
+  }
+
+  /** The cached result of a rule, {@code null} when it was undefined or is not cached yet. */
+  RegoValue cachedRuleResult(Func func) {
+    return ruleResults == null ? null : ruleResults.get(func);
+  }
+
+  void cacheRuleResult(Func func, RegoValue result) {
+    if (ruleResults == null) {
+      ruleResults = new IdentityHashMap<>();
+    }
+    ruleResults.put(func, result);
   }
 
   public static class Builder {

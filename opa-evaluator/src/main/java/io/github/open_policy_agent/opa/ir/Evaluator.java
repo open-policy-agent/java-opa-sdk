@@ -114,6 +114,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
     frame.setLocal(0, input);
     frame.setLocal(1, data);
     frame.markDataDerived(1);
+    irCtx.setRoots(input, data);
 
     int blockIndex = 0;
     for (Block block : plan.getBlocks()) {
@@ -164,6 +165,7 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
     frame.setLocal(0, input);
     frame.setLocal(1, data);
     frame.markDataDerived(1);
+    irCtx.setRoots(input, data);
 
     // Use pre-looked-up plan
     int blockIndex = 0;
@@ -896,14 +898,30 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
 
   private boolean invokeFunction(
       Func func, RegoValue[] frameLocals, int result, IREvaluationContext ctx, Frame frame) {
+    final List<Integer> params = func.getParams();
+    final boolean cacheable =
+        params != null
+            && params.size() == 2
+            && ctx.cachesRuleResults()
+            && ctx.isRootCall(frameLocals[params.get(0)], frameLocals[params.get(1)]);
+    if (cacheable) {
+      final RegoValue cached = ctx.cachedRuleResult(func);
+      if (cached != null) {
+        frame.setLocal(result, cached);
+        return true;
+      }
+      if (ctx.hasCachedRuleResult(func)) {
+        return false;
+      }
+    }
     Frame newFrame = frame.subFrame(frameLocals);
-    boolean isUserFunction = func.getParams() != null && func.getParams().size() > 2;
+    final boolean isUserFunction = params != null && params.size() > 2;
     newFrame.setUserFunction(isUserFunction);
     newFrame.setFuncName(func.getName());
     // Mark the data parameter (index 1 in params list) as data-derived in the new frame.
     // By OPA IR convention, params[0] = input and params[1] = data.
-    if (func.getParams() != null && func.getParams().size() >= 2) {
-      newFrame.markDataDerived(func.getParams().get(1));
+    if (params != null && params.size() >= 2) {
+      newFrame.markDataDerived(params.get(1));
     }
     for (Block cBlock : func.getBlocks()) {
       evaluateBlock(cBlock, 0, newFrame, ctx);
@@ -912,6 +930,9 @@ public class Evaluator implements io.github.open_policy_agent.opa.rego.Evaluator
         newFrame.decrementBreakTarget();
         break;
       }
+    }
+    if (cacheable) {
+      ctx.cacheRuleResult(func, newFrame.getResult());
     }
     if (newFrame.getResult() == null) {
       return false;
