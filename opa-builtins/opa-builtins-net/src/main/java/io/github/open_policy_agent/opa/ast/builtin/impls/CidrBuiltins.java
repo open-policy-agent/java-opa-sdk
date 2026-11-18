@@ -71,6 +71,11 @@ public class CidrBuiltins implements BuiltinProvider {
     return addrStr.toAddress();
   }
 
+  /** Parse a CIDR to its network, so host bits are ignored as in Go's net.ParseCIDR. */
+  private IPAddress parseNetwork(String str, String builtinName) throws AddressStringException {
+    return parseCidr(str, builtinName).toPrefixBlock();
+  }
+
   /** Parse an IP address or CIDR, throwing a BuiltinError with the builtin name on failure. */
   private IPAddress parseAddressOrThrow(String str, String builtinName)
       throws AddressStringException {
@@ -105,7 +110,7 @@ public class CidrBuiltins implements BuiltinProvider {
       String cidrOrIpStr = getArg(args, 1, RegoString.class).getValue();
 
       // Parse the first CIDR
-      IPAddress cidrAddr = parseCidr(cidrStr, builtinName).toPrefixBlock();
+      IPAddress cidrAddr = parseNetwork(cidrStr, builtinName);
 
       // Try parsing as a plain IP first (no CIDR notation)
       // In Go, net.ParseIP only accepts plain IPs without /prefix
@@ -148,8 +153,8 @@ public class CidrBuiltins implements BuiltinProvider {
       String cidr1Str = getArg(args, 0, RegoString.class).getValue();
       String cidr2Str = getArg(args, 1, RegoString.class).getValue();
 
-      IPAddress addr1 = parseCidr(cidr1Str, "net.cidr_intersects");
-      IPAddress addr2 = parseCidr(cidr2Str, "net.cidr_intersects");
+      IPAddress addr1 = parseNetwork(cidr1Str, "net.cidr_intersects");
+      IPAddress addr2 = parseNetwork(cidr2Str, "net.cidr_intersects");
 
       // Two CIDRs intersect if either contains the other's starting IP
       boolean intersects = addr1.contains(addr2.getLower()) || addr2.contains(addr1.getLower());
