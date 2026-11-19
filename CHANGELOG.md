@@ -3,7 +3,13 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
-## Unreleased
+## 0.8.0
+
+This release adds the `crypto.x509.parse_certificates` and
+`crypto.x509.parse_and_verify_certificates` builtins, bringing the builtin surface to 160. It
+also brings many builtins closer to OPA (value ordering, integer arguments, strings in code
+points, time, `net.cidr_*`), adds a manual bundle trigger mode and a per-evaluation rule result
+cache, and speeds up several hot paths.
 
 ### Runtime, SDK, Tooling
 
@@ -11,7 +17,7 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `crypto.x509.parse_and_verify_certificates` builtins in `opa-builtins-crypto`,
   following Go's `crypto/x509` as OPA does. Chains whose signatures use NIST
   P-224 or ML-DSA, which Java 17 does not provide, are reported as not verified
-  ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129))
+  ([#129](https://github.com/open-policy-agent/java-opa-sdk/issues/129)) authored by @nikhilred2619
 - `time.parse_ns` and `time.parse_rfc3339_ns` now return the exact int64 nanoseconds instead of a
   value rounded through a double, and accept 1 to 9 fractional digits as OPA does ([#280](https://github.com/open-policy-agent/java-opa-sdk/pull/280)) authored by @kroekle
 - `abs`, `round`, `ceil` and `floor` now return integers beyond the `long` range, `abs` no longer
@@ -33,7 +39,6 @@ project adheres to [Semantic Versioning](http://semver.org/).
   `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
 - `object.union_n` now merges into one result object instead of copying it for every element, so
   its cost grows linearly with the number of objects instead of quadratically ([#286](https://github.com/open-policy-agent/java-opa-sdk/pull/286)) authored by @kroekle
-  `Opa.makeDecision` no longer builds a registry per decision and custom builtins apply
 - Report the `timer_bundle_request_ns` and `timer_rego_load_bundles_ns` timers in the `metrics` of
   each bundle in status reports, as OPA does. They describe the latest poll only ([#285](https://github.com/open-policy-agent/java-opa-sdk/pull/285)) authored by @kroekle
 - Number constants in a plan are parsed once and shared by every evaluation, and parsing a number
@@ -59,6 +64,19 @@ project adheres to [Semantic Versioning](http://semver.org/).
   1.5 ms to 5 µs and a short `crypto.sha256` from about 5.4 µs to 0.19 µs ([#294](https://github.com/open-policy-agent/java-opa-sdk/pull/294)) authored by @kroekle
 - Unpaired surrogates in strings and object keys converted from Java objects, `yaml.unmarshal` and JSON string values now become U+FFFD as OPA does. JSON text with a lone high surrogate followed by a non-escape character is still rejected by the parser ([#290](https://github.com/open-policy-agent/java-opa-sdk/pull/290)) authored by @kroekle
 - `net.cidr_intersects` now compares the networks of CIDRs written with host bits set (`10.1.2.3/8` and `10.9.9.9/8` intersect), as OPA does ([#292](https://github.com/open-policy-agent/java-opa-sdk/pull/292)) authored by @kroekle
+- Add a per-bundle `trigger` option to the bundle plugin, `periodic` by default or `manual` as in OPA. In manual mode nothing is fetched at start and bundles refresh on demand through `BundleDownloader.refresh()`; the initial activation, and so the bundles plugin status, completes on the first successful refresh. Configuring polling alongside a manual trigger, or an unknown trigger, fails validation ([#274](https://github.com/open-policy-agent/java-opa-sdk/pull/274)) authored by @sspaink
+- Values of different types are now ordered as in Rego (null < boolean < number < string < array < object < set) instead of by type name, which changes `[] >= 0`, `sort`, `max`, `min` and the comparison operators on mixed types ([#273](https://github.com/open-policy-agent/java-opa-sdk/pull/273)) authored by @srenatus
+- `substring`, `array.slice`, `format_int`, `regex.find_n` and `regex.find_all_string_submatch_n` now accept computed integers (`1 + 1`) as integer arguments instead of being undefined ([#271](https://github.com/open-policy-agent/java-opa-sdk/pull/271)) authored by @srenatus
+- Match OPA on empty and malformed inputs: `max([])` and `min([])` are undefined, `indexof` and `indexof_n` with an empty needle are errors, and `json.is_valid("")` and `base64.is_valid` of malformed input are `false` ([#272](https://github.com/open-policy-agent/java-opa-sdk/pull/272)) authored by @srenatus
+- `time.date`, `time.clock`, `time.weekday` and `time.diff` now accept small integer timestamps such as `0` ([#270](https://github.com/open-policy-agent/java-opa-sdk/pull/270)) authored by @srenatus
+- `member_2` (`x in xs`) uses hash lookups for sets and specialised loops for arrays and objects instead of streams, and `RegoSet` is now `Iterable` ([#268](https://github.com/open-policy-agent/java-opa-sdk/pull/268)) authored by @philipaconrad
+
+### Miscellaneous
+
+- Bump OPA to v1.22.4 in the compliance-test generator and regenerate the fixtures ([#297](https://github.com/open-policy-agent/java-opa-sdk/pull/297))
+- Downgrade protobuf-java from 4.36.2 to 4.35.1 ([#298](https://github.com/open-policy-agent/java-opa-sdk/pull/298)) authored by @kroekle
+- Allow underscores in test method names in Checkstyle ([#275](https://github.com/open-policy-agent/java-opa-sdk/pull/275))
+- Other dependency updates by @dependabot
 
 ## 0.7.0
 
