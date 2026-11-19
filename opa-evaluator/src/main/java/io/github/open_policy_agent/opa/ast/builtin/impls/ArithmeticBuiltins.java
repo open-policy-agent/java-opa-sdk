@@ -314,7 +314,8 @@ public class ArithmeticBuiltins {
     RegoNumber x = getArg(args, 0, RegoNumber.class);
     RegoNumber y = getArg(args, 1, RegoNumber.class);
 
-    if (y.getBigIntValue().equals(BigInteger.ZERO)) {
+    // getBigIntValue() truncates decimals, so check the divisor to make sure it is a non-zero value.
+    if (y.isDecimal() ? y.getDecimalValue() == 0.0 : y.getBigIntValue().signum() == 0) {
       throw new BuiltinError("div: divide by zero");
     }
 
