@@ -197,15 +197,31 @@ public class ArithmeticBuiltins {
     RegoNumber x = getArg(args, 0, RegoNumber.class);
     RegoNumber y = getArg(args, 1, RegoNumber.class);
 
-    if (y.getBigIntValue().equals(BigInteger.ZERO)) {
-      throw new BuiltinError("modulo by zero");
-    }
-
-    if (x.isDecimal() || y.isDecimal()) {
+    // OPA rejects non-integers before checking for zero.
+    BigInteger a = exactInteger(x);
+    BigInteger b = exactInteger(y);
+    if (a == null || b == null) {
       throw new BuiltinError("modulo on floating-point number");
     }
 
-    return new RegoBigInt((x.getBigIntValue().divideAndRemainder(y.getBigIntValue()))[1]);
+    if (b.signum() == 0) {
+      throw new BuiltinError("modulo by zero");
+    }
+
+    return new RegoBigInt(a.remainder(b));
+  }
+
+  // Like OPA's NumberToInt, whole-valued decimals convert exactly. Returns null for anything else.
+  @SuppressWarnings("PMD.AvoidDecimalLiteralsInBigDecimalConstructor")
+  private static BigInteger exactInteger(RegoNumber n) {
+    if (!n.isDecimal()) {
+      return n.getBigIntValue();
+    }
+    final double d = n.getDecimalValue();
+    if (!Double.isFinite(d) || d != Math.rint(d)) {
+      return null;
+    }
+    return new BigDecimal(d).toBigInteger();
   }
 
   @OpaBuiltin(
