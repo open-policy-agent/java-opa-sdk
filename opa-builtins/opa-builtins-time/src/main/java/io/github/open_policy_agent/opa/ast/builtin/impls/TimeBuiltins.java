@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
@@ -391,18 +392,68 @@ public class TimeBuiltins implements BuiltinProvider {
         return parseNsFormat(goLayout, value);
     }
 
-    private RegoBigInt parseNsFormat(String goLayout, String value) {
-        final boolean fixedFraction = FIXED_FRACTION.matcher(goLayout).find();
-        String[] javaPattern = GoTimeLayoutConverter.convert(goLayout);
-        TemporalAccessor parsed = null;
-        for (String basePattern : javaPattern) {
-            final String pattern =
-                fixedFraction ? basePattern : FRACTION.matcher(basePattern).replaceAll(ANY_FRACTION);
-            try {
+    private static final int MAX_CACHED_LAYOUTS = 256;
+    private static final Map<String, ParseLayout> PARSE_LAYOUTS = new ConcurrentHashMap<>();
+
+    /** The patterns a Go layout converts to, with their formatters built when first needed. */
+    private static final class ParseLayout {
+        private final String[] patterns;
+        private final DateTimeFormatter[] formatters;
+
+        ParseLayout(String goLayout) {
+            final boolean fixedFraction = FIXED_FRACTION.matcher(goLayout).find();
+            final String[] base = GoTimeLayoutConverter.convert(goLayout);
+            this.patterns = new String[base.length];
+            for (int i = 0; i < base.length; i++) {
+                patterns[i] = fixedFraction ? base[i] : FRACTION.matcher(base[i]).replaceAll(ANY_FRACTION);
+            }
+            this.formatters = new DateTimeFormatter[base.length];
+        }
+
+        int size() {
+            return patterns.length;
+        }
+
+        DateTimeFormatter formatter(int index) {
+            DateTimeFormatter formatter = formatters[index];
+            if (formatter == null) {
                 // Go's layouts use fixed English month/day/AM-PM names regardless of the
                 // JVM's default locale, so pin the formatter locale rather than inheriting it.
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern, Locale.ENGLISH);
-                parsed = formatter.parse(value);
+                formatter = DateTimeFormatter.ofPattern(patterns[index], Locale.ENGLISH);
+                formatters[index] = formatter;
+            }
+            return formatter;
+        }
+    }
+
+    private static ParseLayout parseLayout(String goLayout) {
+        ParseLayout layout = PARSE_LAYOUTS.get(goLayout);
+        if (layout == null) {
+            layout = new ParseLayout(goLayout);
+            if (PARSE_LAYOUTS.size() < MAX_CACHED_LAYOUTS) {
+                PARSE_LAYOUTS.putIfAbsent(goLayout, layout);
+            }
+        }
+        return layout;
+    }
+
+    private RegoBigInt parseNsFormat(String goLayout, String value) {
+        if ("RFC3339Nano".equals(goLayout) || "RFC3339".equals(goLayout)) {
+            final Long epochNanos = Rfc3339.epochNanos(value);
+            if (epochNanos != null) {
+                return new RegoBigInt(epochNanos);
+            }
+        }
+        return parseNsWithFormatter(goLayout, value);
+    }
+
+    /** Parses with the layout's formatters; the reference any faster path has to agree with. */
+    RegoBigInt parseNsWithFormatter(String goLayout, String value) {
+        final ParseLayout layout = parseLayout(goLayout);
+        TemporalAccessor parsed = null;
+        for (int i = 0; i < layout.size(); i++) {
+            try {
+                parsed = layout.formatter(i).parse(value);
                 break;
             } catch (DateTimeParseException ignored) {
             }

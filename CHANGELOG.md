@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Runtime, SDK, Tooling
+
+- `time.parse_ns` and `time.parse_rfc3339_ns` keep the converted layout and its formatters for reuse
+  instead of rebuilding them on every call, which makes `time.parse_ns` with a plain layout about 6
+  times faster in a microbenchmark. The usual RFC3339 shape (`2024-03-05T10:20:30.123Z`) is read
+  directly, with any other input left to the formatter, which makes `time.parse_rfc3339_ns` about 14
+  times faster ([#304](https://github.com/open-policy-agent/java-opa-sdk/pull/304)) authored by @kroekle
+
 ## 0.8.0
 
 This release adds the `crypto.x509.parse_certificates` and
