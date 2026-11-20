@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Miscellaneous
+
+- Downgrade Jackson from 3.3.0 to 3.1.8 ([#303](https://github.com/open-policy-agent/java-opa-sdk/pull/303)) authored by @kroekle
+
 ## 0.8.0
 
 This release adds the `crypto.x509.parse_certificates` and
