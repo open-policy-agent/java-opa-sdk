@@ -15,6 +15,7 @@ dependencies {
     api(project(":opa-builtins:opa-builtins-crypto"))
     api(project(":opa-builtins:opa-builtins-json"))
     api(project(":opa-builtins:opa-builtins-providers-aws"))
+    api(project(":opa-builtins:opa-builtins-http"))
 }
 
 java {

@@ -680,6 +680,39 @@
       }
     }
   }, {
+    "name" : "http.send",
+    "description" : "Returns a HTTP response to the given HTTP request.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "object",
+        "name" : "request",
+        "description" : "the HTTP request object",
+        "dynamic" : {
+          "key" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      } ],
+      "result" : {
+        "type" : "object",
+        "name" : "response",
+        "description" : "the HTTP response object",
+        "dynamic" : {
+          "key" : {
+            "type" : "any"
+          },
+          "value" : {
+            "type" : "any"
+          }
+        }
+      }
+    },
+    "nondeterministic" : true
+  }, {
     "name" : "indexof",
     "description" : "Returns the index of a substring contained inside a string.",
     "categories" : [ "strings" ],
