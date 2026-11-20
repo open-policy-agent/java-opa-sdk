@@ -8,6 +8,11 @@ import io.github.open_policy_agent.opa.ast.builtin.BuiltinError;
 import io.github.open_policy_agent.opa.ast.types.RegoNumber;
 import io.github.open_policy_agent.opa.ast.types.RegoString;
 import io.github.open_policy_agent.opa.ast.types.RegoValue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -103,6 +108,79 @@ class TimeParseNsTest {
         builtins.parseRFC3339Ns(null, new RegoValue[] {new RegoString("2024-01-01T00:00:00.000000001Z")});
 
     assertFalse(((RegoNumber) result).isDecimal());
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "RFC3339Nano|2024-06-01T12:00:00.123456789Z|1717243200123456789",
+        "2006-01-02|2024-01-01|1704067200000000000",
+        "2006-01-02 15:04:05.999999999 -0700|2024-03-04 05:06:07.123456789 +0900|1709496367123456789"
+      })
+  void aRepeatedLayoutGivesTheSameAnswerEveryTime(String layout, String value, String expected) {
+    for (int i = 0; i < 3; i++) {
+      assertEquals(
+          expected,
+          exact(builtins.parseNs(null, new RegoValue[] {new RegoString(layout), new RegoString(value)})));
+    }
+  }
+
+  @Test
+  void aLayoutThatDoesNotFitTheValueIsAnErrorEveryTime() {
+    final RegoValue[] args = {new RegoString("2006-01-02"), new RegoString("not a date")};
+
+    assertThrows(BuiltinError.class, () -> builtins.parseNs(null, args));
+    assertThrows(BuiltinError.class, () -> builtins.parseNs(null, args));
+  }
+
+  @Test
+  void manyDifferentLayoutsStillParse() {
+    for (int i = 0; i < 600; i++) {
+      final String separator = String.valueOf((char) (0x2190 + i % 300));
+      final String layout = "2006" + separator + "01" + separator + "02" + " " + "15" + (i % 2 == 0 ? ":04:05" : ":04");
+      final String value = "2024" + separator + "03" + separator + "04 05" + (i % 2 == 0 ? ":06:07" : ":06");
+      final String expected = i % 2 == 0 ? "1709528767000000000" : "1709528760000000000";
+
+      assertEquals(
+          expected,
+          exact(builtins.parseNs(null, new RegoValue[] {new RegoString(layout), new RegoString(value)})),
+          layout);
+    }
+  }
+
+  @Test
+  void concurrentParsesGiveTheSameAnswers() throws Exception {
+    final String[][] cases = {
+      {"RFC3339Nano", "2024-06-01T12:00:00.123456789Z", "1717243200123456789"},
+      {"2006-01-02", "2024-01-01", "1704067200000000000"},
+      {"2006-01-02T15:04:05Z07:00", "2024-03-04T05:06:07+09:00", "1709496367000000000"},
+      {"RFC3339", "2024-01-01T00:00:00.5Z", "1704067200500000000"}
+    };
+    final ExecutorService pool = Executors.newFixedThreadPool(8);
+    try {
+      final List<Future<String>> futures = new ArrayList<>();
+      for (int t = 0; t < 8; t++) {
+        futures.add(
+            pool.submit(
+                () -> {
+                  for (int i = 0; i < 2000; i++) {
+                    final String[] c = cases[i % cases.length];
+                    final String got =
+                        exact(builtins.parseNs(null, new RegoValue[] {new RegoString(c[0]), new RegoString(c[1])}));
+                    if (!c[2].equals(got)) {
+                      return c[0] + " " + c[1] + " gave " + got;
+                    }
+                  }
+                  return "";
+                }));
+      }
+      for (Future<String> future : futures) {
+        assertEquals("", future.get());
+      }
+    } finally {
+      pool.shutdownNow();
+    }
   }
 
   private static String exact(RegoValue result) {
