@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file. This
 project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+
+### Runtime, SDK, Tooling
+
+- The evaluator no longer reads the clock and calls the tracer and profiler hooks for every
+  statement when no tracer, profiler or statement profiler is attached, which makes evaluation
+  noticeably faster on loop-heavy policies. What an attached hook receives is unchanged ([#302](https://github.com/open-policy-agent/java-opa-sdk/pull/302)) authored by @kroekle
+
 ## 0.8.0
 
 This release adds the `crypto.x509.parse_certificates` and
@@ -70,6 +78,7 @@ cache, and speeds up several hot paths.
 - Match OPA on empty and malformed inputs: `max([])` and `min([])` are undefined, `indexof` and `indexof_n` with an empty needle are errors, and `json.is_valid("")` and `base64.is_valid` of malformed input are `false` ([#272](https://github.com/open-policy-agent/java-opa-sdk/pull/272)) authored by @srenatus
 - `time.date`, `time.clock`, `time.weekday` and `time.diff` now accept small integer timestamps such as `0` ([#270](https://github.com/open-policy-agent/java-opa-sdk/pull/270)) authored by @srenatus
 - `member_2` (`x in xs`) uses hash lookups for sets and specialised loops for arrays and objects instead of streams, and `RegoSet` is now `Iterable` ([#268](https://github.com/open-policy-agent/java-opa-sdk/pull/268)) authored by @philipaconrad
+
 
 ### Miscellaneous
 

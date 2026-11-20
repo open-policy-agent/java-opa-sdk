@@ -63,6 +63,10 @@ public class IREvaluationContext extends EvaluationContext {
     ruleResults.put(func, result);
   }
 
+  boolean statementHooks() {
+    return hasStatementHooks();
+  }
+
   public static class Builder {
     private EvaluationContext evaluationContext;
     private Map<String, Func> functions = new HashMap<>();
