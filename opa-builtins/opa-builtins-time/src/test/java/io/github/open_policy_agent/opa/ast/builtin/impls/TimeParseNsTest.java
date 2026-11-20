@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -175,11 +176,86 @@ class TimeParseNsTest {
                   return "";
                 }));
       }
-      for (Future<String> future : futures) {
+      for (final Future<String> future : futures) {
         assertEquals("", future.get());
       }
     } finally {
       pool.shutdownNow();
+    }
+  }
+
+  // The direct RFC3339 parser must agree with the formatter on every input: the same value, or the same error.
+  @Test
+  void rfc3339ParsingAgreesWithTheFormatterOnEveryDateAndTime() {
+    final String[] years = {"0000", "0001", "1677", "1969", "1970", "2024", "2262", "9999"};
+    final String[] months = {"00", "01", "02", "12", "13"};
+    final String[] days = {"00", "01", "28", "29", "30", "31", "32"};
+    final String[] hours = {"00", "23", "24", "25"};
+    final String[] minutes = {"00", "59", "60"};
+    final String[] seconds = {"00", "59", "60", "61"};
+    for (final String year : years) {
+      for (final String month : months) {
+        for (final String day : days) {
+          for (final String hour : hours) {
+            for (final String minute : minutes) {
+              for (final String second : seconds) {
+                assertAgrees(year + "-" + month + "-" + day + "T" + hour + ":" + minute + ":" + second + "Z");
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  void rfc3339ParsingAgreesWithTheFormatterOnEveryFractionAndOffset() {
+    final String[] fractions = {"", ".1", ".12", ".123456789", ".1234567890", ".", ".000000000", ",5"};
+    final String[] offsets = {"Z", "+00:00", "-00:00", "+05:30", "-02:00", "+18:00", "+18:01", "-17:59", "+23:59", "+0530", "+05", "z", "", "+5:30", "+05:60"};
+    final String[] bases = {"2024-03-05T10:20:30", "1677-09-21T00:12:43", "2262-04-11T23:47:16", "1970-01-01T00:00:00", "9999-12-31T23:59:59"};
+    for (final String base : bases) {
+      for (final String fraction : fractions) {
+        for (final String offset : offsets) {
+          assertAgrees(base + fraction + offset);
+        }
+      }
+    }
+  }
+
+  @Test
+  void rfc3339ParsingAgreesWithTheFormatterOnMutatedInput() {
+    final String valid = "2024-03-05T10:20:30.123456789+05:30";
+    final String replacements = "0189:-+TtZz. \u0661\u00e9/";
+    for (int i = 0; i <= valid.length(); i++) {
+      if (i < valid.length()) {
+        assertAgrees(valid.substring(0, i) + valid.substring(i + 1));
+      }
+      for (final char c : replacements.toCharArray()) {
+        assertAgrees(valid.substring(0, i) + c + valid.substring(i));
+        if (i < valid.length()) {
+          assertAgrees(valid.substring(0, i) + c + valid.substring(i + 1));
+        }
+      }
+    }
+    for (final String edge : new String[] {"", " ", valid + " ", " " + valid, valid + "Z", valid.substring(0, 19), "2024-03-05", "T10:20:30Z"}) {
+      assertAgrees(edge);
+    }
+  }
+
+  private void assertAgrees(String value) {
+    final String nano = outcome(() -> builtins.parseNsWithFormatter("RFC3339Nano", value));
+    final String plain = outcome(() -> builtins.parseNsWithFormatter("RFC3339", value));
+
+    assertEquals(nano, outcome(() -> builtins.parseRFC3339Ns(null, new RegoValue[] {new RegoString(value)})), value);
+    assertEquals(
+        plain, outcome(() -> builtins.parseNs(null, new RegoValue[] {new RegoString("RFC3339"), new RegoString(value)})), value);
+  }
+
+  private static String outcome(Supplier<RegoValue> call) {
+    try {
+      return exact(call.get());
+    } catch (BuiltinError e) {
+      return "error: " + e.getMessage();
     }
   }
 

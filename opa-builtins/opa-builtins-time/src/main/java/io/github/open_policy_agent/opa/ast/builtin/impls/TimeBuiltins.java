@@ -438,6 +438,17 @@ public class TimeBuiltins implements BuiltinProvider {
     }
 
     private RegoBigInt parseNsFormat(String goLayout, String value) {
+        if ("RFC3339Nano".equals(goLayout) || "RFC3339".equals(goLayout)) {
+            final Long epochNanos = Rfc3339.epochNanos(value);
+            if (epochNanos != null) {
+                return new RegoBigInt(epochNanos);
+            }
+        }
+        return parseNsWithFormatter(goLayout, value);
+    }
+
+    /** Parses with the layout's formatters; the reference any faster path has to agree with. */
+    RegoBigInt parseNsWithFormatter(String goLayout, String value) {
         final ParseLayout layout = parseLayout(goLayout);
         TemporalAccessor parsed = null;
         for (int i = 0; i < layout.size(); i++) {
