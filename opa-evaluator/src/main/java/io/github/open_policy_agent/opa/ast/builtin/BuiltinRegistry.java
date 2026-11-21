@@ -11,6 +11,7 @@ import java.util.stream.StreamSupport;
 import io.github.open_policy_agent.opa.ast.builtin.impls.AggregateBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.ArithmeticBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.ArrayBuiltins;
+import io.github.open_policy_agent.opa.ast.builtin.impls.BitsBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.CastBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.ComparisonBuiltins;
 import io.github.open_policy_agent.opa.ast.builtin.impls.EncodingBuiltins;
@@ -41,6 +42,7 @@ public class BuiltinRegistry {
     AggregateBuiltins.class,
     ArithmeticBuiltins.class,
     ArrayBuiltins.class,
+    BitsBuiltins.class,
     EncodingBuiltins.class,
     GraphBuiltins.class,
     HexBuiltins.class,
