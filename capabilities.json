@@ -157,6 +157,122 @@
       }
     }
   }, {
+    "name" : "bits.and",
+    "description" : "Returns the bitwise \"AND\" of two integers.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the first integer"
+      }, {
+        "type" : "number",
+        "name" : "y",
+        "description" : "the second integer"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the bitwise AND of `x` and `y`"
+      }
+    }
+  }, {
+    "name" : "bits.lsh",
+    "description" : "Returns a new integer with its bits shifted `s` bits to the left.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the integer to shift"
+      }, {
+        "type" : "number",
+        "name" : "s",
+        "description" : "the number of bits to shift"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the result of shifting `x` `s` bits to the left"
+      }
+    }
+  }, {
+    "name" : "bits.negate",
+    "description" : "Returns the bitwise negation (flip) of an integer.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the integer to negate"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the bitwise negation of `x`"
+      }
+    }
+  }, {
+    "name" : "bits.or",
+    "description" : "Returns the bitwise \"OR\" of two integers.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the first integer"
+      }, {
+        "type" : "number",
+        "name" : "y",
+        "description" : "the second integer"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the bitwise OR of `x` and `y`"
+      }
+    }
+  }, {
+    "name" : "bits.rsh",
+    "description" : "Returns a new integer with its bits shifted `s` bits to the right.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the integer to shift"
+      }, {
+        "type" : "number",
+        "name" : "s",
+        "description" : "the number of bits to shift"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the result of shifting `x` `s` bits to the right"
+      }
+    }
+  }, {
+    "name" : "bits.xor",
+    "description" : "Returns the bitwise \"XOR\" (exclusive-or) of two integers.",
+    "decl" : {
+      "type" : "function",
+      "args" : [ {
+        "type" : "number",
+        "name" : "x",
+        "description" : "the first integer"
+      }, {
+        "type" : "number",
+        "name" : "y",
+        "description" : "the second integer"
+      } ],
+      "result" : {
+        "type" : "number",
+        "name" : "z",
+        "description" : "the bitwise XOR of `x` and `y`"
+      }
+    }
+  }, {
     "name" : "ceil",
     "description" : "Rounds a number up to the nearest integer",
     "categories" : [ "numbers" ],

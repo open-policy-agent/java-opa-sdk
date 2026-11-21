@@ -23,13 +23,6 @@
 
 # --- Not implemented anywhere in the SDK -------------------------------------
 
-bits.and
-bits.lsh
-bits.negate
-bits.or
-bits.rsh
-bits.xor
-
 crypto.parse_private_keys
 crypto.x509.parse_certificate_request
 crypto.x509.parse_keypair
