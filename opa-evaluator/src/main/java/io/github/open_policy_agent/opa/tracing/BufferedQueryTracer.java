@@ -17,7 +17,7 @@ public class BufferedQueryTracer implements QueryTracer {
     this.filters = Arrays.stream(filters).collect(Collectors.toList());
   }
 
-  public void TraceEvent(Event event) {
+  public void traceEvent(Event event) {
     if (!filters.isEmpty()) {
       for (Filter f : filters) {
         if (!f.apply(event)) {

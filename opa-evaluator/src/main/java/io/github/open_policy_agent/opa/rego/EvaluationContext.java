@@ -134,7 +134,7 @@ public class EvaluationContext {
   public void traceEnterEvent(Stmt stmt, int blockIndex, int stmtIndex) {
     if (this.tracer != null) {
       String stmtKind = stmt.getClass().getSimpleName();
-      this.tracer.TraceEvent(
+      this.tracer.traceEvent(
           new StatementEvent(Operation.ENTER, stmt, stmtKind, stmt.getLocation(), blockIndex, stmtIndex));
     }
 
@@ -146,7 +146,7 @@ public class EvaluationContext {
   public void traceExitEvent(Stmt stmt, int blockIndex, int stmtIndex, long duration) {
     if (tracer != null) {
       String stmtKind = stmt.getClass().getSimpleName();
-      this.tracer.TraceEvent(
+      this.tracer.traceEvent(
           new StatementEvent(Operation.EXIT, stmt, stmtKind, stmt.getLocation(), blockIndex, stmtIndex));
     }
 
@@ -157,19 +157,19 @@ public class EvaluationContext {
 
   public void traceEnterBlock() {
     if (tracer != null) {
-      tracer.TraceEvent(new BlockEvent(Operation.ENTER));
+      tracer.traceEvent(new BlockEvent(Operation.ENTER));
     }
   }
 
   public void traceExitBlock() {
     if (tracer != null) {
-      tracer.TraceEvent(new BlockEvent(Operation.EXIT));
+      tracer.traceEvent(new BlockEvent(Operation.EXIT));
     }
   }
 
   public void traceBreak() {
     if (tracer != null) {
-      tracer.TraceEvent(new Event(Operation.BREAK, null));
+      tracer.traceEvent(new Event(Operation.BREAK, null));
     }
   }
 
@@ -342,7 +342,7 @@ public class EvaluationContext {
 
     public EvaluationContext build() {
       if (metrics == null) {
-        metrics = NoOpMetrics.Instance();
+        metrics = NoOpMetrics.instance();
       }
       if (statementProfiler == null) {
         statementProfiler = new NoOpStatementProfiler();

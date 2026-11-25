@@ -8,7 +8,7 @@ public class NoOpMetrics implements Metrics {
 
   private static final NoOpMetrics INSTANCE = new NoOpMetrics();
 
-  public static NoOpMetrics Instance() {
+  public static NoOpMetrics instance() {
     return INSTANCE;
   }
 
